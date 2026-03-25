@@ -188,10 +188,7 @@ function AgencySourcesView({
   const [toggles, setToggles] = useState<Record<number, boolean>>(
     Object.fromEntries(BUILTIN_SOURCES.map((s, i) => [i, s.defaultOn]))
   )
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([
-    { id: '1', icon: '📄', name: 'Acme Corp AI Readiness Report.pdf', size: '2.4 MB', type: 'PDF', status: 'processed', usedIn: 'Trend Report W12' },
-    { id: '2', icon: '📊', name: 'Q1 2026 Budget Allocation.xlsx', size: '890 KB', type: 'Excel', status: 'processed', usedIn: 'Signal Brief W11' },
-  ])
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleToggle = (i: number) => {

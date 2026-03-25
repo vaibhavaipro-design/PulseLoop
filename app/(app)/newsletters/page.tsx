@@ -23,7 +23,7 @@ export default async function NewslettersPage() {
   const supabase = createSupabaseServerClient()
   const currentMonth = new Date().toISOString().slice(0, 7)
 
-  const [newslettersResult, linkedinResult, reportsResult, usageResult] = workspace
+  const [newslettersResult, linkedinResult, reportsResult, usageResult, workspacesResult] = workspace
     ? await Promise.all([
         supabaseAdmin
           .from('newsletters')
@@ -53,8 +53,13 @@ export default async function NewslettersPage() {
           .eq('action_type', 'newsletter')
           .eq('month', currentMonth)
           .maybeSingle(),
+        supabase
+          .from('workspaces')
+          .select('id, name')
+          .eq('user_id', user.id)
+          .order('created_at'),
       ])
-    : [{ data: [] }, { data: [] }, { data: [] }, { data: null }]
+    : [{ data: [] }, { data: [] }, { data: [] }, { data: null }, { data: [] }]
 
   const linkedinByNewsletter: Record<string, any> = {}
   linkedinResult.data?.forEach(lp => {
@@ -75,6 +80,7 @@ export default async function NewslettersPage() {
         limitPerMonth={limits.newsletters as number}
         usedThisMonth={usedThisMonth}
         workspaceId={workspace?.id ?? ''}
+        workspaces={(workspacesResult.data ?? []) as Array<{ id: string; name: string }>}
       />
     </>
   )

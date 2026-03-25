@@ -13,6 +13,7 @@ interface Props {
   limitPerMonth: number
   usedThisMonth: number
   workspaceId: string
+  workspaces: Array<{ id: string; name: string }>
 }
 
 // ── ICONS ────────────────────────────────────────────────────────────────────
@@ -673,12 +674,14 @@ export default function NewsletterClient({
   limitPerMonth,
   usedThisMonth,
   workspaceId,
+  workspaces,
 }: Props) {
   const router = useRouter()
   const isAgency = plan === 'agency'
   const [showModal, setShowModal] = useState(false)
   const [detail, setDetail] = useState<any | null>(null)
   const [activeNicheFilter, setActiveNicheFilter] = useState('all')
+  const [activeWsIndex, setActiveWsIndex] = useState(0)
 
   const handleGenerated = useCallback(() => {
     router.refresh()
@@ -766,19 +769,22 @@ export default function NewsletterClient({
         )}
 
         {/* Agency workspace tabs */}
-        {isAgency && (
+        {isAgency && workspaces.length > 0 && (
           <div className="mb-3">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Workspace</div>
             <div className="flex gap-1.5 flex-wrap">
-              {[{ name: '🏢 Acme Corp', count: 4 }, { name: '🚀 Mistral AI', count: 4 }, { name: '📊 Pennylane', count: 2 }].map(({ name, count }, i) => (
-                <button key={name} className={`h-7 px-3 rounded-lg text-xs font-semibold cursor-pointer border-none inline-flex items-center gap-1.5 ${i === 0 ? 'bg-slate-900 text-white' : 'bg-white text-slate-500 border border-slate-200'}`}>
-                  {name}
-                  <span className={`text-[10px] rounded-full px-1.5 py-px ${i === 0 ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'}`}>{count}</span>
+              {workspaces.map((ws, i) => (
+                <button
+                  key={ws.id}
+                  onClick={() => setActiveWsIndex(i)}
+                  className={`h-7 px-3 rounded-lg text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 ${i === activeWsIndex ? 'bg-slate-900 text-white border-none' : 'bg-white text-slate-500 border border-slate-200'}`}
+                >
+                  {ws.name}
                 </button>
               ))}
-              <button className="h-7 px-3 rounded-lg text-xs font-semibold cursor-pointer bg-transparent text-slate-400 border border-dashed border-slate-300 inline-flex items-center gap-1.5">
+              <a href="/settings" className="h-7 px-3 rounded-lg text-xs font-semibold cursor-pointer bg-transparent text-slate-400 border border-dashed border-slate-300 inline-flex items-center gap-1.5">
                 + Add workspace
-              </button>
+              </a>
             </div>
           </div>
         )}

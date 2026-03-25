@@ -216,6 +216,19 @@ export default async function OverviewPage({ searchParams }: { searchParams: { w
   const supabase = createSupabaseServerClient()
   const wid = workspace?.id
 
+  // Fetch niche counts for all workspaces (for agency tab badges)
+  const wsNicheCountMap: Record<string, number> = {}
+  if (isAgency && allWorkspaces.length > 0) {
+    const allWsIds = allWorkspaces.map(w => w.id)
+    const { data: allNicheCounts } = await supabase
+      .from('niches')
+      .select('workspace_id')
+      .in('workspace_id', allWsIds)
+    ;(allNicheCounts ?? []).forEach((r: { workspace_id: string }) => {
+      wsNicheCountMap[r.workspace_id] = (wsNicheCountMap[r.workspace_id] ?? 0) + 1
+    })
+  }
+
   const [usageResult, nichesResult, weekReportsResult] = wid
     ? await Promise.all([
         supabaseAdmin.from('usage_logs').select('action_type, count').eq('workspace_id', wid).eq('month', currentMonth),
@@ -447,7 +460,7 @@ export default async function OverviewPage({ searchParams }: { searchParams: { w
                   >
                     🏢 {ws.name}
                     <span className={`text-[10px] rounded-full px-1.5 py-px ${isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                      {niches.length} niches
+                      {wsNicheCountMap[ws.id] ?? 0} niches
                     </span>
                   </Link>
                 )

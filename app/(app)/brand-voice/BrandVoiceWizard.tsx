@@ -26,6 +26,8 @@ const C = {
 type WizardStep = 1 | 2 | 3 | 4 | 5
 type PageMode = 'intro' | 'upload' | 'wizard'
 
+interface SampleItem { type: string; content: string }
+
 interface CalibrationState {
   scales: number[]
   radios: string[]
@@ -63,6 +65,16 @@ function IconPlus({ size = 11 }: { size?: number }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ width: size, height: size }}>
       <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  )
+}
+function IconTrash({ size = 12 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" style={{ width: size, height: size }}>
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
     </svg>
   )
 }
@@ -430,61 +442,133 @@ function Card({ title, subtitle, badge, children }: { title: string; subtitle?: 
 }
 
 // ── Step 1: writing samples ────────────────────────────────────────
-const SAMPLE_TYPES = ['LinkedIn post', 'Newsletter excerpt', 'Client email / report', 'Report section', 'Other writing']
+const ALL_SAMPLE_TYPES: Array<{ type: string; icon: string; placeholder: string }> = [
+  { type: 'LinkedIn post',          icon: '💼', placeholder: 'Paste a LinkedIn post you\'ve written…' },
+  { type: 'Newsletter excerpt',     icon: '✉️', placeholder: 'Paste a section from a newsletter you\'ve sent…' },
+  { type: 'Client email / report',  icon: '💬', placeholder: 'Paste any client-facing writing…' },
+  { type: 'Report section',         icon: '📄', placeholder: 'Paste a section from a trend report or brief…' },
+  { type: 'Other writing',          icon: '✏️', placeholder: 'Paste any other writing sample…' },
+]
 
-function Step1({ samples, setSamples, isAg }: { samples: string[]; setSamples: React.Dispatch<React.SetStateAction<string[]>>; isAg: boolean }) {
-  function update(i: number, val: string) {
-    setSamples(prev => { const next = [...prev]; next[i] = val; return next })
+function Step1({ samples, setSamples, isAg }: { samples: SampleItem[]; setSamples: React.Dispatch<React.SetStateAction<SampleItem[]>>; isAg: boolean }) {
+  const [pickerOpen, setPickerOpen] = useState(false)
+
+  const usedTypes = new Set(samples.map(s => s.type))
+  const availableTypes = ALL_SAMPLE_TYPES.filter(t => !usedTypes.has(t.type))
+
+  function updateContent(i: number, content: string) {
+    setSamples(prev => prev.map((s, idx) => idx === i ? { ...s, content } : s))
   }
-  function clear(i: number) {
-    setSamples(prev => { const next = [...prev]; next[i] = ''; return next })
+  function clearContent(i: number) {
+    setSamples(prev => prev.map((s, idx) => idx === i ? { ...s, content: '' } : s))
   }
-  function addSample() {
-    setSamples(prev => prev.length < 5 ? [...prev, ''] : prev)
+  function deleteContainer(i: number) {
+    setSamples(prev => prev.filter((_, idx) => idx !== i))
   }
+  function addType(type: string) {
+    setSamples(prev => [...prev, { type, content: '' }])
+    setPickerOpen(false)
+  }
+
+  const accentColor = isAg ? '#9A6600' : C.a
+  const accentBg    = isAg ? 'rgba(245,166,35,.15)' : C.al
 
   return (
     <Card
-      title="Paste 3–5 pieces of your own writing"
-      subtitle="LinkedIn posts, newsletter excerpts, client emails, reports — anything you've actually written. The more variety, the better the extraction."
+      title="Paste your writing samples"
+      subtitle="The more variety, the better the extraction — mix LinkedIn posts, newsletters, emails, and reports."
     >
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' as const }}>
-        {[{ icon: '💼', label: 'LinkedIn posts' }, { icon: '✉️', label: 'Newsletter excerpts' }, { icon: '💬', label: 'Client emails' }, { icon: '📄', label: 'Report sections' }].map(h => (
-          <div key={h.label} style={{ background: C.bm, border: `1px solid ${C.br}`, borderRadius: 8, padding: '6px 10px', fontSize: 11, color: C.ts, display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span>{h.icon}</span>{h.label}
+      {/* Sample containers */}
+      {samples.map((sample, i) => {
+        const meta = ALL_SAMPLE_TYPES.find(t => t.type === sample.type)
+        return (
+          <div key={sample.type} style={{ border: `1px solid ${C.br}`, borderRadius: 10, marginBottom: 10, overflow: 'hidden' }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', background: C.bm, borderBottom: `1px solid ${C.br}` }}>
+              <div style={{ width: 20, height: 20, borderRadius: 5, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: accentBg, color: accentColor }}>
+                {i + 1}
+              </div>
+              <span style={{ fontSize: 11, fontWeight: 600, color: C.ts }}>{meta?.icon ?? '✏️'} {sample.type}</span>
+              <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 2 }}>
+                {/* Clear button */}
+                <button
+                  type="button"
+                  onClick={() => clearContent(i)}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 10, color: accentColor, fontWeight: 600, padding: '3px 7px', borderRadius: 5, height: 24, display: 'inline-flex', alignItems: 'center' }}
+                >
+                  Clear
+                </button>
+                {/* Divider */}
+                <div style={{ width: 1, height: 14, background: C.br, margin: '0 2px' }} />
+                {/* Delete button */}
+                <button
+                  type="button"
+                  onClick={() => deleteContainer(i)}
+                  title="Remove this sample"
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.tt, padding: '3px 6px', borderRadius: 5, height: 24, display: 'inline-flex', alignItems: 'center', transition: 'color .15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = C.da)}
+                  onMouseLeave={e => (e.currentTarget.style.color = C.tt)}
+                >
+                  <IconTrash size={12} />
+                </button>
+              </div>
+            </div>
+            {/* Textarea */}
+            <textarea
+              value={sample.content}
+              onChange={e => updateContent(i, e.target.value)}
+              rows={5}
+              placeholder={meta?.placeholder ?? 'Paste your writing here…'}
+              style={{ width: '100%', border: 'none', outline: 'none', padding: '10px 12px', fontSize: 12, color: C.tp, fontFamily: 'inherit', resize: 'none', lineHeight: 1.65, background: '#fff' }}
+            />
           </div>
-        ))}
-      </div>
-      {samples.map((val, i) => (
-        <div key={i} style={{ border: `1px solid ${C.br}`, borderRadius: 10, marginBottom: 10, overflow: 'hidden' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', background: C.bm, borderBottom: `1px solid ${C.br}` }}>
-            <div style={{ width: 20, height: 20, borderRadius: 5, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: isAg ? 'rgba(245,166,35,.15)' : C.al, color: isAg ? '#9A6600' : C.a }}>{i + 1}</div>
-            <span style={{ fontSize: 11, fontWeight: 600, color: C.ts }}>{SAMPLE_TYPES[i] ?? 'Writing sample'}</span>
+        )
+      })}
+
+      {/* Add sample button + inline type picker */}
+      {samples.length < 5 && availableTypes.length > 0 && (
+        <div style={{ marginTop: 6 }}>
+          {!pickerOpen ? (
             <button
               type="button"
-              onClick={() => clear(i)}
-              style={{ marginLeft: 'auto', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 10, color: isAg ? '#9A6600' : C.a, fontWeight: 600, padding: '2px 6px', borderRadius: 5 }}
+              onClick={() => setPickerOpen(true)}
+              style={{ height: 32, padding: '0 12px', borderRadius: 9, background: '#fff', color: C.tp, fontSize: 12, fontWeight: 500, border: `1px solid ${C.br}`, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5 }}
             >
-              Clear
+              <IconPlus size={11} />Add another sample (up to 5)
             </button>
-          </div>
-          <textarea
-            value={val}
-            onChange={e => update(i, e.target.value)}
-            rows={5}
-            placeholder={`Paste a ${(SAMPLE_TYPES[i] ?? 'writing sample').toLowerCase()}…`}
-            style={{ width: '100%', border: 'none', outline: 'none', padding: '10px 12px', fontSize: 12, color: C.tp, fontFamily: 'inherit', resize: 'none', lineHeight: 1.65, background: '#fff' }}
-          />
+          ) : (
+            <div style={{ background: C.bm, border: `1px solid ${C.br}`, borderRadius: 10, padding: '12px 14px' }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: C.ts, marginBottom: 10 }}>
+                Choose what type of writing to add:
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const }}>
+                {availableTypes.map(t => (
+                  <button
+                    key={t.type}
+                    type="button"
+                    onClick={() => addType(t.type)}
+                    style={{
+                      height: 32, padding: '0 13px', borderRadius: 9999, fontSize: 12, fontWeight: 500,
+                      border: `1.5px solid ${C.br}`, background: '#fff', color: C.ts, cursor: 'pointer',
+                      display: 'inline-flex', alignItems: 'center', gap: 6, transition: 'all .12s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = accentColor; e.currentTarget.style.color = accentColor; e.currentTarget.style.background = accentBg }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = C.br; e.currentTarget.style.color = C.ts; e.currentTarget.style.background = '#fff' }}
+                  >
+                    <span>{t.icon}</span>{t.type}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setPickerOpen(false)}
+                style={{ marginTop: 10, background: 'transparent', border: 'none', cursor: 'pointer', fontSize: 11, color: C.tt }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
-      ))}
-      {samples.length < 5 && (
-        <button
-          type="button"
-          onClick={addSample}
-          style={{ height: 32, padding: '0 12px', borderRadius: 9, background: '#fff', color: C.tp, fontSize: 12, fontWeight: 500, border: `1px solid ${C.br}`, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 5, marginTop: 4 }}
-        >
-          <IconPlus size={11} />Add another sample (up to 5)
-        </button>
       )}
     </Card>
   )
@@ -746,7 +830,7 @@ export default function BrandVoiceWizard({ existingProfile, existingSource, exis
 
   // Wizard state
   const [step,              setStep]              = useState<WizardStep>(1)
-  const [samples,           setSamples]           = useState<string[]>(['', '', ''])
+  const [samples,           setSamples]           = useState<SampleItem[]>([{ type: 'Newsletter excerpt', content: '' }])
   const [traits,            setTraits]            = useState<VoiceTraits | null>(null)
   const [calibration,       setCalibration]       = useState<CalibrationState>(DEFAULT_CALIBRATION)
   const [profile,           setProfile]           = useState(existingProfile ?? '')
@@ -765,7 +849,7 @@ export default function BrandVoiceWizard({ existingProfile, existingSource, exis
   const [, startTransition] = useTransition()
 
   function resetAll() {
-    setMode('intro'); setStep(1); setSamples(['', '', '']); setTraits(null)
+    setMode('intro'); setStep(1); setSamples([{ type: 'Newsletter excerpt', content: '' }]); setTraits(null)
     setCalibration(DEFAULT_CALIBRATION); setProfile(existingProfile ?? ''); setEditing(false)
     setTestType('LinkedIn post'); setTestSample(''); setApproved(false)
     setExtracting(false); setGeneratingProfile(false); setGeneratingTest(false); setError(null)
@@ -774,17 +858,17 @@ export default function BrandVoiceWizard({ existingProfile, existingSource, exis
 
   // ── Step transitions ────────────────────────────────────────────
   async function goStep2() {
-    const nonEmpty = samples.filter(s => s.trim().length > 20)
+    const nonEmpty = samples.filter(s => s.content.trim().length > 20)
     if (nonEmpty.length === 0) { setError('Please paste at least one writing sample (minimum 20 characters).'); return }
     setError(null); setExtracting(true); setStep(2)
-    try { const data = await analyzeWritingSamples(samples); setTraits(data) }
+    try { const data = await analyzeWritingSamples(samples.map(s => s.content)); setTraits(data) }
     catch (e: any) { setError(e.message) }
     finally { setExtracting(false) }
   }
 
   async function goStep4() {
     setError(null); setGeneratingProfile(true); setStep(4)
-    try { const p = await buildFinalProfile(samples, calibration); setProfile(p) }
+    try { const p = await buildFinalProfile(samples.map(s => s.content), calibration); setProfile(p) }
     catch (e: any) { setError(e.message) }
     finally { setGeneratingProfile(false) }
   }

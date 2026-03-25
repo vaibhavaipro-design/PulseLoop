@@ -250,6 +250,54 @@ Return a detailed brand voice profile covering:
   return response.content[0].type === 'text' ? response.content[0].text : ''
 }
 
+// ── Brand voice: extract profile from uploaded file ───────────────
+
+export async function extractBrandVoiceFromPDF(pdfBase64: string): Promise<string> {
+  const client = getAnthropicClient()
+  if (!client) throw new Error('ANTHROPIC_CLIENT_NOT_INITIALIZED')
+
+  // Use Anthropic's native PDF beta support
+  const response = await (client.beta.messages.create as any)({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 800,
+    betas: ['pdfs-2024-09-25'],
+    system: `You are a brand voice analyst for PulseLoop. ${DATA_BOUNDARY}`.trim(),
+    messages: [{
+      role: 'user',
+      content: [
+        {
+          type: 'document',
+          source: { type: 'base64', media_type: 'application/pdf', data: pdfBase64 },
+        },
+        {
+          type: 'text',
+          text: 'Read this document and extract a concise brand voice profile paragraph (3–5 sentences). Write it in second person: "Your writing is…". Cover tone, vocabulary, sentence style, POV, and any recurring phrases or words to avoid. If the document IS already a brand voice guide, summarise it faithfully. If it is a writing sample, infer the voice from the writing.',
+        },
+      ],
+    }],
+  })
+  return response.content[0].type === 'text' ? response.content[0].text.trim() : ''
+}
+
+export async function extractBrandVoiceFromText(text: string): Promise<string> {
+  const client = getAnthropicClient()
+  if (!client) throw new Error('ANTHROPIC_CLIENT_NOT_INITIALIZED')
+
+  const response = await client.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 800,
+    system: `You are a brand voice analyst for PulseLoop. ${DATA_BOUNDARY}`.trim(),
+    messages: [{
+      role: 'user',
+      content: `Read this content and extract a concise brand voice profile paragraph (3–5 sentences). Write it in second person: "Your writing is…". Cover tone, vocabulary, sentence style, POV, and any recurring phrases or words to avoid. If this IS already a brand voice guide, summarise it faithfully. If it is a writing sample, infer the voice from the writing.
+
+Content:
+${text.slice(0, 8000)}`,
+    }],
+  })
+  return response.content[0].type === 'text' ? response.content[0].text.trim() : ''
+}
+
 // ── Brand voice wizard helpers ────────────────────────────────────
 
 export interface VoiceTraits {

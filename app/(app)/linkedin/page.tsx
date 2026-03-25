@@ -1,7 +1,7 @@
 import Topbar from '@/components/layout/Topbar'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { isLocked } from '@/lib/plans'
+import { isLocked, getPlanLimits } from '@/lib/plans'
 import type { Plan } from '@/lib/plans'
 import LinkedInClient from './LinkedInClient'
 
@@ -27,25 +27,52 @@ export default async function LinkedInPage() {
 
   const plan = (subscription?.plan ?? 'trial') as Plan
   const locked = isLocked(plan, 'linkedinPosts')
+  const limits = getPlanLimits(plan)
 
-  // Load linkedin_posts with newsletter + report join
-  const { data: linkedinPosts } = workspace
-    ? await supabaseAdmin
-        .from('linkedin_posts')
-        .select(`
-          id,
-          variants,
-          newsletter_id,
-          newsletters ( id, angle, trend_reports ( title, niches ( name ) ) )
-        `)
-        .eq('workspace_id', workspace.id)
-        .order('id', { ascending: false })
-    : { data: [] }
+  const currentMonth = new Date().toISOString().slice(0, 7)
+
+  const [linkedinPostsRes, newslettersRes, trendReportsRes, usageRes] = workspace
+    ? await Promise.all([
+        supabaseAdmin
+          .from('linkedin_posts')
+          .select(`id, variants, newsletter_id, newsletters ( id, angle, trend_reports ( title, niches ( name ) ) )`)
+          .eq('workspace_id', workspace.id)
+          .order('id', { ascending: false }),
+        supabaseAdmin
+          .from('newsletters')
+          .select('id, angle, trend_reports ( id, title, niches ( name ) )')
+          .eq('workspace_id', workspace.id)
+          .order('id', { ascending: false })
+          .limit(20),
+        supabaseAdmin
+          .from('trend_reports')
+          .select('id, title, niches ( name )')
+          .eq('workspace_id', workspace.id)
+          .order('id', { ascending: false })
+          .limit(20),
+        supabaseAdmin
+          .from('usage_logs')
+          .select('count')
+          .eq('workspace_id', workspace.id)
+          .eq('action_type', 'linkedin')
+          .eq('month', currentMonth)
+          .maybeSingle(),
+      ])
+    : [{ data: [] }, { data: [] }, { data: [] }, { data: null }]
 
   return (
     <>
       <Topbar title="LinkedIn Posts" />
-      <LinkedInClient posts={linkedinPosts ?? []} plan={plan} locked={locked} />
+      <LinkedInClient
+        posts={(linkedinPostsRes.data ?? []) as any}
+        newsletters={(newslettersRes.data ?? []) as any}
+        trendReports={(trendReportsRes.data ?? []) as any}
+        plan={plan}
+        locked={locked}
+        workspaceId={workspace?.id ?? ''}
+        setsUsedThisMonth={usageRes.data?.count ?? 0}
+        setsLimit={limits.linkedinPosts}
+      />
     </>
   )
 }

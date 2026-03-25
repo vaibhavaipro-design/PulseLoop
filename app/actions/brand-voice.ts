@@ -3,10 +3,14 @@
 import { revalidatePath } from 'next/cache'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { generateBrandVoice } from '@/lib/claude'
+import {
+  extractVoiceTraits,
+  buildVoiceProfile,
+  generateVoiceTestSample,
+  type VoiceTraits,
+} from '@/lib/claude'
 
 async function saveBrandVoiceContent(workspaceId: string, content: string, source: string) {
-  // Update existing profile if one exists, otherwise insert
   const { data: existing } = await supabaseAdmin
     .from('brand_voice_profiles')
     .select('id')
@@ -27,6 +31,62 @@ async function saveBrandVoiceContent(workspaceId: string, content: string, sourc
   }
 }
 
+// ── Step 1 → 2: extract structured traits from writing samples ────
+export async function analyzeWritingSamples(
+  samples: string[]
+): Promise<VoiceTraits> {
+  const supabase = createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  const nonEmpty = samples.filter(s => s.trim().length > 20)
+  if (nonEmpty.length === 0) throw new Error('Please paste at least one writing sample.')
+
+  return extractVoiceTraits(nonEmpty)
+}
+
+// ── Step 3 → 4: build final profile from samples + calibration ────
+export async function buildFinalProfile(
+  samples: string[],
+  calibration: { scales: number[]; radios: string[] }
+): Promise<string> {
+  const supabase = createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  return buildVoiceProfile(samples.filter(Boolean), calibration)
+}
+
+// ── Step 4 → 5: generate test sample with the profile ─────────────
+export async function runVoiceTest(
+  profile: string,
+  contentType: string
+): Promise<string> {
+  const supabase = createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  return generateVoiceTestSample(profile, contentType)
+}
+
+// ── Step 5: save & activate ───────────────────────────────────────
+export async function activateBrandVoice(profile: string) {
+  const supabase = createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  const { data: workspace } = await supabase
+    .from('workspaces').select('id').eq('user_id', user.id).single()
+  if (!workspace) throw new Error('Workspace not found')
+
+  await saveBrandVoiceContent(workspace.id, profile, 'wizard')
+  revalidatePath('/brand-voice')
+  revalidatePath('/settings')
+}
+
+// ── Legacy: settings page quick-analyze (single sample) ──────────
+const NEUTRAL_CALIBRATION = { scales: [3, 3, 3, 3, 3], radios: ['first-person', 'text-only', 'inline'] }
+
 export async function analyzeBrandVoice(sample: string) {
   const supabase = createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -36,14 +96,14 @@ export async function analyzeBrandVoice(sample: string) {
     .from('workspaces').select('id').eq('user_id', user.id).single()
   if (!workspace) throw new Error('Workspace not found')
 
-  const extractedVoice = await generateBrandVoice([sample])
-  if (!extractedVoice) throw new Error('Failed to analyze brand voice')
-
-  await saveBrandVoiceContent(workspace.id, extractedVoice, 'generated')
+  const profile = await buildVoiceProfile([sample], NEUTRAL_CALIBRATION)
+  await saveBrandVoiceContent(workspace.id, profile, 'generated')
   revalidatePath('/settings')
-  return extractedVoice
+  revalidatePath('/brand-voice')
+  return profile
 }
 
+// ── Direct manual save (settings page) ───────────────────────────
 export async function saveManualBrandVoice(voicePrompt: string) {
   const supabase = createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -66,12 +126,12 @@ export async function deleteBrandVoice() {
     .from('workspaces').select('id').eq('user_id', user.id).single()
   if (!workspace) throw new Error('Workspace not found')
 
-  // User client respects RLS bvp_all policy
   const { error } = await supabase
     .from('brand_voice_profiles')
     .delete()
     .eq('workspace_id', workspace.id)
   if (error) throw new Error('Failed to delete brand voice')
 
+  revalidatePath('/brand-voice')
   revalidatePath('/settings')
 }

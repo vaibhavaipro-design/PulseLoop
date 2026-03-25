@@ -1,22 +1,48 @@
 import Topbar from '@/components/layout/Topbar'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
+import BrandVoiceWizard from './BrandVoiceWizard'
+import type { Plan } from '@/lib/plans'
 
-export default function BrandVoicePage() {
+export default async function BrandVoicePage() {
+  const supabase = createSupabaseServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const { data: workspaceRows } = await supabase
+    .from('workspaces')
+    .select('id')
+    .eq('user_id', user!.id)
+    .order('created_at', { ascending: true })
+    .limit(1)
+  const workspace = workspaceRows?.[0] ?? null
+
+  const { data: subscription } = workspace
+    ? await supabaseAdmin
+        .from('subscriptions')
+        .select('plan')
+        .eq('workspace_id', workspace.id)
+        .single()
+    : { data: null }
+
+  const plan = (subscription?.plan ?? 'trial') as Plan
+
+  const { data: brandVoice } = workspace
+    ? await supabaseAdmin
+        .from('brand_voice_profiles')
+        .select('content, source, updated_at')
+        .eq('workspace_id', workspace.id)
+        .maybeSingle()
+    : { data: null }
+
   return (
     <>
       <Topbar title="Brand Voice" />
-      <div className="flex-1 overflow-y-auto p-5 bg-slate-50">
-        <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-violet-50 flex items-center justify-center text-3xl">✍️</div>
-          <h2 className="text-lg font-bold text-slate-800">Brand Voice Profile</h2>
-          <p className="text-sm text-slate-500 max-w-sm">
-            Paste 3–5 writing samples and PulseLoop will extract your unique tone, style, and vocabulary.
-            Every output will match your voice.
-          </p>
-          <button className="inline-flex items-center justify-center h-9 px-5 rounded-lg text-sm font-semibold text-white bg-indigo-500 hover:bg-indigo-600 transition-colors">
-            Set Up Brand Voice
-          </button>
-        </div>
-      </div>
+      <BrandVoiceWizard
+        existingProfile={brandVoice?.content ?? null}
+        existingSource={brandVoice?.source ?? null}
+        existingUpdatedAt={brandVoice?.updated_at ?? null}
+        plan={plan}
+      />
     </>
   )
 }

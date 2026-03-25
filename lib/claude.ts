@@ -250,6 +250,138 @@ Return a detailed brand voice profile covering:
   return response.content[0].type === 'text' ? response.content[0].text : ''
 }
 
+// ── Brand voice wizard helpers ────────────────────────────────────
+
+export interface VoiceTraits {
+  traits: Array<{ label: string; value: string; pct: number }>
+  phrases: string[]
+  avoidWords: string[]
+}
+
+export async function extractVoiceTraits(samples: string[]): Promise<VoiceTraits> {
+  const client = getAnthropicClient()
+  if (!client) throw new Error('ANTHROPIC_CLIENT_NOT_INITIALIZED')
+
+  const response = await client.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 1200,
+    system: `You are a brand voice analyst. ${DATA_BOUNDARY}`.trim(),
+    messages: [{
+      role: 'user',
+      content: `Analyse these writing samples and extract voice traits.
+
+Samples:
+${samples.map((s, i) => `--- Sample ${i + 1} ---\n${s}`).join('\n\n')}
+
+Return ONLY valid JSON in this exact format (no markdown, no explanation):
+{
+  "traits": [
+    {"label":"Formality","value":"Direct & informal","pct":30},
+    {"label":"Data use","value":"Data-heavy","pct":82},
+    {"label":"Sentence length","value":"Short — avg 11 words","pct":25},
+    {"label":"Narrative style","value":"Observation → implication","pct":75},
+    {"label":"Point of view","value":"First person (I)","pct":60},
+    {"label":"Audience distance","value":"Peer-to-peer","pct":35}
+  ],
+  "phrases": ["phrase1","phrase2","phrase3","phrase4","phrase5","phrase6"],
+  "avoidWords": ["word1","word2","word3","word4","word5"]
+}
+
+Infer all values from the writing samples provided. Keep labels short and values concise.`,
+    }],
+  })
+
+  const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
+  try {
+    const json = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+    return JSON.parse(json)
+  } catch {
+    return {
+      traits: [
+        { label: 'Formality', value: 'Direct', pct: 40 },
+        { label: 'Data use', value: 'Data-driven', pct: 70 },
+        { label: 'Sentence length', value: 'Concise', pct: 35 },
+        { label: 'Narrative style', value: 'Analytical', pct: 65 },
+        { label: 'Point of view', value: 'First person', pct: 55 },
+        { label: 'Audience', value: 'Peer-level', pct: 45 },
+      ],
+      phrases: ['key insight', 'what this means', 'the data shows'],
+      avoidWords: ['synergy', 'leverage', 'game-changer'],
+    }
+  }
+}
+
+export async function buildVoiceProfile(
+  samples: string[],
+  calibration: {
+    scales: number[]  // 5 scale answers (1–5)
+    radios: string[]  // 3 radio answers
+  }
+): Promise<string> {
+  const client = getAnthropicClient()
+  if (!client) throw new Error('ANTHROPIC_CLIENT_NOT_INITIALIZED')
+
+  const [pov, emojis, citations] = calibration.radios
+  const [directness, peerLevel, closingStyle, opinionLevel, dataVsNarrative] = calibration.scales
+
+  const response = await client.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 600,
+    system: `You are a brand voice profile writer. ${DATA_BOUNDARY}`.trim(),
+    messages: [{
+      role: 'user',
+      content: `Write a brand voice profile paragraph (3–5 sentences) based on these writing samples and calibration.
+
+Samples:
+${samples.filter(Boolean).map((s, i) => `--- Sample ${i + 1} ---\n${s.slice(0, 600)}`).join('\n\n')}
+
+Calibration:
+- Directness/data-focus (1=vague, 5=very direct/data-heavy): ${directness}
+- Peer-level writing (1=simplified, 5=always peer-level): ${peerLevel}
+- Closing style (1=summaries, 5=always ends with question): ${closingStyle}
+- Opinionatedness (1=just facts, 5=strong opinion): ${opinionLevel}
+- Point of view: ${pov || 'first-person'}
+- Emoji usage: ${emojis || 'text-only'}
+- Citation style: ${citations || 'inline'}
+
+Write a concise brand voice profile paragraph that Claude can use as a writing instruction. Use phrases like "Your writing is…", "You cite…", "You write in…". Highlight the most distinctive traits. Do NOT use consultant jargon.`,
+    }],
+  })
+
+  return response.content[0].type === 'text' ? response.content[0].text.trim() : ''
+}
+
+export async function generateVoiceTestSample(
+  profile: string,
+  contentType: string
+): Promise<string> {
+  const client = getAnthropicClient()
+  if (!client) throw new Error('ANTHROPIC_CLIENT_NOT_INITIALIZED')
+
+  const prompts: Record<string, string> = {
+    'LinkedIn post': 'Write a 150-word LinkedIn post about a recent EU regulatory change affecting B2B SaaS.',
+    'Signal Brief opening': 'Write a 2-sentence opening paragraph for a signal brief about AI tooling adoption in France.',
+    'Newsletter lede': 'Write a newsletter lede (3–4 sentences) for a weekly market intelligence update.',
+    'Trend Report summary': 'Write a 3-sentence executive summary for a trend report on French SaaS funding in Q1.',
+  }
+
+  const prompt = prompts[contentType] ?? prompts['LinkedIn post']
+
+  const response = await client.messages.create({
+    model: 'claude-sonnet-4-6',
+    max_tokens: 400,
+    system: `
+You are a content writer for PulseLoop. Apply this brand voice profile exactly:
+${DATA_BOUNDARY}
+Brand voice:
+${profile}
+    `.trim(),
+    messages: [{ role: 'user', content: prompt }],
+  })
+
+  return response.content[0].type === 'text' ? response.content[0].text.trim() : ''
+}
+
 export async function generateDashboard(
   reportContent: string,
   style: string,

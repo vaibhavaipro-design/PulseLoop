@@ -1,0 +1,564 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --a:#5B5FC7;--al:#EEEEFF;--am:#A3A6E8;
+  --bp:#F0F0F7;--bm:#F7F7FC;
+  --tp:#1A1A3E;--ts:#6B6B8A;--tt:#A0A0BE;
+  --br:#E4E4F0;--brs:#C5C5E0;
+  --su:#4CAF82;--sub:#E8F7EF;
+  --wa:#F5A623;--wab:#FFF4E0;
+  --da:#E85757;--dab:#FDEAEA;
+  --ag:#1A1A3E;--agb:#F5A623;
+}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bp);}
+
+/* SHELL */
+.shell{display:flex;height:760px;background:var(--bp);border-radius:14px;overflow:hidden;border:1px solid var(--br);}
+
+/* SIDEBAR */
+.sidebar{width:215px;min-width:215px;background:#fff;border-right:1px solid var(--br);display:flex;flex-direction:column;flex-shrink:0;}
+.slogo{height:56px;display:flex;align-items:center;padding:0 14px;gap:8px;border-bottom:1px solid var(--br);flex-shrink:0;}
+.sli{width:28px;height:28px;background:var(--a);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.slt{font-size:14px;font-weight:700;color:var(--tp);}
+.snav{padding:12px 8px 6px;}
+.snl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:0 8px;margin-bottom:4px;color:var(--tt);}
+.sni{display:flex;align-items:center;gap:8px;height:38px;padding:0 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--ts);margin-bottom:1px;}
+.sni.act{background:var(--al);color:var(--a);}
+.sni svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.sbot{margin-top:auto;padding:10px;border-top:1px solid var(--br);display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.sav{width:28px;height:28px;border-radius:9999px;background:var(--al);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--a);flex-shrink:0;}
+.spb{font-size:10px;font-weight:700;padding:1px 7px;border-radius:9999px;background:var(--al);color:var(--a);}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.tb{height:56px;background:#fff;border-bottom:1px solid var(--br);display:flex;align-items:center;padding:0 20px;gap:8px;flex-shrink:0;}
+.tb-title{font-size:16px;font-weight:600;color:var(--tp);flex:1;}
+.scroll{flex:1;overflow-y:auto;padding:18px 20px;background:var(--bm);}
+
+/* BUTTONS */
+.btnp{height:30px;padding:0 12px;border-radius:8px;background:var(--a);color:#fff;font-size:12px;font-weight:600;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.btns{height:30px;padding:0 10px;border-radius:8px;background:#fff;color:var(--tp);font-size:12px;font-weight:500;border:1px solid var(--br);cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
+
+/* BREADCRUMB */
+.bc{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tt);margin-bottom:12px;}
+.bc .lnk{color:var(--a);cursor:pointer;font-weight:600;}
+.bc svg{width:10px;height:10px;stroke:var(--tt);fill:none;stroke-width:1.5;stroke-linecap:round;}
+
+/* ── INTERNAL RESEARCH LABEL ── */
+.internal-banner{background:var(--bm);border:1px solid var(--br);border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.internal-banner svg{width:13px;height:13px;stroke:var(--ts);fill:none;stroke-width:1.5;stroke-linecap:round;flex-shrink:0;}
+.internal-txt{font-size:11px;color:var(--ts);font-weight:500;}
+.internal-txt span{font-weight:700;color:var(--tp);}
+
+/* REPORT HEADER CARD */
+.rh{background:#fff;border:1px solid var(--br);border-radius:14px;padding:16px 18px;margin-bottom:12px;}
+.rh-row{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;}
+.rh-ic{width:44px;height:44px;border-radius:11px;background:var(--al);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;}
+.rh-niche{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--a);margin-bottom:3px;}
+.rh-title{font-size:17px;font-weight:700;color:var(--tp);line-height:1.3;margin-bottom:7px;}
+.rh-pills{display:flex;gap:5px;flex-wrap:wrap;}
+.rp{font-size:10px;font-weight:600;padding:2px 8px;border-radius:9999px;}
+.rp-a{background:var(--al);color:var(--a);}
+.rp-s{background:var(--sub);color:var(--su);}
+.rp-w{background:var(--wab);color:var(--wa);}
+.rh-div{height:1px;background:var(--br);margin-bottom:12px;}
+/* source bars */
+.src-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 22px;}
+.src-row{display:flex;align-items:center;gap:5px;}
+.src-name{font-size:10px;color:var(--tt);width:80px;flex-shrink:0;}
+.src-track{flex:1;height:4px;border-radius:9999px;background:var(--bp);overflow:hidden;}
+.src-fill{height:100%;border-radius:9999px;background:var(--am);}
+.src-fill.hi{background:var(--a);}
+.src-count{font-size:10px;color:var(--ts);width:24px;text-align:right;flex-shrink:0;}
+
+/* BADGES */
+.bd{font-size:10px;font-weight:600;padding:2px 7px;border-radius:9999px;white-space:nowrap;}
+.bd-hi{background:var(--sub);color:var(--su);}
+.bd-med{background:var(--wab);color:var(--wa);}
+.bd-new{background:var(--al);color:var(--a);}
+.bd-eu{background:#EFF6FF;color:#1D4ED8;}
+.bd-weak{background:var(--bp);color:var(--ts);border:1px solid var(--br);}
+.bd-lock{background:var(--dab);color:var(--da);}
+.bd-90{background:#F3E8FF;color:#7C3AED;}
+.cite{display:inline-block;background:var(--al);color:var(--a);border-radius:4px;font-size:10px;font-weight:700;padding:1px 5px;margin:0 1px;border:1px solid var(--am);}
+.cite.eu{background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE;}
+.cite.gh{background:#F0FDF4;color:#166534;border-color:#BBF7D0;}
+
+/* SECTION CARDS */
+.crd{background:#fff;border:1px solid var(--br);border-radius:13px;margin-bottom:12px;overflow:hidden;}
+.crd-hd{padding:11px 16px 9px;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;}
+.crd-ttl{font-size:13px;font-weight:700;color:var(--tp);}
+.crd-sub{font-size:10px;color:var(--tt);margin-top:1px;}
+.crd-bd{padding:13px 16px;}
+
+/* ── SECTION 1: EXECUTIVE SUMMARY ── */
+.exec{font-size:13px;color:var(--tp);line-height:1.85;}
+
+/* ── SECTION 2: SIGNAL INVENTORY ── */
+.signal-table{width:100%;border-collapse:collapse;}
+.signal-table th{font-size:10px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.4px;padding:6px 10px;background:var(--bm);border-bottom:1px solid var(--br);text-align:left;}
+.signal-table td{font-size:12px;color:var(--tp);padding:9px 10px;border-bottom:1px solid var(--br);vertical-align:top;}
+.signal-table tr:last-child td{border-bottom:none;}
+.signal-table tr:hover td{background:var(--bm);}
+.sig-title-cell{font-weight:600;line-height:1.4;}
+.sig-src-cell{color:var(--tt);font-size:11px;}
+
+/* ── SECTION 3: 90-DAY PATTERN DETECTION ── */
+.pattern-list{display:flex;flex-direction:column;gap:10px;}
+.pattern-item{display:flex;gap:12px;padding:11px 13px;border-radius:10px;border:1px solid var(--br);}
+.pattern-item.building{border-color:#C4B5FD;background:#FAF5FF;}
+.pattern-item.new{border-color:#BBF7D0;background:#F0FDF4;}
+.pattern-item.fading{border-color:var(--brs);background:var(--bm);}
+.pattern-item.spike{border-color:#FDE68A;background:#FFFBEB;}
+.pattern-tag{width:64px;flex-shrink:0;}
+.pattern-badge{font-size:10px;font-weight:700;padding:3px 7px;border-radius:9999px;white-space:nowrap;}
+.pb-building{background:#EDE9FE;color:#6D28D9;}
+.pb-new{background:var(--sub);color:var(--su);}
+.pb-fading{background:var(--bp);color:var(--tt);border:1px solid var(--brs);}
+.pb-spike{background:var(--wab);color:var(--wa);}
+.pattern-body{flex:1;}
+.pattern-title{font-size:12px;font-weight:700;color:var(--tp);margin-bottom:3px;}
+.pattern-desc{font-size:12px;color:var(--ts);line-height:1.6;}
+.pattern-weeks{font-size:10px;color:var(--tt);margin-top:4px;display:flex;align-items:center;gap:4px;}
+/* mini sparkline */
+.spark{display:flex;align-items:flex-end;gap:2px;height:20px;}
+.sp-bar{width:5px;border-radius:1px 1px 0 0;background:var(--am);}
+.sp-bar.hi{background:var(--a);}
+
+/* ── SECTION 4: TREND BREAKDOWN ── */
+.trend-list{display:flex;flex-direction:column;gap:10px;}
+.trend-item{padding:12px 14px;border-radius:10px;border:1px solid var(--br);background:#fff;}
+.trend-hd{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;}
+.trend-num{width:20px;height:20px;border-radius:5px;background:var(--al);color:var(--a);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.trend-title{font-size:13px;font-weight:700;color:var(--tp);flex:1;line-height:1.35;}
+.trend-body{font-size:12px;color:var(--ts);line-height:1.7;margin-left:28px;}
+/* confidence meter */
+.conf-row{display:flex;align-items:center;gap:7px;margin-left:28px;margin-top:6px;}
+.conf-lbl{font-size:10px;color:var(--tt);width:68px;flex-shrink:0;}
+.conf-track{flex:1;max-width:120px;height:4px;border-radius:9999px;background:var(--bp);overflow:hidden;}
+.conf-fill{height:100%;border-radius:9999px;background:var(--a);}
+.conf-pct{font-size:10px;font-weight:600;color:var(--ts);}
+
+/* ── SECTION 5: EU-SPECIFIC SIGNALS ── */
+.eu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.eu-card{padding:10px 12px;border-radius:9px;border:1px solid #BFDBFE;background:#EFF6FF;}
+.eu-src-lbl{font-size:10px;font-weight:700;color:#1D4ED8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;display:flex;align-items:center;gap:5px;}
+.eu-tier{font-size:9px;font-weight:600;padding:1px 5px;border-radius:9999px;background:rgba(29,78,216,.12);color:#1D4ED8;}
+.eu-headline{font-size:12px;font-weight:600;color:var(--tp);margin-bottom:3px;}
+.eu-body{font-size:11px;color:var(--ts);line-height:1.55;}
+
+/* ── SECTION 6: WEAK SIGNALS ── */
+.weak-list{display:flex;flex-direction:column;gap:8px;}
+.weak-item{display:flex;gap:9px;padding:10px 12px;border-radius:9px;border:1.5px dashed var(--brs);background:var(--bm);}
+.weak-ic{font-size:15px;flex-shrink:0;margin-top:1px;}
+.weak-title{font-size:12px;font-weight:600;color:var(--tp);margin-bottom:2px;}
+.weak-body{font-size:11px;color:var(--ts);line-height:1.55;}
+.weak-horizon{font-size:10px;color:var(--tt);margin-top:4px;}
+
+/* ── SECTION 7: SOURCE PERFORMANCE ── */
+.src-perf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.src-perf-card{border:1px solid var(--br);border-radius:9px;padding:10px 12px;background:#fff;}
+.src-perf-name{font-size:11px;font-weight:700;color:var(--tp);margin-bottom:2px;}
+.src-perf-count{font-size:18px;font-weight:700;color:var(--tp);}
+.src-perf-delta{font-size:10px;margin-top:2px;}
+.src-delta-up{color:var(--su);}
+.src-delta-dn{color:var(--da);}
+.src-delta-neu{color:var(--tt);}
+.src-perf-bar{height:3px;border-radius:9999px;background:var(--bp);overflow:hidden;margin-top:6px;}
+.src-perf-fill{height:100%;border-radius:9999px;background:var(--a);}
+.src-perf-tier{font-size:9px;color:var(--tt);text-transform:uppercase;letter-spacing:.4px;margin-top:3px;}
+
+/* ── SECTION 8: SIGNAL VOLUME CHART ── */
+.chart-wrap{padding:12px 16px 14px;}
+.bar-area{display:flex;align-items:flex-end;gap:5px;height:72px;}
+.bar{flex:1;border-radius:3px 3px 0 0;background:var(--am);}
+.bar.hi{background:var(--a);}
+.bar-xlbls{display:flex;justify-content:space-between;margin-top:4px;}
+.bxl{font-size:9px;color:var(--tt);}
+/* 90-day annotation */
+.chart-annotation{margin:8px 16px 0;padding:8px 12px;border-radius:8px;background:#FAF5FF;border:1px solid #C4B5FD;font-size:11px;color:#6D28D9;display:flex;align-items:center;gap:7px;}
+.chart-annotation svg{width:12px;height:12px;stroke:#7C3AED;fill:none;stroke-width:1.5;stroke-linecap:round;flex-shrink:0;}
+
+/* ── SECTION 9: CONTENT HOOKS ── */
+.hook-list{display:flex;flex-direction:column;gap:8px;}
+.hook-item{display:flex;gap:10px;padding:11px 13px;border-radius:10px;border:1px solid var(--br);background:#fff;}
+.hook-num{width:20px;height:20px;border-radius:5px;background:var(--al);color:var(--a);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.hook-angle{font-size:12px;font-weight:700;color:var(--tp);margin-bottom:3px;}
+.hook-desc{font-size:11px;color:var(--ts);line-height:1.55;}
+.hook-fmts{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap;}
+.hf{font-size:10px;font-weight:500;padding:2px 7px;border-radius:9999px;}
+.hf-li{background:var(--al);color:var(--a);}
+.hf-nl{background:var(--sub);color:var(--su);}
+.hf-th{background:var(--wab);color:var(--wa);}
+
+/* ── GENERATE ROW ── */
+.gen-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:12px 16px;border-top:1px solid var(--br);}
+.gen-btn{border-radius:9px;border:1px solid var(--br);background:#fff;padding:10px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all .15s;}
+.gen-btn:hover{border-color:var(--a);background:var(--al);}
+.gen-btn:hover .gic{background:var(--a);}
+.gen-btn:hover .gic svg{stroke:#fff;}
+.gic{width:28px;height:28px;border-radius:7px;background:var(--al);display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.gic svg{width:12px;height:12px;stroke:var(--a);fill:none;stroke-width:1.5;stroke-linecap:round;transition:all .15s;}
+.g-lbl{font-size:11px;font-weight:600;color:var(--tp);}
+.g-sub{font-size:9px;color:var(--tt);}
+
+/* TABLE OF CONTENTS */
+.toc{background:#fff;border:1px solid var(--br);border-radius:12px;padding:14px 16px;margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.toc-lbl{font-size:10px;font-weight:700;color:var(--tt);text-transform:uppercase;letter-spacing:.5px;flex-shrink:0;}
+.toc-item{font-size:11px;font-weight:500;color:var(--a);cursor:pointer;padding:3px 9px;border-radius:9999px;background:var(--al);}
+.toc-item:hover{background:var(--am);color:#fff;}
+</style>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="slogo">
+      <div class="sli"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+      <span class="slt">PulseLoop</span>
+    </div>
+    <div class="snav">
+      <div class="snl">Workspace</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>Niches</div>
+      <div class="sni act"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Trend Reports</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="5" rx="1"/><rect x="13" y="3" width="8" height="9" rx="1"/><rect x="3" y="10" width="8" height="9" rx="1"/><rect x="13" y="14" width="8" height="5" rx="1"/></svg>Dashboards</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>Signal Briefs</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Newsletters</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn Posts</div>
+    </div>
+    <div class="snav" style="padding-top:4px;">
+      <div class="snl">Settings</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Brand Voice</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>Sources</div>
+    </div>
+    <div class="sbot">
+      <div class="sav">VB</div>
+      <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:500;color:var(--tp);">Vaibhav</div><span class="spb">PRO</span></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="tb">
+      <div class="tb-title">Trend Report</div>
+      <div style="flex:1;"></div>
+      <button class="btns" style="font-size:11px;height:28px;">← All reports</button>
+      <button class="btns" style="font-size:11px;height:28px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:11px;height:11px;fill:none;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Share</button>
+      <button class="btnp" style="height:28px;font-size:11px;"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" style="width:11px;height:11px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export PDF</button>
+    </div>
+
+    <div class="scroll">
+
+      <!-- BREADCRUMB -->
+      <div class="bc">
+        <span class="lnk">Trend Reports</span>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>Week 12 · AI Tooling for B2B SaaS</span>
+      </div>
+
+      <!-- INTERNAL RESEARCH LABEL -->
+      <div class="internal-banner">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <div class="internal-txt"><span>Internal research document</span> — This is your analytical workspace. Dense, cited, comprehensive. Generate a Signal Brief when you're ready to share externally.</div>
+        <button style="height:24px;padding:0 10px;border-radius:7px;background:var(--a);color:#fff;font-size:10px;font-weight:600;border:none;cursor:pointer;white-space:nowrap;flex-shrink:0;">Generate Signal Brief →</button>
+      </div>
+
+      <!-- REPORT HEADER -->
+      <div class="rh">
+        <div class="rh-row">
+          <div class="rh-ic">🤖</div>
+          <div style="flex:1;min-width:0;">
+            <div class="rh-niche">AI Tooling for B2B SaaS</div>
+            <div class="rh-title">Week 12 — Mistral €600M Series C, CNIL binding LLM guidance & developer-led adoption surge in French B2B SaaS</div>
+            <div class="rh-pills">
+              <span class="rp rp-a">24 Mar 2026 · Week 12</span>
+              <span class="rp rp-s">847 signals captured</span>
+              <span class="rp rp-a">18 EU sources</span>
+              <span class="rp rp-a">90-day RAG context</span>
+              <span class="rp rp-s">High signal week</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:5px;flex-shrink:0;">
+            <button class="btns" style="height:26px;font-size:11px;">Annotate</button>
+          </div>
+        </div>
+        <div class="rh-div"></div>
+        <!-- SOURCE BARS — all 18, both columns -->
+        <div style="margin-bottom:4px;font-size:10px;font-weight:700;color:var(--tt);text-transform:uppercase;letter-spacing:.4px;">Signal volume by source this week</div>
+        <div class="src-grid">
+          <div class="src-row"><span class="src-name">LinkedIn</span><div class="src-track"><div class="src-fill hi" style="width:91%;"></div></div><span class="src-count">214</span></div>
+          <div class="src-row"><span class="src-name">FrenchWeb</span><div class="src-track"><div class="src-fill hi" style="width:74%;"></div></div><span class="src-count">173</span></div>
+          <div class="src-row"><span class="src-name">Hacker News</span><div class="src-track"><div class="src-fill" style="width:59%;"></div></div><span class="src-count">139</span></div>
+          <div class="src-row"><span class="src-name">Reddit</span><div class="src-track"><div class="src-fill" style="width:45%;"></div></div><span class="src-count">106</span></div>
+          <div class="src-row"><span class="src-name">GitHub</span><div class="src-track"><div class="src-fill" style="width:38%;"></div></div><span class="src-count">88</span></div>
+          <div class="src-row"><span class="src-name">Maddyness</span><div class="src-track"><div class="src-fill" style="width:29%;"></div></div><span class="src-count">67</span></div>
+          <div class="src-row"><span class="src-name">CNIL</span><div class="src-track"><div class="src-fill" style="width:22%;"></div></div><span class="src-count">52</span></div>
+          <div class="src-row"><span class="src-name">Malt.fr</span><div class="src-track"><div class="src-fill" style="width:18%;"></div></div><span class="src-count">41</span></div>
+          <div class="src-row"><span class="src-name">Substack</span><div class="src-track"><div class="src-fill" style="width:13%;"></div></div><span class="src-count">31</span></div>
+          <div class="src-row"><span class="src-name">EU Parliament</span><div class="src-track"><div class="src-fill" style="width:11%;"></div></div><span class="src-count">26</span></div>
+          <div class="src-row"><span class="src-name">ProductHunt</span><div class="src-track"><div class="src-fill" style="width:9%;"></div></div><span class="src-count">21</span></div>
+          <div class="src-row"><span class="src-name">Dev.to</span><div class="src-track"><div class="src-fill" style="width:8%;"></div></div><span class="src-count">18</span></div>
+        </div>
+      </div>
+
+      <!-- TABLE OF CONTENTS -->
+      <div class="toc">
+        <span class="toc-lbl">Jump to</span>
+        <span class="toc-item">Executive summary</span>
+        <span class="toc-item">Signal inventory (22)</span>
+        <span class="toc-item">90-day patterns</span>
+        <span class="toc-item">Trend breakdown</span>
+        <span class="toc-item">EU signals</span>
+        <span class="toc-item">Weak signals</span>
+        <span class="toc-item">Source performance</span>
+        <span class="toc-item">Signal volume</span>
+        <span class="toc-item">Content hooks</span>
+      </div>
+
+      <!-- ①  EXECUTIVE SUMMARY -->
+      <div class="crd">
+        <div class="crd-hd"><div><div class="crd-ttl">① Executive summary</div><div class="crd-sub">AI-synthesised from 847 signals · 18 sources · 90-day RAG context · brand voice off (internal mode)</div></div></div>
+        <div class="crd-bd">
+          <div class="exec">
+            This week's intelligence is dominated by a single structural event: Mistral AI's €600M Series C <span class="cite">FrenchWeb</span> <span class="cite">LinkedIn</span>, which functions as a Schelling point for EU sovereign AI. The announcement has clarified what was previously diffuse sentiment into a concrete organisational choice — EU-first vs US-first LLM vendor strategy — and that decision is now active inside French enterprise procurement teams. The effect is measurable: LinkedIn signal density around "LLM vendor" and "EU data residency" doubled week-on-week <span class="cite">LinkedIn</span>.
+            <br><br>
+            Concurrent with the funding news, CNIL published binding guidance on LLM data retention <span class="cite eu">CNIL</span>, creating a 90-day compliance clock for any SaaS product processing EU user data through a language model. This is the first enforcement-grade regulatory action specifically targeting LLM workflows — not AI in general, but LLMs specifically. This matters because it converts "GDPR risk" from a vague concern to a specific, dated obligation.
+            <br><br>
+            At the developer layer, GitHub trending data <span class="cite gh">GitHub</span> shows French-authored LLM integration repositories up 3× week-on-week, with <code style="background:var(--bm);padding:1px 5px;border-radius:4px;font-size:11px;">claude-api</code> and <code style="background:var(--bm);padding:1px 5px;border-radius:4px;font-size:11px;">mistral-sdk</code> as the top two. This developer adoption pattern — which appeared 6–8 weeks ahead of formal procurement decisions in the 2021 Notion and 2022 Figma cycles — suggests the enterprise deal wave will arrive in Q3 2026. <strong>This week's report is high-confidence and high-longevity: the signals are structural, not event-driven.</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- ② SIGNAL INVENTORY -->
+      <div class="crd">
+        <div class="crd-hd">
+          <div><div class="crd-ttl">② Full signal inventory</div><div class="crd-sub">All 22 high & medium signals captured this week · ranked by confidence score</div></div>
+          <span class="bd bd-hi">22 signals</span>
+        </div>
+        <div class="crd-bd" style="padding:0;">
+          <table class="signal-table">
+            <thead>
+              <tr>
+                <th style="width:36px;">#</th>
+                <th>Signal</th>
+                <th style="width:90px;">Source</th>
+                <th style="width:56px;">Strength</th>
+                <th style="width:56px;">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td style="color:var(--ts);font-size:11px;padding:9px 10px;">1</td><td><div class="sig-title-cell">Mistral AI raises €600M Series C at €6B valuation — largest EU AI round of 2026</div><div class="sig-src-cell">Funding announcement, confirmed by multiple sources</div></td><td class="sig-src-cell">FrenchWeb · LinkedIn</td><td><span class="bd bd-hi">High</span></td><td class="sig-src-cell">24 Mar</td></tr>
+              <tr><td style="color:var(--ts);font-size:11px;padding:9px 10px;">2</td><td><div class="sig-title-cell">CNIL issues binding guidance on LLM prompt data retention — 30-day deletion requirement</div><div class="sig-src-cell">Official regulatory publication, enforcement-grade</div></td><td class="sig-src-cell">CNIL · EU Parliament</td><td><span class="bd bd-hi">High</span></td><td class="sig-src-cell">22 Mar</td></tr>
+              <tr><td style="color:var(--ts);font-size:11px;padding:9px 10px;">3</td><td><div class="sig-title-cell">French LLM integration repos on GitHub up 3× week-on-week — claude-api and mistral-sdk top trending</div><div class="sig-src-cell">Developer adoption ahead of procurement, structural signal</div></td><td class="sig-src-cell">GitHub</td><td><span class="bd bd-hi">High</span></td><td class="sig-src-cell">21 Mar</td></tr>
+              <tr><td style="color:var(--ts);font-size:11px;padding:9px 10px;">4</td><td><div class="sig-title-cell">Pennylane and Payfit both publicly confirm Claude API integrations in product roadmaps</div><div class="sig-src-cell">Incumbent SaaS validation of EU LLM adoption</div></td><td class="sig-src-cell">LinkedIn</td><td><span class="bd bd-hi">High</span></td><td class="sig-src-cell">20 Mar</td></tr>
+              <tr><td style="color:var(--ts);font-size:11px;padding:9px 10px;">5</td><td><div class="sig-title-cell">AI consultant daily rates on Malt.fr reach €1,200 — up from €800 in Q4 2025</div><div class="sig-src-cell">Market rate inflation, productisation window signal</div></td><td class="sig-src-cell">Malt.fr</td><td><span class="bd bd-med">Med</span></td><td class="sig-src-cell">20 Mar</td></tr>
+              <tr><td style="color:var(--ts);font-size:11px;padding:9px 10px;">6</td><td><div class="sig-title-cell">Hacker News thread "Claude for B2B SaaS" hits #3 EU timezone trending with 340 comments</div><div class="sig-src-cell">Developer community signal, mostly French and German</div></td><td class="sig-src-cell">Hacker News</td><td><span class="bd bd-med">Med</span></td><td class="sig-src-cell">19 Mar</td></tr>
+              <tr>
+                <td colspan="5" style="padding:8px 10px;background:var(--bm);">
+                  <span style="font-size:11px;color:var(--ts);cursor:pointer;font-weight:500;">▼ Show 16 more signals (6 medium · 10 low)</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ③ 90-DAY PATTERN DETECTION -->
+      <div class="crd">
+        <div class="crd-hd">
+          <div><div class="crd-ttl">③ 90-day pattern detection</div><div class="crd-sub">RAG memory analysis — how this week's signals compare to the past 90 days of niche intelligence</div></div>
+          <span class="bd bd-90">RAG memory</span>
+        </div>
+        <div class="crd-bd">
+          <div class="pattern-list">
+
+            <div class="pattern-item building">
+              <div class="pattern-tag"><span class="pattern-badge pb-building">Building</span></div>
+              <div class="pattern-body">
+                <div class="pattern-title">EU sovereign AI narrative — 8 weeks of consistent escalation</div>
+                <div class="pattern-desc">This trend has appeared in every weekly report since W4. Signal volume has grown 340% over 8 weeks, accelerating sharply this week with the Mistral funding. The 90-day context window shows this started as 3 low-confidence LinkedIn posts and has compounded into a mainstream enterprise procurement criterion. <span class="cite">LinkedIn</span> <span class="cite">FrenchWeb</span></div>
+                <div class="pattern-weeks">
+                  <span>8-week trajectory:</span>
+                  <div class="spark">
+                    <div class="sp-bar" style="height:4px;"></div><div class="sp-bar" style="height:5px;"></div><div class="sp-bar" style="height:6px;"></div><div class="sp-bar" style="height:7px;"></div><div class="sp-bar" style="height:9px;"></div><div class="sp-bar" style="height:11px;"></div><div class="sp-bar" style="height:14px;"></div><div class="sp-bar hi" style="height:20px;"></div>
+                  </div>
+                  <span style="color:#6D28D9;font-weight:600;">+340% since W4</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pattern-item spike">
+              <div class="pattern-tag"><span class="pattern-badge pb-spike">Spike</span></div>
+              <div class="pattern-body">
+                <div class="pattern-title">CNIL/regulatory signal volume — sudden 4× spike, no prior build-up</div>
+                <div class="pattern-desc">Unlike the Mistral narrative which built gradually, the CNIL regulatory signal appeared this week with no prior 90-day precedent in this niche. It's a genuine new event, not a trend maturation. High confidence but low predictability — follow weekly to determine if this becomes a sustained thread. <span class="cite eu">CNIL</span></div>
+                <div class="pattern-weeks">
+                  <span>8-week trajectory:</span>
+                  <div class="spark">
+                    <div class="sp-bar" style="height:2px;"></div><div class="sp-bar" style="height:2px;"></div><div class="sp-bar" style="height:2px;"></div><div class="sp-bar" style="height:3px;"></div><div class="sp-bar" style="height:2px;"></div><div class="sp-bar" style="height:2px;"></div><div class="sp-bar" style="height:3px;"></div><div class="sp-bar hi" style="height:20px;"></div>
+                  </div>
+                  <span style="color:var(--wa);font-weight:600;">New this week — watch W13</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pattern-item new">
+              <div class="pattern-tag"><span class="pattern-badge pb-new">Emerging</span></div>
+              <div class="pattern-body">
+                <div class="pattern-title">Developer-led LLM adoption in French SaaS — 3 weeks of growing GitHub signal</div>
+                <div class="pattern-desc">First appeared in W10 as a small cluster of GitHub repos. W11 added volume. This week's 3× spike confirms an emergent pattern rather than random noise. The 90-day context shows zero prior developer signal for this niche — this is a new cohort of actors entering the space. <span class="cite gh">GitHub</span> <span class="cite">Hacker News</span></div>
+                <div class="pattern-weeks">
+                  <span>8-week trajectory:</span>
+                  <div class="spark">
+                    <div class="sp-bar" style="height:2px;"></div><div class="sp-bar" style="height:2px;"></div><div class="sp-bar" style="height:2px;"></div><div class="sp-bar" style="height:2px;"></div><div class="sp-bar" style="height:2px;"></div><div class="sp-bar" style="height:5px;"></div><div class="sp-bar" style="height:9px;"></div><div class="sp-bar hi" style="height:20px;"></div>
+                  </div>
+                  <span style="color:var(--su);font-weight:600;">3 weeks · emerging confirmed</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pattern-item fading">
+              <div class="pattern-tag"><span class="pattern-badge pb-fading">Fading</span></div>
+              <div class="pattern-body">
+                <div class="pattern-title">OpenAI-specific signals — declining week 5 of 8</div>
+                <div class="pattern-desc">OpenAI-related signals peaked at W7 (42 mentions) and have declined each week since. Now at 11 this week. The 90-day context confirms this is a relative shift in attention rather than a real-world event — it correlates directly with the rise of EU-native alternatives. Worth tracking but declining priority for this niche. <span class="cite">Hacker News</span> <span class="cite">Reddit</span></div>
+                <div class="pattern-weeks">
+                  <span>8-week trajectory:</span>
+                  <div class="spark">
+                    <div class="sp-bar" style="height:8px;"></div><div class="sp-bar" style="height:12px;"></div><div class="sp-bar" style="height:14px;"></div><div class="sp-bar" style="height:20px;"></div><div class="sp-bar" style="height:16px;"></div><div class="sp-bar" style="height:12px;"></div><div class="sp-bar" style="height:7px;"></div><div class="sp-bar" style="height:4px;"></div>
+                  </div>
+                  <span style="color:var(--tt);font-weight:600;">-74% from peak at W7</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ④ TREND BREAKDOWN -->
+      <div class="crd">
+        <div class="crd-hd"><div><div class="crd-ttl">④ Trend breakdown</div><div class="crd-sub">5 trends · analytical depth · confidence scoring · cited throughout</div></div></div>
+        <div class="crd-bd"><div class="trend-list">
+
+          <div class="trend-item">
+            <div class="trend-hd"><div class="trend-num">1</div><div class="trend-title">EU sovereign AI is transitioning from narrative to procurement criterion</div><span class="bd bd-hi">High</span></div>
+            <div class="trend-body">The Mistral Series C is functioning as a legitimacy signal for procurement teams who were sympathetic to EU-native LLMs but lacked a vendor with sufficient scale and backing to put on an RFP. Three separate LinkedIn job postings this week from French SaaS companies explicitly listed "EU data residency" as a technical requirement — not a preference. The 90-day context shows this language entered job descriptions for the first time in W9 and has appeared in 11 postings since. <span class="cite">LinkedIn</span> <span class="cite">FrenchWeb</span></div>
+            <div class="conf-row"><span class="conf-lbl">Confidence</span><div class="conf-track"><div class="conf-fill" style="width:88%;"></div></div><span class="conf-pct">88%</span></div>
+            <div class="conf-row"><span class="conf-lbl">90d trajectory</span><div class="conf-track"><div class="conf-fill" style="width:100%;background:var(--su);"></div></div><span class="conf-pct" style="color:var(--su);">Building</span></div>
+          </div>
+
+          <div class="trend-item">
+            <div class="trend-hd"><div class="trend-num">2</div><div class="trend-title">CNIL enforcement converts GDPR risk from vague to specific — 90-day compliance window</div><span class="bd bd-hi">High</span></div>
+            <div class="trend-body">Prior to this week, "GDPR compliance" in the context of LLMs was a fuzzy concern — most procurement teams knew it mattered but couldn't point to a specific obligation. The CNIL guidance changes this: it creates a named, dated, enforcement-backed requirement. LLM prompt logs must be deleted within 30 days unless explicit consent is documented. This affects every SaaS product using Claude, GPT, or Mistral APIs in EU. The 90-day RAG context shows zero prior CNIL guidance on LLMs — this is new legal territory. <span class="cite eu">CNIL</span> <span class="cite">EU Parliament</span></div>
+            <div class="conf-row"><span class="conf-lbl">Confidence</span><div class="conf-track"><div class="conf-fill" style="width:95%;"></div></div><span class="conf-pct">95%</span></div>
+            <div class="conf-row"><span class="conf-lbl">90d trajectory</span><div class="conf-track"><div class="conf-fill" style="width:50%;background:var(--wa);"></div></div><span class="conf-pct" style="color:var(--wa);">New spike</span></div>
+          </div>
+
+          <div class="trend-item">
+            <div class="trend-hd"><div class="trend-num">3</div><div class="trend-title">Developer adoption is running 6–8 weeks ahead of enterprise procurement cycles</div><span class="bd bd-hi">High</span></div>
+            <div class="trend-body">The GitHub pattern is structurally familiar: in the Notion adoption cycle (2021) and Figma cycle (2022), developer usage at this density preceded enterprise procurement decisions by 6–8 weeks. The 90-day RAG context shows French developer LLM activity started at near-zero in W5, inflected in W10, and spiked 3× this week. If the pattern holds, the first wave of enterprise LLM procurement decisions in French SaaS will close in Q3 2026 (June–August). <span class="cite gh">GitHub</span> <span class="cite">Hacker News</span></div>
+            <div class="conf-row"><span class="conf-lbl">Confidence</span><div class="conf-track"><div class="conf-fill" style="width:76%;"></div></div><span class="conf-pct">76%</span></div>
+            <div class="conf-row"><span class="conf-lbl">90d trajectory</span><div class="conf-track"><div class="conf-fill" style="width:70%;background:var(--su);"></div></div><span class="conf-pct" style="color:var(--su);">Emerging</span></div>
+          </div>
+
+          <div class="trend-item">
+            <div class="trend-hd"><div class="trend-num">4</div><div class="trend-title">AI consultant rate inflation signals a productisation window for mid-market</div><span class="bd bd-med">Medium</span></div>
+            <div class="trend-body">Malt.fr daily rate data shows LLM specialist rates have increased from €800 (Q4 2025) to €1,200 (this week) — a 50% increase in 12 weeks. The 90-day context shows a consistent upward trend with no signs of plateauing. At these rates, mid-market SaaS companies (€20–50M ARR) face a build-vs-buy decision where bespoke integration costs €60–100K and 6–12 weeks. This creates a clear addressable window for productised AI tooling that delivers 80% of the outcome at 15% of the cost. <span class="cite">Malt.fr</span> <span class="cite">Maddyness</span></div>
+            <div class="conf-row"><span class="conf-lbl">Confidence</span><div class="conf-track"><div class="conf-fill" style="width:72%;"></div></div><span class="conf-pct">72%</span></div>
+            <div class="conf-row"><span class="conf-lbl">90d trajectory</span><div class="conf-track"><div class="conf-fill" style="width:100%;background:var(--su);"></div></div><span class="conf-pct" style="color:var(--su);">Consistent build</span></div>
+          </div>
+
+          <div class="trend-item">
+            <div class="trend-hd"><div class="trend-num">5</div><div class="trend-title">French SaaS incumbents using AI as a retention mechanism, not an acquisition tool</div><span class="bd bd-med">Medium</span></div>
+            <div class="trend-body">Both Pennylane and Payfit framed their AI announcements this week in terms of reducing churn and deepening workflow lock-in — not winning new customers. The 90-day context shows this framing emerged first in W8 (Pennylane earnings call language) and has now become the standard positioning for French SaaS AI. The implication: the market has shifted from "AI as differentiator" to "AI as table stakes." Vendors without a credible AI roadmap face renewal risk in H2 2026 — not new business risk. <span class="cite">LinkedIn</span> <span class="cite">Hacker News</span></div>
+            <div class="conf-row"><span class="conf-lbl">Confidence</span><div class="conf-track"><div class="conf-fill" style="width:65%;"></div></div><span class="conf-pct">65%</span></div>
+            <div class="conf-row"><span class="conf-lbl">90d trajectory</span><div class="conf-track"><div class="conf-fill" style="width:60%;background:var(--su);"></div></div><span class="conf-pct" style="color:var(--su);">Building W8+</span></div>
+          </div>
+
+        </div></div>
+      </div>
+
+      <!-- ⑤ EU-SPECIFIC SIGNALS -->
+      <div class="crd">
+        <div class="crd-hd"><div><div class="crd-ttl">⑤ EU-specific signals</div><div class="crd-sub">Tier 2 & 3 sources only — intelligence no generic AI tool monitors</div></div><span class="bd bd-eu">EU Edge</span></div>
+        <div class="crd-bd"><div class="eu-grid">
+          <div class="eu-card"><div class="eu-src-lbl">CNIL <span class="eu-tier">Tier 3</span></div><div class="eu-headline">LLM prompt logs — 30-day deletion mandate</div><div class="eu-body">Binding guidance published 22 Mar. Covers prompt inputs, model outputs, and session metadata. Applies to any SaaS processing EU user data. 90-day enforcement grace period begins immediately.</div></div>
+          <div class="eu-card"><div class="eu-src-lbl">FrenchWeb <span class="eu-tier">Tier 2</span></div><div class="eu-headline">Mistral enterprise partnership programme — Q2 launch</div><div class="eu-body">Arthur Mensch post-funding interview confirms enterprise programme targeting French SaaS incumbents as anchor partners. Integration support, shared sales motion, and data residency guarantees included.</div></div>
+          <div class="eu-card"><div class="eu-src-lbl">Malt.fr <span class="eu-tier">Tier 2</span></div><div class="eu-headline">AI roles now 12% of all French freelance postings</div><div class="eu-body">Up from 4% in Q3 2025. Top 3 titles: RAG integration architect, LLM fine-tuning specialist, AI product manager. Average daily rate across all AI roles: €920. Specialist (RAG/fine-tuning) rates: €1,100–1,400.</div></div>
+          <div class="eu-card"><div class="eu-src-lbl">EU Parliament <span class="eu-tier">Tier 3</span></div><div class="eu-headline">AI Act high-risk obligations confirmed for Aug 2026</div><div class="eu-body">Committee vote confirmed 20 Mar. SaaS products using AI in HR decisions, credit scoring, or access control are high-risk category. Conformity assessments required 90 days before August enforcement date.</div></div>
+          <div class="eu-card"><div class="eu-src-lbl">Maddyness <span class="eu-tier">Tier 2</span></div><div class="eu-headline">Welcome to the Jungle adds AI interview coaching — first EU HR SaaS to go live</div><div class="eu-body">Feature uses Mistral API exclusively. First major French HR SaaS platform to publicly commit to EU-only LLM stack. Positioned explicitly as a GDPR-safe alternative to US-based competitors.</div></div>
+          <div class="eu-card"><div class="eu-src-lbl">Dealroom <span class="eu-tier">Tier 2</span></div><div class="eu-headline">Q1 2026 EU AI deal flow: €2.1B across 34 rounds</div><div class="eu-body">France accounts for 31% (€650M). Germany 28%. Netherlands 14%. Seed stage growing fastest at +89% YoY. AI-native (not AI-added) companies taking 62% of deal volume vs 41% in Q1 2025.</div></div>
+        </div></div>
+      </div>
+
+      <!-- ⑥ WEAK SIGNALS -->
+      <div class="crd">
+        <div class="crd-hd"><div><div class="crd-ttl">⑥ Weak signals — early-stage, low confidence</div><div class="crd-sub">Not trends yet · worth watching · review in 2–3 weeks</div></div><span class="bd bd-weak">3 signals</span></div>
+        <div class="crd-bd"><div class="weak-list">
+          <div class="weak-item"><div class="weak-ic">🌱</div><div><div class="weak-title">Polymarket: 73% probability of a second major EU AI sovereign fund announcement before Q3</div><div class="weak-body">Prediction market activity spiked 4× after the Mistral news. If a second fund closes (Germany or Benelux most likely based on political signals), it will trigger another wave of enterprise adoption urgency and extend this week's narrative for another 4–6 weeks.</div><div class="weak-horizon">Source: Polymarket · Confidence: Low · Horizon: 4–8 weeks · Action: Monitor weekly</div></div></div>
+          <div class="weak-item"><div class="weak-ic">🌱</div><div><div class="weak-title">Bluesky emerging as 12–18 hour early signal for French tech community before LinkedIn pickup</div><div class="weak-body">Three major announcements this week (Mistral, CNIL, WttJ) all appeared on French tech Bluesky accounts 12–18 hours before LinkedIn signal peaked. If this pattern holds, Bluesky becomes a predictive source for next-week LinkedIn volume. Currently no other EU AI intelligence tool monitors it.</div><div class="weak-horizon">Source: Bluesky (Tier 3) · Confidence: Low · Horizon: 2–4 weeks · Action: Validate with 2 more data points</div></div></div>
+          <div class="weak-item"><div class="weak-ic">🌱</div><div><div class="weak-title">Dev.to thread clustering around "leaving OpenAI" from French startup founders</div><div class="weak-body">7 threads this week, 3 of which explicitly named migration timelines. Not yet a trend — but if OpenAI's rate limits persist through April and Mistral's enterprise programme launches in Q2, this could become a measurable migration signal by W16–W18.</div><div class="weak-horizon">Source: Dev.to (Tier 3) · Confidence: Very low · Horizon: 4–6 weeks · Action: Revisit W15</div></div></div>
+        </div></div>
+      </div>
+
+      <!-- ⑦ SOURCE PERFORMANCE -->
+      <div class="crd">
+        <div class="crd-hd"><div><div class="crd-ttl">⑦ Source performance this week</div><div class="crd-sub">Which sources over- or under-performed vs their 4-week average</div></div></div>
+        <div class="crd-bd"><div class="src-perf-grid">
+          <div class="src-perf-card"><div class="src-perf-name">LinkedIn</div><div class="src-perf-count">214</div><div class="src-perf-delta src-delta-up">↑ +89% vs 4w avg (113)</div><div class="src-perf-bar"><div class="src-perf-fill" style="width:91%;"></div></div><div class="src-perf-tier">Tier 1 · Core</div></div>
+          <div class="src-perf-card"><div class="src-perf-name">FrenchWeb</div><div class="src-perf-count">173</div><div class="src-perf-delta src-delta-up">↑ +204% vs 4w avg (57)</div><div class="src-perf-bar"><div class="src-perf-fill" style="width:74%;"></div></div><div class="src-perf-tier">Tier 2 · EU Edge</div></div>
+          <div class="src-perf-card"><div class="src-perf-name">GitHub</div><div class="src-perf-count">88</div><div class="src-perf-delta src-delta-up">↑ +320% vs 4w avg (21)</div><div class="src-perf-bar"><div class="src-perf-fill" style="width:38%;"></div></div><div class="src-perf-tier">Tier 3 · Deep Intel</div></div>
+          <div class="src-perf-card"><div class="src-perf-name">CNIL</div><div class="src-perf-count">52</div><div class="src-perf-delta src-delta-up">↑ +1,300% vs 4w avg (4)</div><div class="src-perf-bar"><div class="src-perf-fill" style="width:22%;background:var(--wa);"></div></div><div class="src-perf-tier">Tier 3 · Deep Intel · Spike</div></div>
+          <div class="src-perf-card"><div class="src-perf-name">Reddit</div><div class="src-perf-count">106</div><div class="src-perf-delta src-delta-neu">→ +4% vs 4w avg (102)</div><div class="src-perf-bar"><div class="src-perf-fill" style="width:45%;background:var(--tt);"></div></div><div class="src-perf-tier">Tier 1 · Core · Stable</div></div>
+          <div class="src-perf-card"><div class="src-perf-name">X / Twitter</div><div class="src-perf-count">19</div><div class="src-perf-delta src-delta-dn">↓ -38% vs 4w avg (31)</div><div class="src-perf-bar"><div class="src-perf-fill" style="width:8%;background:var(--da);"></div></div><div class="src-perf-tier">Tier 1 · Core · Declining</div></div>
+        </div></div>
+      </div>
+
+      <!-- ⑧ SIGNAL VOLUME -->
+      <div class="crd">
+        <div class="crd-hd"><div><div class="crd-ttl">⑧ Signal volume — 12-week history</div><div class="crd-sub">AI Tooling for B2B SaaS niche · peaks annotated with causal events</div></div></div>
+        <div class="chart-wrap">
+          <div class="bar-area" id="vol-chart"></div>
+          <div class="bar-xlbls"><span class="bxl">W1</span><span class="bxl">W2</span><span class="bxl">W3</span><span class="bxl">W4</span><span class="bxl">W5</span><span class="bxl">W6</span><span class="bxl">W7</span><span class="bxl">W8</span><span class="bxl">W9</span><span class="bxl">W10</span><span class="bxl">W11</span><span class="bxl" style="color:var(--a);font-weight:700;">W12↑</span></div>
+        </div>
+        <div class="chart-annotation">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div><strong style="color:#6D28D9;">90-day RAG insight:</strong> This week's volume (847) is 2.7× the 12-week average (314). The last comparable spike was W7 (691 signals) driven by the Claude 3.7 release — which preceded a 3-week sustained elevation. If the Mistral pattern follows the same trajectory, expect elevated signal volume through W15.</div>
+        </div>
+      </div>
+
+      <!-- ⑨ CONTENT HOOKS -->
+      <div class="crd">
+        <div class="crd-hd"><div><div class="crd-ttl">⑨ Content hooks</div><div class="crd-sub">3 angles extracted from this report · ready to turn into Signal Brief sections, LinkedIn posts or newsletter lede</div></div></div>
+        <div class="crd-bd"><div class="hook-list">
+          <div class="hook-item"><div class="hook-num">1</div><div><div class="hook-angle">The CNIL ruling your clients' legal teams don't know about yet — and the 90-day window to act</div><div class="hook-desc">The CNIL guidance creates a specific, dated, enforcement-backed obligation. Most French SaaS legal teams haven't processed it yet. A breakdown of the 3 things they need to fix positions you as the expert who reads the regulatory layer so they don't have to.</div><div class="hook-fmts"><span class="hf hf-li">LinkedIn post</span><span class="hf hf-nl">Newsletter lede</span><span class="hf hf-th">Signal Brief opening</span></div></div></div>
+          <div class="hook-item"><div class="hook-num">2</div><div><div class="hook-angle">Why your engineers are already using Mistral before your procurement team has heard of it</div><div class="hook-desc">The GitHub data tells a story most executives haven't seen. Developer-led adoption running 6–8 weeks ahead of formal decisions is a structural pattern (Notion, Figma precedent) — not a compliance risk. This is a contrarian take that lands hard with CTOs and VP Engineering audiences.</div><div class="hook-fmts"><span class="hf hf-li">LinkedIn post</span><span class="hf hf-th">Thread format</span></div></div></div>
+          <div class="hook-item"><div class="hook-num">3</div><div><div class="hook-angle">€1,200/day: the AI consultant rate inflation data and what it means for mid-market SaaS</div><div class="hook-desc">The Malt.fr rate data is a compelling, concrete hook for any SaaS founder audience. Frame the rate inflation as a market signal (productisation window opens) not a cost complaint — and back it with the 12-week 90-day trajectory showing consistent build. Strongest for newsletter format where you can add the chart.</div><div class="hook-fmts"><span class="hf hf-nl">Newsletter</span><span class="hf hf-li">LinkedIn post</span></div></div></div>
+        </div></div>
+        <!-- GENERATE ROW -->
+        <div class="gen-grid">
+          <button class="gen-btn"><div class="gic"><svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg></div><div class="g-lbl">Signal Brief</div><div class="g-sub">Client-facing 1-pager</div></button>
+          <button class="gen-btn"><div class="gic"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div><div class="g-lbl">Newsletter</div><div class="g-sub">Beehiiv-ready draft</div></button>
+          <button class="gen-btn"><div class="gic"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg></div><div class="g-lbl">LinkedIn Posts</div><div class="g-sub">3 variants</div></button>
+          <button class="gen-btn"><div class="gic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="5" rx="1"/><rect x="13" y="3" width="8" height="9" rx="1"/><rect x="3" y="10" width="8" height="9" rx="1"/><rect x="13" y="14" width="8" height="5" rx="1"/></svg></div><div class="g-lbl">Dashboard</div><div class="g-sub">Visual summary</div></button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+var VOLS = [198,224,178,267,312,289,445,378,501,691,312,847];
+var maxV = Math.max.apply(null, VOLS);
+var bc = document.getElementById('vol-chart');
+VOLS.forEach(function(v,i){
+  var d = document.createElement('div');
+  d.className = 'bar' + (i===11?' hi':'');
+  d.style.height = Math.round(v/maxV*68) + 'px';
+  bc.appendChild(d);
+});
+</script>

@@ -1,0 +1,558 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --a:#5B5FC7;--al:#EEEEFF;--am:#A3A6E8;
+  --bp:#F0F0F7;--bm:#F7F7FC;
+  --tp:#1A1A3E;--ts:#6B6B8A;--tt:#A0A0BE;
+  --br:#E4E4F0;--brs:#C5C5E0;
+  --su:#4CAF82;--sub:#E8F7EF;
+  --wa:#F5A623;--wab:#FFF4E0;
+  --da:#E85757;--dab:#FDEAEA;
+  --ag:#1A1A3E;--agb:#F5A623;
+}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bp);}
+
+/* TIER TABS */
+.tier-row{display:flex;gap:3px;padding:3px;background:#fff;border:1px solid var(--br);border-radius:10px;width:fit-content;margin-bottom:12px;}
+.tt{height:30px;padding:0 14px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--tt);}
+.tt.ts{background:var(--bp);color:var(--tp);}
+.tt.tp{background:var(--a);color:#fff;}
+.tt.tag{background:var(--ag);color:var(--agb);}
+
+/* SHELL */
+.shell{display:flex;height:720px;background:var(--bp);border-radius:14px;overflow:hidden;border:1px solid var(--br);}
+
+/* SIDEBAR */
+.sidebar{width:215px;min-width:215px;background:#fff;border-right:1px solid var(--br);display:flex;flex-direction:column;flex-shrink:0;}
+.sidebar.dark{background:var(--ag);border-color:#2D2D5E;}
+.slogo{height:56px;display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0;}
+.sidebar .slogo{border-bottom:1px solid var(--br);}
+.sidebar.dark .slogo{border-bottom:1px solid #2D2D5E;}
+.sli{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.slt{font-size:14px;font-weight:700;}
+.sidebar .slt{color:var(--tp);}
+.sidebar.dark .slt{color:#fff;}
+.snav{padding:12px 8px 6px;}
+.snl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:0 8px;margin-bottom:4px;color:var(--tt);}
+.sidebar.dark .snl{color:rgba(255,255,255,.3);}
+.sni{display:flex;align-items:center;gap:8px;height:38px;padding:0 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--ts);margin-bottom:1px;}
+.sidebar.dark .sni{color:rgba(255,255,255,.45);}
+.sni.act{background:var(--al);color:var(--a);}
+.sidebar.dark .sni.act{background:rgba(245,166,35,.15);color:var(--agb);}
+.sni svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.sbot{margin-top:auto;padding:10px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.sidebar .sbot{border-top:1px solid var(--br);}
+.sidebar.dark .sbot{border-top:1px solid #2D2D5E;}
+.sav{width:28px;height:28px;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.spb{font-size:10px;font-weight:700;padding:1px 7px;border-radius:9999px;}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.tb{height:56px;background:#fff;border-bottom:1px solid var(--br);display:flex;align-items:center;padding:0 20px;gap:8px;flex-shrink:0;}
+.tb-title{font-size:16px;font-weight:600;color:var(--tp);flex:1;}
+.scroll{flex:1;overflow-y:auto;padding:18px 20px;background:var(--bm);}
+
+/* BTNS */
+.btnp{height:32px;padding:0 14px;border-radius:9px;color:#fff;font-size:12px;font-weight:600;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.btnp.ind{background:var(--a);}
+.btnp.drk{background:var(--ag);}
+.btnp.su{background:var(--su);}
+.btns{height:32px;padding:0 12px;border-radius:9px;background:#fff;color:var(--tp);font-size:12px;font-weight:500;border:1px solid var(--br);cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
+.btng{height:28px;padding:0 9px;border-radius:7px;background:transparent;font-size:11px;font-weight:500;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:3px;color:var(--a);}
+.btng:hover{background:var(--al);}
+.btng.ag{color:#9A6600;}
+.btng.ag:hover{background:rgba(245,166,35,.1);}
+.btn-up{height:24px;padding:0 11px;border-radius:9999px;font-size:11px;font-weight:600;border:none;cursor:pointer;}
+.btn-up.a{background:var(--ag);color:var(--agb);}
+
+/* ── STEP INDICATOR ── */
+.step-bar{display:flex;align-items:center;margin-bottom:22px;background:#fff;border:1px solid var(--br);border-radius:12px;padding:12px 16px;}
+.step-item{display:flex;align-items:center;gap:7px;flex:1;position:relative;}
+.step-item:not(:last-child)::after{content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);width:1px;height:28px;background:var(--br);}
+.step-dot{width:24px;height:24px;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:all .2s;}
+.step-dot.done{background:var(--su);color:#fff;}
+.step-dot.active{background:var(--a);color:#fff;}
+.step-dot.active.ag{background:var(--agb);color:var(--ag);}
+.step-dot.todo{background:var(--bp);color:var(--tt);border:1.5px solid var(--br);}
+.step-label{font-size:11px;font-weight:600;line-height:1.3;}
+.step-label.done{color:var(--ts);}
+.step-label.active{color:var(--a);}
+.step-label.active.ag{color:#9A6600;}
+.step-label.todo{color:var(--tt);}
+.step-item-inner{display:flex;flex-direction:column;gap:1px;flex:1;padding:0 10px;}
+
+/* ── STEP PANELS ── */
+.step-panel{display:none;}
+.step-panel.on{display:block;}
+
+/* CARDS */
+.crd{background:#fff;border:1px solid var(--br);border-radius:13px;overflow:hidden;margin-bottom:12px;}
+.crd-hd{padding:13px 18px 11px;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;}
+.crd-ttl{font-size:14px;font-weight:700;color:var(--tp);}
+.crd-sub{font-size:11px;color:var(--tt);margin-top:1px;}
+.crd-bd{padding:16px 18px;}
+
+/* FORM */
+.fl{font-size:11px;font-weight:600;color:var(--ts);margin-bottom:5px;display:block;}
+.fl span{color:var(--a);}
+.fi{width:100%;height:38px;border:1px solid var(--br);border-radius:9px;padding:0 11px;font-size:13px;color:var(--tp);font-family:inherit;outline:none;background:#fff;}
+.fi:focus{border-color:var(--a);border-width:1.5px;}
+.fta{width:100%;border:1px solid var(--br);border-radius:9px;padding:9px 11px;font-size:13px;color:var(--tp);font-family:inherit;outline:none;resize:none;line-height:1.6;background:#fff;}
+.fta:focus{border-color:var(--a);border-width:1.5px;}
+.fh{font-size:10px;color:var(--tt);margin-top:4px;}
+
+/* SAMPLE BOXES */
+.sample-box{border:1px solid var(--br);border-radius:10px;margin-bottom:10px;overflow:hidden;}
+.sample-box-hd{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--bm);border-bottom:1px solid var(--br);}
+.sample-num{width:20px;height:20px;border-radius:5px;background:var(--al);color:var(--a);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sample-num.ag{background:rgba(245,166,35,.15);color:#9A6600;}
+.sample-type{font-size:11px;font-weight:600;color:var(--ts);}
+.sample-textarea{width:100%;border:none;outline:none;padding:10px 12px;font-size:12px;color:var(--tp);font-family:inherit;resize:none;line-height:1.65;background:#fff;}
+
+/* STEP 1 hint row */
+.hint-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.hint{background:var(--bm);border:1px solid var(--br);border-radius:8px;padding:6px 10px;font-size:11px;color:var(--ts);display:flex;align-items:center;gap:5px;}
+.hint svg{width:12px;height:12px;stroke:var(--a);fill:none;stroke-width:1.5;stroke-linecap:round;flex-shrink:0;}
+
+/* ── STEP 2: EXTRACTION ── */
+.extraction-loading{display:flex;flex-direction:column;align-items:center;gap:16px;padding:32px 0;text-align:center;}
+.pulse-ring{width:56px;height:56px;border-radius:9999px;border:3px solid var(--al);border-top-color:var(--a);animation:spin 1s linear infinite;flex-shrink:0;}
+.pulse-ring.ag{border-color:rgba(245,166,35,.2);border-top-color:var(--agb);}
+@keyframes spin{to{transform:rotate(360deg);}}
+.extraction-done{display:block;}
+.extraction-tag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.ext-tag{background:#fff;border:1px solid var(--br);border-radius:10px;padding:11px 12px;}
+.ext-tag-lbl{font-size:10px;font-weight:700;color:var(--tt);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+.ext-tag-val{font-size:13px;font-weight:600;color:var(--tp);}
+.ext-tag-bar{height:4px;border-radius:9999px;background:var(--bp);margin-top:7px;overflow:hidden;}
+.ext-tag-fill{height:100%;border-radius:9999px;background:var(--a);}
+.ext-tag-fill.ag{background:var(--agb);}
+.ext-phrases{display:flex;flex-wrap:wrap;gap:6px;}
+.ext-phrase{background:var(--al);color:var(--a);border-radius:9999px;font-size:11px;font-weight:500;padding:3px 10px;}
+.ext-phrase.ag{background:rgba(245,166,35,.15);color:#9A6600;}
+.ext-avoid{background:var(--dab);color:var(--da);}
+
+/* ── STEP 3: QUESTIONS ── */
+.q-list{display:flex;flex-direction:column;gap:14px;}
+.q-item{background:var(--bm);border:1px solid var(--br);border-radius:11px;padding:13px 14px;}
+.q-text{font-size:13px;font-weight:600;color:var(--tp);margin-bottom:10px;}
+/* scale 1-5 */
+.scale-row{display:flex;align-items:center;gap:6px;}
+.scale-lbl{font-size:10px;color:var(--tt);white-space:nowrap;}
+.scale-btns{display:flex;gap:4px;}
+.scale-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--br);background:#fff;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;color:var(--ts);}
+.scale-btn.on{background:var(--a);border-color:var(--a);color:#fff;}
+.scale-btn.on.ag{background:var(--agb);border-color:var(--agb);color:var(--ag);}
+/* radio options */
+.radio-row{display:flex;gap:8px;flex-wrap:wrap;}
+.radio-opt{padding:7px 14px;border-radius:9999px;border:1.5px solid var(--br);background:#fff;font-size:12px;font-weight:500;cursor:pointer;color:var(--ts);transition:all .15s;}
+.radio-opt:hover{border-color:var(--am);}
+.radio-opt.on{border-color:var(--a);background:var(--al);color:var(--a);}
+.radio-opt.on.ag{border-color:var(--agb);background:rgba(245,166,35,.12);color:#9A6600;}
+
+/* ── STEP 4: PROFILE ── */
+.profile-block{background:var(--bm);border:1px solid var(--br);border-radius:11px;padding:16px;}
+.profile-block-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--tt);margin-bottom:8px;}
+.profile-text{font-size:14px;color:var(--tp);line-height:1.9;font-weight:400;}
+.profile-text em{color:var(--a);font-style:normal;font-weight:600;}
+.profile-edit{width:100%;border:1.5px solid var(--a);border-radius:11px;padding:14px;font-size:14px;color:var(--tp);font-family:inherit;outline:none;resize:none;line-height:1.9;background:#fff;}
+.profile-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
+.pt{font-size:11px;font-weight:500;padding:3px 10px;border-radius:9999px;}
+.pt-a{background:var(--al);color:var(--a);}
+.pt-s{background:var(--sub);color:var(--su);}
+.pt-w{background:var(--wab);color:var(--wa);}
+.pt-ag{background:rgba(245,166,35,.15);color:#9A6600;}
+
+/* ── STEP 5: TEST ── */
+.test-output{background:var(--bm);border:1px solid var(--br);border-radius:11px;padding:14px;margin-bottom:12px;}
+.test-output-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--tt);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+.test-output-text{font-size:13px;color:var(--tp);line-height:1.8;}
+.approved-banner{background:var(--sub);border:1px solid #BBF7D0;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;}
+.ab-ic{width:30px;height:30px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ab-ic svg{width:14px;height:14px;stroke:var(--su);fill:none;stroke-width:2;stroke-linecap:round;}
+
+/* AGENCY WORKSPACE BANNER */
+.ws-banner{background:var(--ag);border:1px solid #3D3D7E;border-radius:12px;padding:11px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.ws-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;}
+.wst{height:28px;padding:0 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:5px;}
+.wst.on{background:var(--ag);color:#fff;}
+.wst.off{background:#fff;color:var(--ts);border:1px solid var(--br);}
+.wst.add{background:transparent;color:var(--ts);border:1px dashed var(--brs);}
+
+/* STEP NAV FOOTER */
+.step-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-top:1px solid var(--br);background:#fff;flex-shrink:0;}
+.step-progress{font-size:11px;color:var(--tt);}
+</style>
+
+<!-- TIER TABS -->
+<div class="tier-row">
+  <button class="tt ts" onclick="setTier('s')">Starter €49</button>
+  <button class="tt" id="tt-p" onclick="setTier('p')">Pro €99</button>
+  <button class="tt" id="tt-ag" onclick="setTier('ag')">Agency €249</button>
+</div>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sb">
+    <div class="slogo">
+      <div class="sli" id="sb-li" style="background:var(--a);"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+      <span class="slt" id="sb-lt">PulseLoop</span>
+    </div>
+    <div class="snav">
+      <div class="snl">Workspace</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>Niches</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Trend Reports</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="5" rx="1"/><rect x="13" y="3" width="8" height="9" rx="1"/><rect x="3" y="10" width="8" height="9" rx="1"/><rect x="13" y="14" width="8" height="5" rx="1"/></svg>Dashboards</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>Signal Briefs</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Newsletters</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn Posts</div>
+    </div>
+    <div class="snav" style="padding-top:4px;">
+      <div class="snl">Settings</div>
+      <div class="sni act" id="ni-bv"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Brand Voice</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2"/></svg>Sources</div>
+    </div>
+    <div class="sbot">
+      <div class="sav" id="sb-av" style="background:var(--al);color:var(--a);">VB</div>
+      <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:500;" id="sb-un">Vaibhav</div><span class="spb" id="sb-pb" style="background:var(--al);color:var(--a);">PRO</span></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main" style="display:flex;flex-direction:column;">
+    <div class="tb">
+      <div class="tb-title" id="tb-title">Brand Voice</div>
+      <div style="flex:1;"></div>
+      <div class="sav" id="top-av" style="background:var(--al);color:var(--a);">VB</div>
+      <div id="tb-actions"></div>
+    </div>
+
+    <!-- SCROLL AREA -->
+    <div class="scroll" id="scroll-area">
+      <!-- STEP INDICATOR -->
+      <div class="step-bar" id="step-bar"></div>
+      <!-- STEP PANELS -->
+      <div id="step-content"></div>
+    </div>
+
+    <!-- STEP NAV FOOTER -->
+    <div class="step-nav" id="step-nav">
+      <div class="step-progress" id="step-progress"></div>
+      <div style="display:flex;gap:8px;" id="nav-btns"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var T = 'p';
+var STEP = 1;
+var EXTRACTING = false;
+var EXTRACTED = false;
+var EDITING_PROFILE = false;
+var VOICE_APPROVED = false;
+
+var STEPS = [
+  { num:1, label:'Writing samples',    sublabel:'Paste your writing' },
+  { num:2, label:'AI extraction',      sublabel:'Analyse your style' },
+  { num:3, label:'Confirmation',       sublabel:'Verify the findings' },
+  { num:4, label:'Generated profile',  sublabel:'Your voice in words' },
+  { num:5, label:'Test & approve',     sublabel:'Validate before use' },
+];
+
+var SCALE_VALS = { 0:4, 1:4, 2:2, 3:3, 4:1 };
+var RADIO_VALS = { 0:'first-person', 1:'text-only', 2:'inline' };
+
+function setTier(t) {
+  T = t;
+  var isS=t==='s', isAg=t==='ag';
+  document.querySelectorAll('.tt').forEach(function(b){b.className='tt';});
+  if(t==='s') document.querySelectorAll('.tt')[0].className='tt ts';
+  if(t==='p') document.querySelectorAll('.tt')[1].className='tt tp';
+  if(t==='ag') document.querySelectorAll('.tt')[2].className='tt tag';
+
+  var sb=document.getElementById('sb'), sbLi=document.getElementById('sb-li');
+  var sbAv=document.getElementById('sb-av'), topAv=document.getElementById('top-av');
+  var sbPb=document.getElementById('sb-pb'), sbLt=document.getElementById('sb-lt');
+  var sbUn=document.getElementById('sb-un');
+  var niActCls=document.getElementById('ni-bv');
+
+  if (isAg) {
+    sb.className='sidebar dark'; sbLi.style.background='var(--agb)';
+    sbAv.style.background='rgba(245,166,35,.2)'; sbAv.style.color='var(--agb)';
+    topAv.style.background='rgba(245,166,35,.2)'; topAv.style.color='var(--agb)';
+    sbPb.style.cssText='background:var(--ag);color:var(--agb);'; sbPb.textContent='AGENCY';
+    sbLt.style.color='#fff'; sbUn.style.color='#fff';
+    niActCls.style.background='rgba(245,166,35,.15)'; niActCls.style.color='var(--agb)';
+  } else {
+    sb.className='sidebar'; sbLi.style.background='var(--a)';
+    sbAv.style.background='var(--al)'; sbAv.style.color='var(--a)';
+    topAv.style.background='var(--al)'; topAv.style.color='var(--a)';
+    if(t==='p'){sbPb.style.cssText='background:var(--al);color:var(--a);';sbPb.textContent='PRO';}
+    else{sbPb.style.cssText='background:var(--bp);color:var(--ts);border:1px solid var(--br);';sbPb.textContent='STARTER';}
+    sbLt.style.color='var(--tp)'; sbUn.style.color='var(--tp)';
+    niActCls.style.background=''; niActCls.style.color='';
+  }
+  renderStep();
+}
+
+function renderStepBar() {
+  var isAg = T==='ag';
+  var html = '';
+  STEPS.forEach(function(s) {
+    var state = s.num < STEP ? 'done' : s.num === STEP ? 'active' : 'todo';
+    var dotContent = state === 'done' ? '✓' : s.num;
+    var agCls = isAg && state==='active' ? ' ag' : '';
+    html += '<div class="step-item"><div class="step-dot '+state+agCls+'">'+dotContent+'</div>'
+      +'<div class="step-item-inner"><div class="step-label '+state+agCls+'">'+s.label+'</div><div style="font-size:10px;color:var(--tt);">'+s.sublabel+'</div></div></div>';
+  });
+  document.getElementById('step-bar').innerHTML = html;
+}
+
+function renderNavFooter() {
+  var isAg = T==='ag';
+  document.getElementById('step-progress').textContent = 'Step ' + STEP + ' of 5';
+  var btns = '';
+  if (STEP > 1) btns += '<button class="btns" onclick="goStep('+( STEP-1)+')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:11px;height:11px;fill:none;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>Back</button>';
+
+  if (STEP === 1) {
+    btns += '<button class="btnp '+(isAg?'drk':'ind')+'" onclick="goStep(2)">Analyse my writing →</button>';
+  } else if (STEP === 2) {
+    if (EXTRACTING) {
+      btns += '<button class="btnp ind" style="opacity:.5;cursor:not-allowed;">Analysing…</button>';
+    } else {
+      btns += '<button class="btnp '+(isAg?'drk':'ind')+'" onclick="goStep(3)">Looks right — confirm →</button>';
+    }
+  } else if (STEP === 3) {
+    btns += '<button class="btnp '+(isAg?'drk':'ind')+'" onclick="goStep(4)">Generate my profile →</button>';
+  } else if (STEP === 4) {
+    btns += '<button class="btns" onclick="toggleEditProfile()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:11px;height:11px;fill:none;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'+(EDITING_PROFILE?'Done editing':'Edit profile')+'</button>';
+    btns += '<button class="btnp '+(isAg?'drk':'ind')+'" onclick="goStep(5)">Test my voice →</button>';
+  } else if (STEP === 5) {
+    if (VOICE_APPROVED) {
+      btns += '<button class="btnp su" onclick="alert(\'Brand voice saved and active!\')"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:12px;height:12px;"><polyline points="20 6 9 17 4 12"/></svg>Brand voice saved — active</button>';
+    } else {
+      btns += '<button class="btns" onclick="regenerateTest()">Regenerate sample</button>';
+      btns += '<button class="btnp '+(isAg?'drk':'ind')+'" onclick="approveVoice()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:12px;height:12px;"><polyline points="20 6 9 17 4 12"/></svg>Approve & activate</button>';
+    }
+  }
+  document.getElementById('nav-btns').innerHTML = btns;
+}
+
+function renderTbActions() {
+  var isAg = T==='ag';
+  var html = '';
+  if (STEP > 1) {
+    html = '<button class="btns" style="font-size:11px;height:28px;" onclick="resetVoice()">Start over</button>';
+  }
+  document.getElementById('tb-actions').innerHTML = html;
+}
+
+function goStep(n) {
+  if (n===2 && STEP===1) { EXTRACTING=true; renderStep(); setTimeout(function(){ EXTRACTING=false; EXTRACTED=true; renderStep(); }, 1800); return; }
+  STEP = n; renderStep();
+}
+
+function toggleEditProfile() { EDITING_PROFILE = !EDITING_PROFILE; renderStep(); }
+function approveVoice() { VOICE_APPROVED = true; renderStep(); }
+function regenerateTest() { renderStep(); }
+function resetVoice() { STEP=1; EXTRACTING=false; EXTRACTED=false; EDITING_PROFILE=false; VOICE_APPROVED=false; renderStep(); }
+
+function renderStep() {
+  var isAg = T==='ag';
+  var accentFill = isAg ? 'var(--agb)' : 'var(--a)';
+  renderStepBar(); renderNavFooter(); renderTbActions();
+
+  var html = '';
+
+  /* AGENCY CONTEXT BANNER */
+  if (isAg) {
+    html += '<div class="ws-banner"><div style="font-size:14px;flex-shrink:0;">🎨</div><div style="flex:1;"><div style="font-size:12px;font-weight:700;color:#fff;">Editing: Acme Corp workspace</div><div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:1px;">This voice profile applies to all content in this workspace only. Each workspace is independent.</div></div><div class="ws-tabs" style="margin-bottom:0;"><button class="wst on" style="height:26px;font-size:11px;">🏢 Acme Corp</button><button class="wst off" style="height:26px;font-size:11px;">🚀 Mistral AI</button><button class="wst off" style="height:26px;font-size:11px;">📊 Pennylane</button></div></div>';
+  }
+
+  /* ═══ STEP 1: WRITING SAMPLES ═══ */
+  if (STEP === 1) {
+    html += '<div class="crd"><div class="crd-hd"><div><div class="crd-ttl">Paste 3–5 pieces of your own writing</div><div class="crd-sub">LinkedIn posts, newsletter excerpts, client emails, reports — anything you\'ve actually written. The more variety, the better the extraction.</div></div></div><div class="crd-bd">'
+      +'<div class="hint-row">'
+      +'<div class="hint"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn posts</div>'
+      +'<div class="hint"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Newsletter excerpts</div>'
+      +'<div class="hint"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Client emails</div>'
+      +'<div class="hint"><svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>Report sections</div>'
+      +'</div>';
+
+    var samples = [
+      { type:'LinkedIn post', placeholder:'Paste a LinkedIn post you\'ve written…', val:'Your engineers are using Mistral before your legal team has heard of it.\n\nGitHub data shows French LLM repos up 3× this week. The CNIL 90-day clock started Friday. The procurement conversation will happen in Q2 — with or without you in the room.\n\nThis is a structural shift, not a news cycle.' },
+      { type:'Newsletter excerpt', placeholder:'Paste a section from a newsletter you\'ve sent…', val:'' },
+      { type:'Client email / report', placeholder:'Paste any client-facing writing…', val:'' },
+    ];
+    samples.forEach(function(s, i) {
+      html += '<div class="sample-box"><div class="sample-box-hd"><div class="sample-num'+(isAg?' ag':'')+'">'+( i+1)+'</div><span class="sample-type">'+s.type+'</span><button class="btng'+(isAg?' ag':'') +'" style="margin-left:auto;font-size:10px;">Clear</button></div><textarea class="sample-textarea" rows="5" placeholder="'+s.placeholder+'">'+s.val+'</textarea></div>';
+    });
+    html += '<button class="btns" style="margin-top:4px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:11px;height:11px;fill:none;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add another sample (up to 5)</button>';
+    html += '</div></div>';
+  }
+
+  /* ═══ STEP 2: AI EXTRACTION ═══ */
+  if (STEP === 2) {
+    if (EXTRACTING) {
+      html += '<div class="crd"><div class="crd-hd"><div><div class="crd-ttl">Analysing your writing…</div><div class="crd-sub">PulseLoop is reading your samples and extracting your voice patterns</div></div></div><div class="crd-bd"><div class="extraction-loading"><div class="pulse-ring'+(isAg?' ag':'')+'"></div><div style="font-size:14px;font-weight:600;color:var(--tp);">Reading your writing samples</div><div style="font-size:12px;color:var(--ts);max-width:320px;line-height:1.6;">Detecting tone, sentence structure, vocabulary patterns, use of data vs narrative, formality level…</div></div></div></div>';
+    } else {
+      html += '<div class="crd"><div class="crd-hd"><div><div class="crd-ttl">Here\'s what we found in your writing</div><div class="crd-sub">Extracted from 3 writing samples · review and confirm in Step 3</div></div><span style="background:var(--sub);color:var(--su);font-size:10px;font-weight:600;padding:2px 8px;border-radius:9999px;">Analysis complete</span></div><div class="crd-bd">';
+
+      var tags = [
+        { lbl:'Formality', val:'Direct & informal', pct:30 },
+        { lbl:'Data use', val:'Data-heavy', pct:82 },
+        { lbl:'Sentence length', val:'Short — avg 11 words', pct:25 },
+        { lbl:'Narrative style', val:'Observation → implication', pct:75 },
+        { lbl:'Point of view', val:'First person (I)', pct:60 },
+        { lbl:'Audience distance', val:'Peer-to-peer', pct:35 },
+      ];
+      html += '<div class="extraction-tag-grid">';
+      tags.forEach(function(t) {
+        html += '<div class="ext-tag"><div class="ext-tag-lbl">'+t.lbl+'</div><div class="ext-tag-val">'+t.val+'</div><div class="ext-tag-bar"><div class="ext-tag-fill'+(isAg?' ag':'')+'" style="width:'+t.pct+'%;"></div></div></div>';
+      });
+      html += '</div>';
+
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px;">'
+        +'<div><div style="font-size:11px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px;">Recurring phrases detected</div><div class="ext-phrases">'
+        +['structural shift','90-day','procurement window','EU-native','decision-makers','before your competitors'].map(function(p){ return '<span class="ext-phrase'+(isAg?' ag':'')+'">'+p+'</span>'; }).join('')
+        +'</div></div>'
+        +'<div><div style="font-size:11px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px;">Words you never use</div><div class="ext-phrases">'
+        +['synergy','leverage','game-changer','unlock','disruption'].map(function(p){ return '<span class="ext-phrase ext-avoid">'+p+'</span>'; }).join('')
+        +'</div></div>'
+        +'</div>';
+
+      html += '</div></div>';
+    }
+  }
+
+  /* ═══ STEP 3: GUIDED QUESTIONS ═══ */
+  if (STEP === 3) {
+    var qs = [
+      { type:'scale', text:'Your writing tends to be direct and data-heavy, with short sentences. How accurate is that?', lo:'Not me at all', hi:'Exactly right', idx:0 },
+      { type:'scale', text:'You write for a peer audience — not talking down, not simplifying. You assume the reader is smart. How true is that?', lo:'I simplify a lot', hi:'Always peer-level', idx:1 },
+      { type:'radio', text:'Do you write in first person (I think, I\'ve noticed) or prefer impersonal phrasing (The data shows, This week\'s signals)?', opts:['First person (I / we)','Impersonal (The data, This week)','Mix of both'], key:'0', sel:RADIO_VALS[0] },
+      { type:'radio', text:'Do you use emojis in your content, or keep it text-only?', opts:['Text-only','Occasional emojis (1–2 per post)','Emoji-heavy'], key:'1', sel:RADIO_VALS[1] },
+      { type:'scale', text:'Your posts tend to end with an open question or a provocation rather than a summary. Is that intentional?', lo:'I prefer summaries', hi:'Always a question', idx:2 },
+      { type:'radio', text:'How do you cite sources in your content?', opts:['Inline (FrenchWeb, 24 Mar)','Footnote at end','I don\'t cite explicitly'], key:'2', sel:RADIO_VALS[2] },
+      { type:'scale', text:'How opinionated do you want the content to feel — straightforward reporting vs strong point of view?', lo:'Just the facts', hi:'Strong opinion', idx:3 },
+    ];
+
+    html += '<div class="crd"><div class="crd-hd"><div><div class="crd-ttl">Confirm or correct the extraction</div><div class="crd-sub">7 questions — takes about 2 minutes. Your answers calibrate the final profile.</div></div></div><div class="crd-bd"><div class="q-list">';
+
+    qs.forEach(function(q, qi) {
+      html += '<div class="q-item"><div class="q-text">'+q.text+'</div>';
+      if (q.type==='scale') {
+        var val = SCALE_VALS[q.idx];
+        html += '<div class="scale-row"><span class="scale-lbl">'+q.lo+'</span><div class="scale-btns" id="sc-'+q.idx+'">';
+        for (var k=1;k<=5;k++) {
+          html += '<button class="scale-btn'+(k===val?' on'+(isAg?' ag':''):'')+'" data-si="'+q.idx+'" data-v="'+k+'" onclick="setScale('+q.idx+','+k+')">'+k+'</button>';
+        }
+        html += '</div><span class="scale-lbl">'+q.hi+'</span></div>';
+      } else {
+        html += '<div class="radio-row">';
+        q.opts.forEach(function(o) {
+          var sel = RADIO_VALS[q.key]===o.toLowerCase().substring(0,10).replace(/\s/g,'-')||( qi===2&&o.startsWith('First')&&RADIO_VALS[0]==='first-person')||(qi===3&&o.startsWith('Text')&&RADIO_VALS[1]==='text-only')||(qi===5&&o.startsWith('Inline')&&RADIO_VALS[2]==='inline');
+          html += '<div class="radio-opt'+(sel?' on'+(isAg?' ag':''):'')+'" onclick="setRadio(\''+q.key+'\',\''+o.substring(0,12).replace(/[\s\/]/g,'-').toLowerCase()+'\',this)">'+o+'</div>';
+        });
+        html += '</div>';
+      }
+      html += '</div>';
+    });
+    html += '</div></div></div>';
+  }
+
+  /* ═══ STEP 4: GENERATED PROFILE ═══ */
+  if (STEP === 4) {
+    var profileText = isAg
+      ? 'Your writing (for Acme Corp) is <em>confident and data-led</em>, built on short punchy sentences that assume a smart, senior audience. You cite sources inline — always a named outlet and a date, never vague attribution. You write in <em>first person</em> and speak peer-to-peer, not as an authority talking down. Your recurring frame is <em>observation → implication</em>: here\'s what happened, here\'s what it actually means for the decision you\'re about to make. You never use consultant jargon (leverage, synergy, game-changer). You close with a question or provocation, not a summary. Content written in this voice should make the reader feel like they\'re getting early access to a sharp colleague\'s thinking — not a generic market update.'
+      : 'Your writing is <em>confident and data-led</em>, built on short punchy sentences that assume a smart, senior audience. You cite sources inline — always a named outlet and a date, never vague attribution. You write in <em>first person</em> and speak peer-to-peer, not as an authority talking down. Your recurring frame is <em>observation → implication</em>: here\'s what happened, here\'s what it actually means for the decision you\'re about to make. You never use consultant jargon (leverage, synergy, game-changer). You close with a question or provocation, not a summary. Content written in this voice should make the reader feel like they\'re getting early access to a sharp colleague\'s thinking — not a generic market update.';
+
+    html += '<div class="crd"><div class="crd-hd"><div><div class="crd-ttl">Your brand voice profile</div><div class="crd-sub">Generated from your writing samples + confirmation answers · you can edit this directly</div></div></div><div class="crd-bd">';
+
+    if (EDITING_PROFILE) {
+      html += '<label class="fl" style="margin-bottom:6px;">Edit your profile — Claude reads this exactly as written</label>'
+        +'<textarea class="profile-edit" rows="8">Your writing is confident and data-led, built on short punchy sentences that assume a smart, senior audience. You cite sources inline — always a named outlet and a date, never vague attribution. You write in first person and speak peer-to-peer, not as an authority talking down. Your recurring frame is observation → implication: here\'s what happened, here\'s what it actually means. You never use consultant jargon. You close with a question or provocation, not a summary.</textarea>'
+        +'<div class="fh" style="margin-top:6px;">This paragraph is what Claude receives as the brand voice instruction. Make it sound like you.</div>';
+    } else {
+      html += '<div class="profile-block"><div class="profile-block-lbl">Your voice — as Claude reads it</div><div class="profile-text">'+profileText+'</div></div>';
+    }
+
+    html += '<div class="profile-tags" style="margin-top:12px;">'
+      +'<span class="pt pt-a">Direct & data-led</span>'
+      +'<span class="pt pt-a">Short sentences</span>'
+      +'<span class="pt pt-a">First person</span>'
+      +'<span class="pt pt-s">Peer-to-peer tone</span>'
+      +'<span class="pt pt-a">Inline citations</span>'
+      +'<span class="pt pt-w">Ends with question</span>'
+      +(isAg?'<span class="pt pt-ag">Acme Corp workspace</span>':'')
+      +'</div>'
+      +'<div style="margin-top:10px;font-size:11px;color:var(--tt);">Applied to: Trend Reports · Signal Briefs · Newsletters · LinkedIn Posts</div>'
+      +'</div></div>';
+  }
+
+  /* ═══ STEP 5: TEST & APPROVE ═══ */
+  if (STEP === 5) {
+    html += '<div class="crd"><div class="crd-hd"><div><div class="crd-ttl">Test your brand voice</div><div class="crd-sub">Claude wrote this sample paragraph using your profile. Does it sound like you?</div></div></div><div class="crd-bd">';
+
+    if (VOICE_APPROVED) {
+      html += '<div class="approved-banner"><div class="ab-ic"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div><div><div style="font-size:13px;font-weight:700;color:var(--su);">Brand voice approved and active</div><div style="font-size:11px;color:var(--ts);margin-top:2px;">All content generated from this point will use this voice profile. You can update it anytime from Settings → Brand Voice.</div></div></div>';
+    } else {
+      html += '<div style="margin-bottom:12px;"><label class="fl">Test on this content type:</label><div style="display:flex;gap:6px;flex-wrap:wrap;" id="test-type-row">'
+        +['LinkedIn post','Signal Brief opening','Newsletter lede','Trend Report summary'].map(function(t,i){ return '<div class="radio-opt'+(i===0?' on':'') +'" onclick="selectTestType(this)">'+t+'</div>'; }).join('')
+        +'</div></div>'
+        +'<div class="test-output"><div class="test-output-lbl"><span>Sample output — LinkedIn post</span><button class="btng'+(isAg?' ag':'') +'" style="font-size:10px;" onclick="renderStep()">↺ Regenerate</button></div>'
+        +'<div class="test-output-text">'+(isAg
+          ? 'Your client\'s engineering teams have already decided which LLM to use.<br><br>The CNIL guidance that dropped Friday made this a compliance question, not just a strategy one. Any SaaS product processing EU user data through a language model has a 30-day data retention obligation starting now.<br><br>The question isn\'t whether to act — it\'s whether you\'re the person who tells them before their legal team does.<br><br>What\'s your take on how your clients are handling this?'
+          : 'Your engineers are already using Mistral before your legal team has heard of it.<br><br>The CNIL guidance that dropped Friday made this a compliance question, not a strategy one. 90-day clock. Named obligation. Enforcement-grade.<br><br>The structural shift is here. Not next year. The question is whether you\'re in the room when your clients figure that out.<br><br>What\'s your read on how this plays out in Q2?')
+        +'</div></div>'
+        +'<div style="margin-top:10px;"><div style="font-size:11px;color:var(--ts);font-weight:500;margin-bottom:6px;">Does this sound like you?</div>'
+        +'<div style="display:flex;gap:8px;">'
+        +'<button class="btnp '+(isAg?'drk':'ind')+'" onclick="approveVoice()"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:12px;height:12px;"><polyline points="20 6 9 17 4 12"/></svg>Yes — approve & activate</button>'
+        +'<button class="btns" onclick="goStep(4)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:11px;height:11px;fill:none;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Adjust profile</button>'
+        +'<button class="btns" onclick="renderStep()">Regenerate sample</button>'
+        +'</div>'
+        +'</div>';
+    }
+    html += '</div></div>';
+  }
+
+  document.getElementById('step-content').innerHTML = html;
+  wireStep3();
+}
+
+function wireStep3() {
+  document.querySelectorAll('.radio-opt').forEach(function(el){
+    el.addEventListener('click', function(){
+      var parent = this.parentElement;
+      parent.querySelectorAll('.radio-opt').forEach(function(x){
+        x.className='radio-opt';
+      });
+      this.className='radio-opt on'+(T==='ag'?' ag':'');
+    });
+  });
+}
+
+function setScale(idx, val) {
+  SCALE_VALS[idx] = val;
+  var isAg = T==='ag';
+  var container = document.getElementById('sc-'+idx);
+  if (!container) return;
+  container.querySelectorAll('.scale-btn').forEach(function(b){
+    var v = parseInt(b.getAttribute('data-v'));
+    b.className = 'scale-btn'+(v===val?' on'+(isAg?' ag':''):'');
+  });
+}
+
+function setRadio(key, val, el) {
+  RADIO_VALS[key] = val;
+}
+
+function selectTestType(el) {
+  el.closest('#test-type-row').querySelectorAll('.radio-opt').forEach(function(x){x.className='radio-opt';});
+  el.className='radio-opt on'+(T==='ag'?' ag':'');
+}
+
+setTier('p');
+</script>

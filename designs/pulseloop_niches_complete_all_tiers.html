@@ -1,0 +1,590 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --a:#5B5FC7;--al:#EEEEFF;--am:#A3A6E8;
+  --bp:#F0F0F7;--bs:#FFFFFF;--bm:#F7F7FC;--bc:#FFFFFF;--bch:#F5F5FF;
+  --tp:#1A1A3E;--ts:#6B6B8A;--tt:#A0A0BE;
+  --br:#E4E4F0;--brs:#C5C5E0;
+  --su:#4CAF82;--sub:#E8F7EF;
+  --wa:#F5A623;--wab:#FFF4E0;
+  --da:#E85757;--dab:#FDEAEA;
+  --ag:#1A1A3E;--agb:#F5A623;
+}
+body{font-family:'Inter',-apple-system,sans-serif;}
+
+/* TIER SWITCHER */
+.tsw{display:flex;gap:0;margin-bottom:16px;background:#fff;border:1px solid var(--br);border-radius:12px;padding:4px;width:fit-content;}
+.ttab{height:34px;padding:0 18px;border-radius:9px;border:none;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s;}
+.ttab:not(.ton){background:transparent;color:var(--tt);}
+.ton-s{background:var(--bp);color:var(--tp);}
+.ton-p{background:var(--a);color:#fff;}
+.ton-ag{background:var(--ag);color:var(--agb);}
+
+/* SHELL */
+.shell{display:flex;height:700px;background:var(--bp);border-radius:14px;overflow:hidden;border:1px solid var(--br);position:relative;}
+
+/* SIDEBAR */
+.sb{width:220px;min-width:220px;background:#fff;border-right:1px solid var(--br);display:flex;flex-direction:column;}
+.sb.dark{background:var(--ag);border-color:#2D2D5E;}
+.sb-logo{height:60px;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid var(--br);gap:9px;}
+.sb.dark .sb-logo{border-color:#2D2D5E;}
+.li{width:30px;height:30px;background:var(--a);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.li.gold{background:var(--agb);}
+.lt{font-size:15px;font-weight:700;color:var(--tp);letter-spacing:-.3px;}
+.sb.dark .lt{color:#fff;}
+.ns-sec{padding:16px 10px 6px;}
+.nsl{font-size:11px;font-weight:600;color:var(--tt);text-transform:uppercase;letter-spacing:.6px;padding:0 8px;margin-bottom:5px;}
+.sb.dark .nsl{color:rgba(255,255,255,.3);}
+.ni{display:flex;align-items:center;gap:9px;height:40px;padding:0 10px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:500;color:var(--ts);margin-bottom:1px;position:relative;}
+.ni:hover{background:var(--bm);}
+.sb.dark .ni{color:rgba(255,255,255,.45);}
+.sb.dark .ni:hover{background:rgba(255,255,255,.07);}
+.ni.act{background:var(--al);color:var(--a);}
+.sb.dark .ni.act{background:rgba(245,166,35,.15);color:var(--agb);}
+.ni svg{width:16px;height:16px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.ni .lk{width:12px;height:12px;margin-left:auto;stroke:var(--tt);flex-shrink:0;}
+.upg-dot{width:6px;height:6px;border-radius:9999px;background:var(--wa);margin-left:auto;flex-shrink:0;}
+.sb-bot{margin-top:auto;padding:10px;border-top:1px solid var(--br);display:flex;align-items:center;gap:9px;height:58px;}
+.sb.dark .sb-bot{border-color:#2D2D5E;}
+.av{width:32px;height:32px;border-radius:9999px;background:var(--al);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--a);flex-shrink:0;}
+.sb.dark .av{background:rgba(245,166,35,.2);color:var(--agb);}
+.pb{display:inline-block;font-size:10px;font-weight:700;padding:1px 8px;border-radius:9999px;}
+.pb-s{background:var(--bp);color:var(--ts);border:1px solid var(--br);}
+.pb-p{background:var(--al);color:var(--a);}
+.pb-ag{background:var(--ag);color:var(--agb);}
+
+/* TOPBAR */
+.topbar{height:58px;background:#fff;border-bottom:1px solid var(--br);display:flex;align-items:center;padding:0 22px;gap:10px;flex-shrink:0;}
+.tbt{font-size:17px;font-weight:600;color:var(--tp);flex:1;}
+.sbox{display:flex;align-items:center;gap:7px;background:var(--bm);border:1px solid var(--br);border-radius:9px;padding:0 10px;height:33px;font-size:12px;color:var(--tt);}
+.sbox svg{width:13px;height:13px;stroke:var(--tt);fill:none;stroke-width:1.5;stroke-linecap:round;}
+
+/* MAIN */
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.content{flex:1;overflow-y:auto;padding:20px 22px;background:var(--bm);}
+
+/* BUTTONS */
+.btn-p{height:34px;padding:0 14px;border-radius:9px;background:var(--a);color:#fff;font-size:12px;font-weight:600;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.btn-p.dark-btn{background:var(--ag);}
+.btn-p.gray-btn{background:var(--ts);}
+.btn-sec{height:34px;padding:0 12px;border-radius:9px;background:#fff;color:var(--tp);font-size:12px;font-weight:500;border:1px solid var(--br);cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
+.btn-up-p{height:26px;padding:0 11px;border-radius:9999px;background:var(--a);color:#fff;font-size:11px;font-weight:600;border:none;cursor:pointer;white-space:nowrap;}
+.btn-up-ag{height:26px;padding:0 11px;border-radius:9999px;background:var(--ag);color:var(--agb);font-size:11px;font-weight:600;border:none;cursor:pointer;white-space:nowrap;}
+.btn-gh{height:28px;padding:0 8px;border-radius:7px;background:transparent;color:var(--a);font-size:11px;font-weight:500;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:3px;}
+.btn-gh:hover{background:var(--al);}
+.btn-del{height:28px;padding:0 6px;border-radius:7px;background:transparent;color:var(--tt);font-size:11px;border:none;cursor:pointer;display:inline-flex;align-items:center;}
+.btn-del:hover{background:var(--dab);color:var(--da);}
+
+/* UPGRADE BANNER */
+.ub{border-radius:12px;padding:13px 16px;display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+.ub-indigo{background:var(--al);border:1px solid var(--am);}
+.ub-dark{background:var(--ag);border:1px solid #3D3D7E;}
+.ub-ic{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.ub-ic-i{background:var(--al);}
+.ub-ic-d{background:rgba(245,166,35,.15);}
+.ub-txt{flex:1;}
+.ub-ttl{font-size:13px;font-weight:700;}
+.ub-ttl-i{color:var(--a);}
+.ub-ttl-d{color:#fff;}
+.ub-sub{font-size:11px;margin-top:2px;}
+.ub-sub-i{color:var(--ts);}
+.ub-sub-d{color:rgba(255,255,255,.55);}
+.ub-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.ub-tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:9999px;}
+.ub-tag-i{background:var(--al);color:var(--a);}
+.ub-tag-d{background:rgba(245,166,35,.15);color:var(--agb);}
+
+/* STATS */
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.sc{background:#fff;border:1px solid var(--br);border-radius:11px;padding:12px 14px;}
+.sl{font-size:10px;font-weight:500;color:var(--ts);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.sv{font-size:20px;font-weight:700;color:var(--tp);}
+.ss{font-size:11px;color:var(--tt);margin-top:1px;}
+
+/* PLAN BAR */
+.planbar{background:#fff;border:1px solid var(--br);border-radius:11px;padding:10px 14px;display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.planbar.red{border-color:#FBBF9E;}
+.planbar.gold{border-color:#F5D87A;background:#FFFDF4;}
+.pbt{flex:1;font-size:12px;font-weight:500;color:var(--tp);}
+.pbs{font-size:11px;color:var(--tt);margin-top:1px;}
+.ptrack{flex:0 0 120px;}
+.pbar{height:5px;border-radius:9999px;background:var(--bp);overflow:hidden;}
+.pfill-s{height:100%;border-radius:9999px;background:var(--da);}
+.pfill-p{height:100%;border-radius:9999px;background:var(--a);}
+.pfill-ag{height:100%;border-radius:9999px;background:var(--agb);}
+.plbl{font-size:10px;color:var(--ts);margin-top:3px;text-align:right;}
+
+/* FILTER */
+.fbar{display:flex;gap:6px;margin-bottom:14px;}
+.fc{height:27px;padding:0 12px;border-radius:9999px;font-size:11px;font-weight:600;cursor:pointer;border:none;}
+.fc-on{background:var(--a);color:#fff;}
+.fc-on-ag{background:var(--ag);color:#fff;}
+.fc-off{background:#fff;color:var(--ts);border:1px solid var(--br);}
+
+/* WORKSPACE TABS */
+.wstabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px;}
+.wst{height:30px;padding:0 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:5px;}
+.wst-on{background:var(--ag);color:#fff;}
+.wst-off{background:#fff;color:var(--ts);border:1px solid var(--br);}
+.wst-add{background:transparent;color:var(--ts);border:1px dashed var(--brs);}
+.wct{font-size:10px;border-radius:9999px;padding:1px 5px;}
+.wct-on{background:rgba(255,255,255,.2);color:#fff;}
+.wct-off{background:var(--bm);color:var(--tt);}
+
+/* NICHE GRID */
+.ng{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+.nc{background:#fff;border:1px solid var(--br);border-radius:13px;overflow:hidden;display:flex;flex-direction:column;}
+.nc.paused{opacity:.6;}
+.nc-top{padding:14px 14px 10px;display:flex;align-items:flex-start;gap:10px;}
+.nic{width:38px;height:38px;border-radius:10px;background:var(--al);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.nn{font-size:13px;font-weight:600;color:var(--tp);margin-bottom:2px;}
+.nd{font-size:11px;color:var(--ts);line-height:1.45;}
+.nkw{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px;}
+.kt{background:var(--bm);color:var(--ts);border:1px solid var(--br);border-radius:5px;font-size:10px;padding:1px 5px;}
+.kt-gold{background:rgba(245,166,35,.1);border-color:#F5D87A;color:#B07A00;}
+.tgl{width:34px;height:19px;border-radius:9999px;border:none;cursor:pointer;position:relative;flex-shrink:0;}
+.tgl.on{background:var(--a);}
+.tgl.on-ag{background:var(--ag);}
+.tgl.off{background:var(--brs);}
+.tgl-k{position:absolute;top:2px;width:15px;height:15px;background:#fff;border-radius:9999px;}
+.tgl.on .tgl-k,.tgl.on-ag .tgl-k{left:17px;}
+.tgl.off .tgl-k{left:2px;}
+.nst{display:flex;border-top:1px solid var(--br);}
+.nsi{flex:1;padding:8px 0;text-align:center;border-right:1px solid var(--br);}
+.nsi:last-child{border-right:none;}
+.nsv{font-size:12px;font-weight:700;color:var(--tp);}
+.nsl2{font-size:9px;color:var(--tt);text-transform:uppercase;letter-spacing:.4px;margin-top:1px;}
+.nact{display:flex;align-items:center;gap:3px;padding:6px 10px;background:var(--bm);border-top:1px solid var(--br);}
+.sdot{font-size:10px;font-weight:600;padding:2px 8px;border-radius:9999px;}
+.s-on{background:var(--sub);color:var(--su);}
+.s-pa{background:var(--wab);color:var(--wa);}
+.ml{margin-left:auto;display:flex;gap:1px;}
+
+/* LOCKED CARD */
+.lc{border:2px dashed var(--brs);border-radius:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:24px 14px;min-height:185px;}
+.lc-ic{width:38px;height:38px;border-radius:10px;background:var(--bp);display:flex;align-items:center;justify-content:center;}
+.lc-ic svg{width:16px;height:16px;stroke:var(--tt);fill:none;stroke-width:1.5;stroke-linecap:round;}
+.lc-ttl{font-size:12px;font-weight:600;color:var(--ts);}
+.lc-sub{font-size:11px;color:var(--tt);text-align:center;line-height:1.4;}
+
+/* ADD CARD */
+.ac{border:2px dashed var(--brs);border-radius:13px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:24px 14px;min-height:185px;background:transparent;transition:all .15s;}
+.ac:hover{border-color:var(--a);background:var(--al);}
+.ac-ic{width:38px;height:38px;border-radius:10px;background:var(--bm);display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.ac:hover .ac-ic{background:var(--a);}
+.ac-ic svg{width:16px;height:16px;stroke:var(--ts);fill:none;stroke-width:2;stroke-linecap:round;transition:all .15s;}
+.ac:hover .ac-ic svg{stroke:#fff;}
+.ac-ttl{font-size:12px;font-weight:600;color:var(--ts);}
+.ac:hover .ac-ttl{color:var(--a);}
+.ac-sub{font-size:11px;color:var(--tt);text-align:center;}
+
+/* MODAL OVERLAY — faux viewport pattern */
+.mo{display:none;min-height:700px;background:rgba(26,26,62,.4);align-items:center;justify-content:center;border-radius:14px;position:absolute;inset:0;z-index:200;}
+.mo.open{display:flex;}
+.modal{background:#fff;border-radius:18px;width:520px;max-width:calc(100% - 40px);display:flex;flex-direction:column;max-height:660px;overflow:hidden;}
+.mh{padding:18px 22px 14px;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.mh-ttl{font-size:15px;font-weight:700;color:var(--tp);}
+.mh-sub{font-size:11px;color:var(--ts);margin-top:1px;}
+.mx{width:28px;height:28px;border-radius:9999px;background:var(--bm);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--ts);}
+.mx:hover{background:var(--dab);color:var(--da);}
+.mb{padding:18px 22px;overflow-y:auto;flex:1;}
+.mf{padding:12px 22px;border-top:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+
+/* STEP BAR */
+.stepbar{display:flex;align-items:center;margin-bottom:18px;}
+.step{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;}
+.sd{width:20px;height:20px;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.sd-done{background:var(--su);color:#fff;}
+.sd-act{background:var(--a);color:#fff;}
+.sd-todo{background:var(--bp);color:var(--tt);border:1.5px solid var(--br);}
+.sl-done{color:var(--ts);}
+.sl-act{color:var(--a);}
+.sl-todo{color:var(--tt);}
+.sline{flex:1;height:1px;background:var(--br);margin:0 6px;}
+
+/* FORM */
+.fr{margin-bottom:14px;}
+.fl{font-size:11px;font-weight:600;color:var(--ts);margin-bottom:4px;display:block;}
+.fl span{color:var(--a);}
+.fi{width:100%;height:38px;border:1px solid var(--br);border-radius:9px;padding:0 10px;font-size:13px;color:var(--tp);font-family:inherit;outline:none;}
+.fi:focus{border-color:var(--a);border-width:1.5px;}
+.fi::placeholder{color:var(--tt);}
+.fta{width:100%;border:1px solid var(--br);border-radius:9px;padding:8px 10px;font-size:13px;color:var(--tp);font-family:inherit;outline:none;resize:none;line-height:1.5;}
+.fta:focus{border-color:var(--a);border-width:1.5px;}
+.fta::placeholder{color:var(--tt);}
+.fh{font-size:10px;color:var(--tt);margin-top:3px;}
+.fsel{width:100%;height:38px;border:1px solid var(--br);border-radius:9px;padding:0 10px;font-size:13px;color:var(--tp);font-family:inherit;outline:none;appearance:none;cursor:pointer;}
+.fsel:focus{border-color:var(--a);}
+.fr-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.fsec{border-top:1px solid var(--br);padding-top:14px;margin-top:4px;}
+.fsec-ttl{font-size:12px;font-weight:700;color:var(--tp);margin-bottom:10px;}
+
+/* KEYWORDS */
+.kwwrap{display:flex;gap:6px;}
+.kwwrap .fi{flex:1;}
+.kwlist{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;min-height:24px;}
+.kwp{background:var(--al);color:var(--a);border-radius:9999px;font-size:11px;font-weight:500;padding:3px 10px;display:inline-flex;align-items:center;gap:5px;}
+.kwr{cursor:pointer;opacity:.6;font-size:12px;line-height:1;}
+
+/* SOURCES */
+.src-lbl{font-size:10px;font-weight:700;color:var(--tt);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 6px;}
+.srcg{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;}
+.sc2{display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;border:1px solid var(--br);background:var(--bm);cursor:pointer;font-size:11px;color:var(--ts);font-weight:500;transition:all .12s;}
+.sc2:hover,.sc2.sel{border-color:var(--a);background:var(--al);color:var(--a);}
+.chk{width:13px;height:13px;border-radius:3px;border:1.5px solid var(--br);background:#fff;margin-left:auto;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:8px;}
+.sc2.sel .chk{background:var(--a);border-color:var(--a);color:#fff;}
+
+/* EMOJI ROW */
+.er{display:flex;gap:6px;flex-wrap:wrap;}
+.eo{width:36px;height:36px;border-radius:9px;border:1.5px solid var(--br);background:var(--bm);font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.eo:hover{border-color:var(--am);}
+.eo.ep{border-color:var(--a);background:var(--al);}
+
+/* LOCKED UPGRADE MODAL MESSAGE */
+.lock-msg{background:var(--dab);border:1px solid #FBBF9E;border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start;}
+.lock-msg svg{width:16px;height:16px;stroke:var(--da);fill:none;stroke-width:1.5;stroke-linecap:round;flex-shrink:0;margin-top:1px;}
+.lock-msg-txt{font-size:12px;color:#8B1A1A;}
+.lock-msg-ttl{font-weight:700;margin-bottom:2px;}
+
+/* VIEW TOGGLE */
+.view{display:none;}
+.view.on{display:block;}
+</style>
+
+<!-- TIER TABS -->
+<div class="tsw">
+  <button class="ttab ton ton-s" onclick="setTier('s')"><span style="width:7px;height:7px;border-radius:9999px;background:var(--ts);display:inline-block;"></span>Starter €49</button>
+  <button class="ttab" onclick="setTier('p')"><span style="width:7px;height:7px;border-radius:9999px;background:var(--tt);display:inline-block;" id="dot-p"></span>Pro €99</button>
+  <button class="ttab" onclick="setTier('ag')"><span style="width:7px;height:7px;border-radius:9999px;background:var(--tt);display:inline-block;" id="dot-ag"></span>Agency €249</button>
+</div>
+
+<!-- ═══════ STARTER ═══════ -->
+<div class="view on" id="v-s">
+<div class="shell" id="shell-s">
+  <div class="sb">
+    <div class="sb-logo"><div class="li"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px;"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div><span class="lt">PulseLoop</span></div>
+    <div class="ns-sec">
+      <div class="nsl">Workspace</div>
+      <div class="ni"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</div>
+      <div class="ni act"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>Niches</div>
+      <div class="ni"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Trend Reports</div>
+      <div class="ni" style="opacity:.38;"><svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>Signal Briefs<svg viewBox="0 0 24 24" class="lk"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <div class="ni" style="opacity:.38;"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Newsletters<svg viewBox="0 0 24 24" class="lk"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <div class="ni" style="opacity:.38;"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn Posts<svg viewBox="0 0 24 24" class="lk"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+    </div>
+    <div class="ns-sec"><div class="nsl">Settings</div>
+      <div class="ni"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Brand Voice</div>
+      <div class="ni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>Sources</div>
+    </div>
+    <div class="sb-bot"><div class="av">VB</div><div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:500;color:var(--tp);">Vaibhav</div><span class="pb pb-s">STARTER</span></div></div>
+  </div>
+  <div class="main-area">
+    <div class="topbar">
+      <div class="tbt">Niches</div>
+      <div class="sbox"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search niches…</div>
+      <div class="av" style="width:33px;height:33px;font-size:11px;">VB</div>
+      <button class="btn-p gray-btn" onclick="openModal('s','new')"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" style="width:12px;height:12px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Niche</button>
+    </div>
+    <div class="content">
+      <div class="ub ub-indigo">
+        <div class="ub-ic ub-ic-i">🚀</div>
+        <div class="ub-txt">
+          <div class="ub-ttl ub-ttl-i">Unlock the full weekly loop — upgrade to Pro</div>
+          <div class="ub-sub ub-sub-i">You're limited to 3 niches and Trend Reports only. Signal Briefs, Newsletters & LinkedIn Posts are locked.</div>
+          <div class="ub-tags"><span class="ub-tag ub-tag-i">7 niches</span><span class="ub-tag ub-tag-i">Signal Briefs</span><span class="ub-tag ub-tag-i">Newsletters</span><span class="ub-tag ub-tag-i">Scan every 2h</span></div>
+        </div>
+        <button class="btn-up-p">Upgrade to Pro →</button>
+      </div>
+      <div class="sg">
+        <div class="sc"><div class="sl">Total niches</div><div class="sv">3</div><div class="ss" style="color:var(--da);">Limit reached</div></div>
+        <div class="sc"><div class="sl">Active</div><div class="sv" style="color:var(--su);">2</div><div class="ss">every 6 hrs</div></div>
+        <div class="sc"><div class="sl">Paused</div><div class="sv" style="color:var(--wa);">1</div><div class="ss">no new signals</div></div>
+        <div class="sc"><div class="sl">Signals / week</div><div class="sv">423</div><div class="ss">across active</div></div>
+      </div>
+      <div class="planbar red">
+        <div><div class="pbt" style="color:var(--da);">⚠ All 3 Starter slots used</div><div class="pbs">Upgrade to Pro for 7 niches, or Agency for 25</div></div>
+        <div class="ptrack"><div class="pbar"><div class="pfill-s" style="width:100%;"></div></div><div class="plbl" style="color:var(--da);">3 of 3</div></div>
+        <button class="btn-up-p" style="height:30px;padding:0 12px;border-radius:9px;font-size:12px;">Upgrade →</button>
+      </div>
+      <div class="fbar"><button class="fc fc-on">All (3)</button><button class="fc fc-off">Active (2)</button><button class="fc fc-off">Paused (1)</button></div>
+      <div class="ng">
+        <div class="nc">
+          <div class="nc-top"><div class="nic">🤖</div><div style="flex:1;min-width:0;"><div class="nn">AI Tooling for B2B SaaS</div><div class="nd">LLM integrations and automation for EU B2B teams.</div><div class="nkw"><span class="kt">AI/LLM</span><span class="kt">B2B SaaS</span><span class="kt">France</span></div></div><button class="tgl on"><div class="tgl-k"></div></button></div>
+          <div class="nst"><div class="nsi"><div class="nsv">312</div><div class="nsl2">Signals</div></div><div class="nsi"><div class="nsv">4</div><div class="nsl2">Reports</div></div><div class="nsi"><div class="nsv">18</div><div class="nsl2">Sources</div></div><div class="nsi"><div class="nsv">6h ago</div><div class="nsl2">Last scan</div></div></div>
+          <div class="nact"><span class="sdot s-on">● Active</span><div class="ml"><button class="btn-gh">Run report</button><button class="btn-gh" onclick="openModal('s','edit','AI Tooling for B2B SaaS','🤖','LLM integrations and automation for EU B2B teams.')">Edit</button><button class="btn-del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:12px;height:12px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></div></div>
+        </div>
+        <div class="nc">
+          <div class="nc-top"><div class="nic">🇫🇷</div><div style="flex:1;min-width:0;"><div class="nn">French SaaS Funding</div><div class="nd">VC rounds and M&A in the French tech ecosystem.</div><div class="nkw"><span class="kt">VC</span><span class="kt">French Tech</span><span class="kt">M&A</span></div></div><button class="tgl on"><div class="tgl-k"></div></button></div>
+          <div class="nst"><div class="nsi"><div class="nsv">111</div><div class="nsl2">Signals</div></div><div class="nsi"><div class="nsv">2</div><div class="nsl2">Reports</div></div><div class="nsi"><div class="nsv">14</div><div class="nsl2">Sources</div></div><div class="nsi"><div class="nsv">5h ago</div><div class="nsl2">Last scan</div></div></div>
+          <div class="nact"><span class="sdot s-on">● Active</span><div class="ml"><button class="btn-gh">Run report</button><button class="btn-gh" onclick="openModal('s','edit','French SaaS Funding','🇫🇷','VC rounds and M&A in the French tech ecosystem.')">Edit</button><button class="btn-del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:12px;height:12px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></div></div>
+        </div>
+        <div class="nc paused">
+          <div class="nc-top"><div class="nic" style="background:var(--bm);">📋</div><div style="flex:1;min-width:0;"><div class="nn">EU Compliance & GDPR</div><div class="nd">CNIL, AI Act and data privacy enforcement.</div><div class="nkw"><span class="kt">GDPR</span><span class="kt">CNIL</span></div></div><button class="tgl off"><div class="tgl-k"></div></button></div>
+          <div class="nst"><div class="nsi"><div class="nsv" style="color:var(--tt);">45</div><div class="nsl2">Signals</div></div><div class="nsi"><div class="nsv" style="color:var(--tt);">1</div><div class="nsl2">Reports</div></div><div class="nsi"><div class="nsv" style="color:var(--tt);">8</div><div class="nsl2">Sources</div></div><div class="nsi"><div class="nsv" style="color:var(--tt);">3d ago</div><div class="nsl2">Last scan</div></div></div>
+          <div class="nact"><span class="sdot s-pa">⏸ Paused</span><div class="ml"><button class="btn-gh" onclick="openModal('s','edit','EU Compliance & GDPR','📋','CNIL, AI Act and data privacy enforcement.')">Edit</button><button class="btn-del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:12px;height:12px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></div></div>
+        </div>
+        <div class="lc">
+          <div class="lc-ic"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div class="lc-ttl">Slot limit reached</div>
+          <div class="lc-sub">Starter: 3 niches max.<br>Pro unlocks 7 slots.</div>
+          <button class="btn-up-p" style="margin-top:4px;">Upgrade to Pro →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- MODAL S -->
+  <div class="mo" id="mo-s">
+    <div class="modal">
+      <div class="mh">
+        <div><div class="mh-ttl" id="mo-s-title">Add new niche</div><div class="mh-sub" id="mo-s-sub">Define what PulseLoop should track</div></div>
+        <button class="mx" onclick="closeModal('s')">✕</button>
+      </div>
+      <div class="mb" id="mo-s-body"></div>
+      <div class="mf">
+        <button class="btn-sec" onclick="closeModal('s')">Cancel</button>
+        <button class="btn-p" id="mo-s-save">Save niche</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════ PRO ═══════ -->
+<div class="view" id="v-p">
+<div class="shell" id="shell-p">
+  <div class="sb">
+    <div class="sb-logo"><div class="li"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px;"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div><span class="lt">PulseLoop</span></div>
+    <div class="ns-sec">
+      <div class="nsl">Workspace</div>
+      <div class="ni"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</div>
+      <div class="ni act"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>Niches</div>
+      <div class="ni"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Trend Reports</div>
+      <div class="ni"><svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>Signal Briefs</div>
+      <div class="ni"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Newsletters</div>
+      <div class="ni"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn Posts</div>
+    </div>
+    <div class="ns-sec"><div class="nsl">Settings</div>
+      <div class="ni"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Brand Voice</div>
+      <div class="ni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>Sources</div>
+    </div>
+    <div class="sb-bot"><div class="av">VB</div><div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:500;color:var(--tp);">Vaibhav</div><span class="pb pb-p">PRO</span></div></div>
+  </div>
+  <div class="main-area">
+    <div class="topbar">
+      <div class="tbt">Niches</div>
+      <div class="sbox"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search niches…</div>
+      <div class="av" style="width:33px;height:33px;font-size:11px;">VB</div>
+      <button class="btn-p" onclick="openModal('p','new')"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" style="width:12px;height:12px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Niche</button>
+    </div>
+    <div class="content">
+      <div class="ub ub-dark">
+        <div class="ub-ic ub-ic-d">🏢</div>
+        <div class="ub-txt">
+          <div class="ub-ttl ub-ttl-d">Managing multiple clients? You need Agency.</div>
+          <div class="ub-sub ub-sub-d">Pro = 1 workspace. Agency = 5 isolated environments, each with its own niches, brand voice and white-label exports.</div>
+          <div class="ub-tags"><span class="ub-tag ub-tag-d">5 workspaces</span><span class="ub-tag ub-tag-d">25 niches</span><span class="ub-tag ub-tag-d">Custom signals</span><span class="ub-tag ub-tag-d">White-label</span></div>
+        </div>
+        <button class="btn-up-ag">Upgrade to Agency →</button>
+      </div>
+      <div class="sg">
+        <div class="sc"><div class="sl">Total niches</div><div class="sv">3</div><div class="ss">of 7 (Pro)</div></div>
+        <div class="sc"><div class="sl">Active</div><div class="sv" style="color:var(--su);">2</div><div class="ss">every 2 hrs</div></div>
+        <div class="sc"><div class="sl">Paused</div><div class="sv" style="color:var(--wa);">1</div><div class="ss">no new signals</div></div>
+        <div class="sc"><div class="sl">Signals / week</div><div class="sv">1,204</div><div class="ss">across active</div></div>
+      </div>
+      <div class="planbar">
+        <div><div class="pbt">Niche slots — Pro plan</div><div class="pbs">Agency: 5 workspaces × 5 niches each</div></div>
+        <div class="ptrack"><div class="pbar"><div class="pfill-p" style="width:43%;"></div></div><div class="plbl">3 of 7</div></div>
+        <button class="btn-up-ag" style="height:28px;padding:0 12px;border-radius:9px;font-size:11px;">Upgrade →</button>
+      </div>
+      <div class="fbar"><button class="fc fc-on">All (3)</button><button class="fc fc-off">Active (2)</button><button class="fc fc-off">Paused (1)</button></div>
+      <div class="ng">
+        <div class="nc"><div class="nc-top"><div class="nic">🤖</div><div style="flex:1;min-width:0;"><div class="nn">AI Tooling for B2B SaaS</div><div class="nd">LLM integrations and automation for EU B2B teams.</div><div class="nkw"><span class="kt">AI/LLM</span><span class="kt">B2B SaaS</span><span class="kt">France</span></div></div><button class="tgl on"><div class="tgl-k"></div></button></div><div class="nst"><div class="nsi"><div class="nsv">847</div><div class="nsl2">Signals</div></div><div class="nsi"><div class="nsv">4</div><div class="nsl2">Reports</div></div><div class="nsi"><div class="nsv">18</div><div class="nsl2">Sources</div></div><div class="nsi"><div class="nsv">2h ago</div><div class="nsl2">Last scan</div></div></div><div class="nact"><span class="sdot s-on">● Active</span><div class="ml"><button class="btn-gh">Run report</button><button class="btn-gh" onclick="openModal('p','edit','AI Tooling for B2B SaaS','🤖','LLM integrations and automation for EU B2B teams.')">Edit</button><button class="btn-del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:12px;height:12px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></div></div></div>
+        <div class="nc"><div class="nc-top"><div class="nic">🇫🇷</div><div style="flex:1;min-width:0;"><div class="nn">French SaaS Funding</div><div class="nd">VC rounds and M&A in French tech.</div><div class="nkw"><span class="kt">VC</span><span class="kt">French Tech</span><span class="kt">M&A</span></div></div><button class="tgl on"><div class="tgl-k"></div></button></div><div class="nst"><div class="nsi"><div class="nsv">312</div><div class="nsl2">Signals</div></div><div class="nsi"><div class="nsv">2</div><div class="nsl2">Reports</div></div><div class="nsi"><div class="nsv">14</div><div class="nsl2">Sources</div></div><div class="nsi"><div class="nsv">1h ago</div><div class="nsl2">Last scan</div></div></div><div class="nact"><span class="sdot s-on">● Active</span><div class="ml"><button class="btn-gh">Run report</button><button class="btn-gh" onclick="openModal('p','edit','French SaaS Funding','🇫🇷','VC rounds and M&A in French tech.')">Edit</button><button class="btn-del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:12px;height:12px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></div></div></div>
+        <div class="nc paused"><div class="nc-top"><div class="nic" style="background:var(--bm);">📋</div><div style="flex:1;min-width:0;"><div class="nn">EU Compliance & GDPR</div><div class="nd">CNIL, AI Act and data privacy enforcement.</div><div class="nkw"><span class="kt">GDPR</span><span class="kt">CNIL</span></div></div><button class="tgl off"><div class="tgl-k"></div></button></div><div class="nst"><div class="nsi"><div class="nsv" style="color:var(--tt);">45</div><div class="nsl2">Signals</div></div><div class="nsi"><div class="nsv" style="color:var(--tt);">1</div><div class="nsl2">Reports</div></div><div class="nsi"><div class="nsv" style="color:var(--tt);">8</div><div class="nsl2">Sources</div></div><div class="nsi"><div class="nsv" style="color:var(--tt);">3d ago</div><div class="nsl2">Last scan</div></div></div><div class="nact"><span class="sdot s-pa">⏸ Paused</span><div class="ml"><button class="btn-gh" onclick="openModal('p','edit','EU Compliance & GDPR','📋','CNIL, AI Act and data privacy enforcement.')">Edit</button><button class="btn-del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:12px;height:12px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></div></div></div>
+        <div class="ac" onclick="openModal('p','new')"><div class="ac-ic"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="ac-ttl">Add a new niche</div><div class="ac-sub">4 slots remaining on Pro</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="mo" id="mo-p">
+    <div class="modal">
+      <div class="mh"><div><div class="mh-ttl" id="mo-p-title">Add new niche</div><div class="mh-sub" id="mo-p-sub">Define what PulseLoop should track</div></div><button class="mx" onclick="closeModal('p')">✕</button></div>
+      <div class="mb" id="mo-p-body"></div>
+      <div class="mf"><button class="btn-sec" onclick="closeModal('p')">Cancel</button><button class="btn-p" id="mo-p-save">Save niche</button></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════ AGENCY ═══════ -->
+<div class="view" id="v-ag">
+<div class="shell" id="shell-ag">
+  <div class="sb dark">
+    <div class="sb-logo"><div class="li gold"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:16px;height:16px;"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div><span class="lt">PulseLoop</span></div>
+    <div class="ns-sec">
+      <div class="nsl">Workspace</div>
+      <div class="ni"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</div>
+      <div class="ni act"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>Niches</div>
+      <div class="ni"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Trend Reports</div>
+      <div class="ni"><svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>Signal Briefs</div>
+      <div class="ni"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Newsletters</div>
+      <div class="ni"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn Posts</div>
+    </div>
+    <div class="ns-sec"><div class="nsl">Settings</div>
+      <div class="ni"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Brand Voice</div>
+      <div class="ni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>Sources</div>
+    </div>
+    <div class="sb-bot"><div class="av">VB</div><div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:500;color:#fff;">Vaibhav</div><span class="pb pb-ag">AGENCY</span></div></div>
+  </div>
+  <div class="main-area">
+    <div class="topbar">
+      <div class="tbt">Niches</div>
+      <div class="sbox"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search niches…</div>
+      <div class="av" style="width:33px;height:33px;font-size:11px;">VB</div>
+      <button class="btn-p dark-btn" onclick="openModal('ag','new')"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" style="width:12px;height:12px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add Niche</button>
+    </div>
+    <div class="content">
+      <div style="font-size:10px;font-weight:700;color:var(--tt);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px;">Workspaces</div>
+      <div class="wstabs">
+        <button class="wst wst-on">🏢 Acme Corp <span class="wct wct-on">3</span></button>
+        <button class="wst wst-off">🚀 Mistral AI <span class="wct wct-off">5</span></button>
+        <button class="wst wst-off">📊 Pennylane <span class="wct wct-off">2</span></button>
+        <button class="wst wst-add">+ Add workspace</button>
+      </div>
+      <div class="sg">
+        <div class="sc"><div class="sl">This workspace</div><div class="sv">3</div><div class="ss">of 5 slots</div></div>
+        <div class="sc"><div class="sl">Active</div><div class="sv" style="color:var(--su);">2</div><div class="ss">every hour</div></div>
+        <div class="sc"><div class="sl">All workspaces</div><div class="sv">3</div><div class="ss">of 5 used</div></div>
+        <div class="sc"><div class="sl">Total signals / wk</div><div class="sv">4,821</div><div class="ss">all workspaces</div></div>
+      </div>
+      <div class="planbar gold">
+        <div><div class="pbt">Acme Corp — Agency plan</div><div class="pbs">Hourly scan · Custom signals enabled · 3 of 5 niche slots used</div></div>
+        <div class="ptrack"><div class="pbar"><div class="pfill-ag" style="width:60%;"></div></div><div class="plbl" style="color:var(--wa);">3 of 5</div></div>
+        <button class="btn-p dark-btn" style="height:28px;padding:0 12px;border-radius:9px;font-size:11px;">Manage plan</button>
+      </div>
+      <div class="fbar"><button class="fc fc-on-ag">All (3)</button><button class="fc fc-off">Active (2)</button><button class="fc fc-off">Paused (1)</button></div>
+      <div class="ng">
+        <div class="nc"><div class="nc-top"><div class="nic" style="background:rgba(245,166,35,.12);">🤖</div><div style="flex:1;min-width:0;"><div class="nn">AI Tooling for B2B SaaS</div><div class="nd">LLM integrations and automation for EU B2B teams.</div><div class="nkw"><span class="kt">AI/LLM</span><span class="kt">B2B SaaS</span><span class="kt-gold kt">Custom signals ✦</span></div></div><button class="tgl on-ag"><div class="tgl-k"></div></button></div><div class="nst"><div class="nsi"><div class="nsv">2,341</div><div class="nsl2">Signals</div></div><div class="nsi"><div class="nsv">12</div><div class="nsl2">Reports</div></div><div class="nsi"><div class="nsv">18</div><div class="nsl2">Sources</div></div><div class="nsi"><div class="nsv">58m ago</div><div class="nsl2">Last scan</div></div></div><div class="nact"><span class="sdot s-on">● Active</span><div class="ml"><button class="btn-gh">Run report</button><button class="btn-gh" onclick="openModal('ag','edit','AI Tooling for B2B SaaS','🤖','LLM integrations and automation for EU B2B teams.')">Edit</button><button class="btn-del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:12px;height:12px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></div></div></div>
+        <div class="nc"><div class="nc-top"><div class="nic" style="background:rgba(245,166,35,.12);">🇫🇷</div><div style="flex:1;min-width:0;"><div class="nn">French SaaS Funding</div><div class="nd">VC rounds and M&A in French tech.</div><div class="nkw"><span class="kt">VC</span><span class="kt">French Tech</span><span class="kt">M&A</span></div></div><button class="tgl on-ag"><div class="tgl-k"></div></button></div><div class="nst"><div class="nsi"><div class="nsv">1,204</div><div class="nsl2">Signals</div></div><div class="nsi"><div class="nsv">8</div><div class="nsl2">Reports</div></div><div class="nsi"><div class="nsv">14</div><div class="nsl2">Sources</div></div><div class="nsi"><div class="nsv">45m ago</div><div class="nsl2">Last scan</div></div></div><div class="nact"><span class="sdot s-on">● Active</span><div class="ml"><button class="btn-gh">Run report</button><button class="btn-gh" onclick="openModal('ag','edit','French SaaS Funding','🇫🇷','VC rounds and M&A in French tech.')">Edit</button><button class="btn-del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:12px;height:12px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></div></div></div>
+        <div class="nc paused"><div class="nc-top"><div class="nic" style="background:var(--bm);">📋</div><div style="flex:1;min-width:0;"><div class="nn">EU Compliance & GDPR</div><div class="nd">CNIL, AI Act updates for Acme Corp.</div><div class="nkw"><span class="kt">GDPR</span><span class="kt">CNIL</span></div></div><button class="tgl off"><div class="tgl-k"></div></button></div><div class="nst"><div class="nsi"><div class="nsv" style="color:var(--tt);">88</div><div class="nsl2">Signals</div></div><div class="nsi"><div class="nsv" style="color:var(--tt);">2</div><div class="nsl2">Reports</div></div><div class="nsi"><div class="nsv" style="color:var(--tt);">8</div><div class="nsl2">Sources</div></div><div class="nsi"><div class="nsv" style="color:var(--tt);">2d ago</div><div class="nsl2">Last scan</div></div></div><div class="nact"><span class="sdot s-pa">⏸ Paused</span><div class="ml"><button class="btn-gh" onclick="openModal('ag','edit','EU Compliance & GDPR','📋','CNIL, AI Act updates for Acme Corp.')">Edit</button><button class="btn-del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:12px;height:12px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg></button></div></div></div>
+        <div class="ac" onclick="openModal('ag','new')"><div class="ac-ic"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="ac-ttl">Add niche to Acme Corp</div><div class="ac-sub">2 slots remaining in this workspace</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="mo" id="mo-ag">
+    <div class="modal">
+      <div class="mh"><div><div class="mh-ttl" id="mo-ag-title">Add new niche</div><div class="mh-sub" id="mo-ag-sub">Define what PulseLoop should track</div></div><button class="mx" onclick="closeModal('ag')">✕</button></div>
+      <div class="mb" id="mo-ag-body"></div>
+      <div class="mf"><button class="btn-sec" onclick="closeModal('ag')">Cancel</button><button class="btn-p dark-btn" id="mo-ag-save">Save niche</button></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+var TIERS={s:{max:3,freq:'Every 6 hours',freqLocked:true},p:{max:7,freq:'Every 2 hours',freqLocked:false},ag:{max:5,freq:'Every hour',freqLocked:false,hasCustomSignals:true}};
+
+function setTier(t){
+  ['s','p','ag'].forEach(function(x){
+    document.getElementById('v-'+x).classList.remove('on');
+    var tabs=document.querySelectorAll('.ttab');
+    var i=['s','p','ag'].indexOf(x);
+    tabs[i].className='ttab';
+  });
+  document.getElementById('v-'+t).classList.add('on');
+  var tabs=document.querySelectorAll('.ttab');
+  var i=['s','p','ag'].indexOf(t);
+  if(t==='s') tabs[i].className='ttab ton ton-s';
+  if(t==='p') tabs[i].className='ttab ton ton-p';
+  if(t==='ag') tabs[i].className='ttab ton ton-ag';
+  var dp=document.getElementById('dot-p');
+  var dag=document.getElementById('dot-ag');
+  if(dp) dp.style.background=t==='p'?'#fff':'var(--tt)';
+  if(dag) dag.style.background=t==='ag'?'var(--agb)':'var(--tt)';
+}
+
+var EMOJIS=['🤖','📊','🚀','🇫🇷','💡','🔍','📋','⚡','🎯','💼'];
+var SOURCES_T1=['LinkedIn','Google News','Hacker News','Reddit','X/Twitter'];
+var SOURCES_T2=['FrenchWeb','Maddyness','Malt.fr','Dealroom','ProductHunt','Substack'];
+var SOURCES_T3=['GitHub','EU Parliament','CNIL','Dev.to','Polymarket'];
+var DEFAULT_KW=['AI tooling','LLM SaaS','French B2B'];
+var DEFAULT_SRCS=['LinkedIn','Google News','Hacker News','FrenchWeb','GitHub'];
+
+function buildModalBody(tier,mode,name,emoji,desc){
+  var isEdit=mode==='edit';
+  var isStarter=tier==='s';
+  var isAgency=tier==='ag';
+  var kws=isEdit?[name.split(' ')[0],'EU SaaS','automation']:DEFAULT_KW.slice();
+  var selSrcs=DEFAULT_SRCS.slice();
+  var chosenEmoji=emoji||(isEdit?emoji:'🤖');
+
+  var lockMsg=isStarter&&!isEdit?'<div class="lock-msg"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><div class="lock-msg-txt"><div class="lock-msg-ttl">Starter: '+(3-(isEdit?0:0))+' of 3 slots used — this is your last slot</div>You can still create this niche, but you won\'t be able to add more until you upgrade to Pro.</div></div>':'';
+
+  var stepHtml='<div class="stepbar"><div class="step"><div class="sd sd-done">✓</div><span class="sl-done">Basics</span></div><div class="sline"></div><div class="step"><div class="sd sd-act">2</div><span class="sl-act">Keywords</span></div><div class="sline"></div><div class="step"><div class="sd sd-todo">3</div><span class="sl-todo">Sources</span></div><div class="sline"></div><div class="step"><div class="sd sd-todo">4</div><span class="sl-todo">Schedule</span></div></div>';
+
+  var emojiHtml='<div class="fr"><label class="fl">Icon</label><div class="er">'+EMOJIS.map(function(e){return '<div class="eo'+(e===chosenEmoji?' ep':'')+'" onclick="pickEmoji(this,\''+e+'\')">'+e+'</div>';}).join('')+'</div></div>';
+
+  var kwHtml='<div class="fsec"><div class="fsec-ttl">Keywords to track</div><div class="fr"><label class="fl">Add keywords <span>*</span></label><div class="kwwrap"><input class="fi" type="text" placeholder="Type keyword, press Enter…" id="kw-input-'+tier+'" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addKw(\''+tier+'\');}"/><button class="btn-p'+(isAgency?' dark-btn':'')+'" style="height:34px;padding:0 12px;" onclick="addKw(\''+tier+'\')">Add</button></div><div class="kwlist" id="kw-list-'+tier+'">'+kws.map(function(k){return '<span class="kwp">'+k+' <span class="kwr" onclick="this.parentElement.remove()">×</span></span>';}).join('')+'</div></div></div>';
+
+  var srcHtml='<div class="fsec"><div class="fsec-ttl">Sources to monitor</div>'+
+    '<div class="src-lbl">Tier 1 — Core</div><div class="srcg">'+SOURCES_T1.map(function(s){return '<div class="sc2'+(selSrcs.includes(s)?' sel':'')+'" onclick="this.classList.toggle(\'sel\')">'+s+'<div class="chk">'+(selSrcs.includes(s)?'✓':'')+'</div></div>';}).join('')+'</div>'+
+    '<div class="src-lbl">Tier 2 — EU Edge</div><div class="srcg">'+SOURCES_T2.map(function(s){return '<div class="sc2'+(selSrcs.includes(s)?' sel':'')+'" onclick="this.classList.toggle(\'sel\')">'+s+'<div class="chk">'+(selSrcs.includes(s)?'✓':'')+'</div></div>';}).join('')+'</div>'+
+    '<div class="src-lbl">Tier 3 — Deep Intel</div><div class="srcg">'+SOURCES_T3.map(function(s){return '<div class="sc2'+(selSrcs.includes(s)?' sel':'')+'" onclick="this.classList.toggle(\'sel\')">'+s+'<div class="chk">'+(selSrcs.includes(s)?'✓':'')+'</div></div>';}).join('')+'</div>'+
+    '</div>';
+
+  var freqDisabled=isStarter?' disabled style="opacity:.5;pointer-events:none;"':'';
+  var freqHint=isStarter?'<div class="fh" style="color:var(--da);">Locked on Starter — upgrade to Pro for 2-hour scans</div>':'<div class="fh">Your plan allows up to '+TIERS[tier].freq+'</div>';
+  var customSignalsRow=isAgency?'<div class="fr"><label class="fl">Custom signal types <span style="background:rgba(245,166,35,.15);color:#B07A00;border-radius:9999px;padding:1px 7px;font-size:10px;">Agency only ✦</span></label><input class="fi" type="text" placeholder="e.g. Hiring signals, Product launches, Pricing changes…"/><div class="fh">Define sub-topics beyond standard keyword matching</div></div>':'';
+
+  var schedHtml='<div class="fsec"><div class="fsec-ttl">Scan schedule</div><div class="fr-2"><div><label class="fl">Scrape frequency</label><select class="fsel"'+freqDisabled+'><option'+(tier==='ag'?' selected':'')+'>Every hour (Agency)</option><option'+(tier==='p'?' selected':'')+'>Every 2 hours (Pro)</option><option'+(tier==='s'?' selected':'')+'>Every 6 hours (Starter)</option></select>'+freqHint+'</div><div><label class="fl">Signal memory</label><select class="fsel"><option selected>90 days</option><option>30 days</option><option>7 days</option></select><div class="fh">How far back RAG context is kept</div></div></div>'+customSignalsRow+'<div class="fr"><label class="fl">Activate immediately</label><div style="display:flex;align-items:center;gap:8px;margin-top:3px;"><button class="tgl on'+(isAgency?' on-ag':'')+'" id="act-tgl-'+tier+'" onclick="toggleAct(this,\''+tier+'\')"><div class="tgl-k"></div></button><span style="font-size:12px;color:var(--ts);" id="act-lbl-'+tier+'">Niche starts scanning right after saving</span></div></div></div>';
+
+  var wsRow=isAgency?'<div class="fr"><label class="fl">Workspace</label><select class="fsel"><option selected>🏢 Acme Corp</option><option>🚀 Mistral AI</option><option>📊 Pennylane</option></select><div class="fh">Niches are isolated per workspace</div></div>':'';
+
+  return lockMsg+stepHtml+
+    '<div class="fr"><label class="fl">Niche name <span>*</span></label><input class="fi" type="text" placeholder="e.g. AI Tooling for B2B SaaS" value="'+(isEdit?name:'')+'" /></div>'+
+    wsRow+
+    '<div class="fr"><label class="fl">Description</label><textarea class="fta" rows="2" placeholder="What market are you tracking and for whom?">'+(isEdit?desc:'')+'</textarea><div class="fh">Claude uses this context when generating reports and content</div></div>'+
+    emojiHtml+kwHtml+srcHtml+schedHtml;
+}
+
+function openModal(tier,mode,name,emoji,desc){
+  var isEdit=mode==='edit';
+  document.getElementById('mo-'+tier+'-title').textContent=isEdit?'Edit niche':'Add new niche';
+  document.getElementById('mo-'+tier+'-sub').textContent=isEdit?'Update the niche settings':'Define what PulseLoop should track';
+  document.getElementById('mo-'+tier+'-save').textContent=isEdit?'Save changes':'Save niche';
+  document.getElementById('mo-'+tier+'-body').innerHTML=buildModalBody(tier,mode,name,emoji,desc);
+  document.getElementById('mo-'+tier).classList.add('open');
+}
+
+function closeModal(tier){document.getElementById('mo-'+tier).classList.remove('open');}
+
+function addKw(tier){
+  var inp=document.getElementById('kw-input-'+tier);
+  var val=inp.value.trim();
+  if(!val)return;
+  var list=document.getElementById('kw-list-'+tier);
+  var pill=document.createElement('span');
+  pill.className='kwp';
+  pill.innerHTML=val+' <span class="kwr" onclick="this.parentElement.remove()">×</span>';
+  list.appendChild(pill);
+  inp.value='';inp.focus();
+}
+
+function pickEmoji(el,e){
+  el.closest('.er').querySelectorAll('.eo').forEach(function(x){x.classList.remove('ep');});
+  el.classList.add('ep');
+}
+
+function toggleAct(btn,tier){
+  btn.classList.toggle('on');
+  btn.classList.toggle('on-ag');
+  btn.classList.toggle('off');
+  var lbl=document.getElementById('act-lbl-'+tier);
+  if(lbl) lbl.textContent=btn.classList.contains('off')?'Saved but not activated — toggle later':'Niche starts scanning right after saving';
+}
+
+document.querySelectorAll('.mo').forEach(function(mo){
+  mo.addEventListener('click',function(e){if(e.target===mo){var t=mo.id.replace('mo-','');closeModal(t);}});
+});
+</script>

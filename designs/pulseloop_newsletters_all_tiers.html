@@ -1,0 +1,585 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --a:#5B5FC7;--al:#EEEEFF;--am:#A3A6E8;
+  --bp:#F0F0F7;--bm:#F7F7FC;
+  --tp:#1A1A3E;--ts:#6B6B8A;--tt:#A0A0BE;
+  --br:#E4E4F0;--brs:#C5C5E0;
+  --su:#4CAF82;--sub:#E8F7EF;
+  --wa:#F5A623;--wab:#FFF4E0;
+  --da:#E85757;--dab:#FDEAEA;
+  --ag:#1A1A3E;--agb:#F5A623;
+}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bp);}
+
+.controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.tab-group{display:flex;gap:3px;padding:3px;background:#fff;border:1px solid var(--br);border-radius:10px;}
+.tt{height:30px;padding:0 14px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--tt);}
+.tt.ts{background:var(--bp);color:var(--tp);}
+.tt.tp{background:var(--a);color:#fff;}
+.tt.tag{background:var(--ag);color:var(--agb);}
+.vt{height:30px;padding:0 13px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--tt);}
+.vt.on{background:var(--a);color:#fff;}
+
+.shell{display:flex;height:720px;background:var(--bp);border-radius:14px;overflow:hidden;border:1px solid var(--br);}
+
+/* SIDEBAR */
+.sidebar{width:215px;min-width:215px;background:#fff;border-right:1px solid var(--br);display:flex;flex-direction:column;flex-shrink:0;}
+.sidebar.dark{background:var(--ag);border-color:#2D2D5E;}
+.slogo{height:56px;display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0;}
+.sidebar .slogo{border-bottom:1px solid var(--br);}
+.sidebar.dark .slogo{border-bottom:1px solid #2D2D5E;}
+.sli{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.slt{font-size:14px;font-weight:700;}
+.sidebar .slt{color:var(--tp);}
+.sidebar.dark .slt{color:#fff;}
+.snav{padding:12px 8px 6px;}
+.snl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:0 8px;margin-bottom:4px;color:var(--tt);}
+.sidebar.dark .snl{color:rgba(255,255,255,.3);}
+.sni{display:flex;align-items:center;gap:8px;height:38px;padding:0 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--ts);margin-bottom:1px;}
+.sidebar.dark .sni{color:rgba(255,255,255,.45);}
+.sni.act{background:var(--al);color:var(--a);}
+.sidebar.dark .sni.act{background:rgba(245,166,35,.15);color:var(--agb);}
+.sni svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.sbot{margin-top:auto;padding:10px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.sidebar .sbot{border-top:1px solid var(--br);}
+.sidebar.dark .sbot{border-top:1px solid #2D2D5E;}
+.sav{width:28px;height:28px;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.spb{font-size:10px;font-weight:700;padding:1px 7px;border-radius:9999px;}
+
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.tb{height:56px;background:#fff;border-bottom:1px solid var(--br);display:flex;align-items:center;padding:0 20px;gap:8px;flex-shrink:0;}
+.tb-title{font-size:16px;font-weight:600;color:var(--tp);flex:1;}
+.scroll{flex:1;overflow-y:auto;padding:18px 20px;background:var(--bm);}
+
+/* BUTTONS */
+.btnp{height:30px;padding:0 12px;border-radius:8px;color:#fff;font-size:12px;font-weight:600;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.btnp.ind{background:var(--a);}
+.btnp.drk{background:var(--ag);}
+.btns{height:30px;padding:0 10px;border-radius:8px;background:#fff;color:var(--tp);font-size:12px;font-weight:500;border:1px solid var(--br);cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
+.btng{height:26px;padding:0 8px;border-radius:6px;background:transparent;font-size:11px;font-weight:500;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:3px;}
+.btng.p{color:var(--a);}
+.btng.p:hover{background:var(--al);}
+.btng.ag{color:#9A6600;}
+.btng.ag:hover{background:rgba(245,166,35,.08);}
+.btn-up{height:24px;padding:0 11px;border-radius:9999px;font-size:11px;font-weight:600;border:none;cursor:pointer;white-space:nowrap;}
+.btn-up.p{background:var(--a);color:#fff;}
+.btn-up.a{background:var(--ag);color:var(--agb);}
+
+/* ── EXPORT BUTTON + DROPDOWN ── */
+.export-wrap{position:relative;display:inline-block;}
+.export-btn{height:30px;padding:0 12px;border-radius:8px;background:#fff;color:var(--tp);font-size:12px;font-weight:500;border:1px solid var(--br);cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+.export-btn:hover{background:var(--bm);}
+.export-btn svg{width:11px;height:11px;stroke:var(--ts);fill:none;stroke-width:2;stroke-linecap:round;transition:transform .15s;}
+.export-btn.open svg.chevron{transform:rotate(180deg);}
+.export-dropdown{position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid var(--br);border-radius:12px;box-shadow:0 8px 24px rgba(91,95,199,.14);min-width:240px;z-index:999;overflow:hidden;display:none;}
+.export-dropdown.open{display:block;}
+.export-section-lbl{font-size:10px;font-weight:700;color:var(--tt);text-transform:uppercase;letter-spacing:.5px;padding:10px 14px 5px;}
+.export-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;transition:background .12s;}
+.export-item:hover{background:var(--bm);}
+.export-item-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.export-item-body{flex:1;}
+.export-item-lbl{font-size:12px;font-weight:600;color:var(--tp);}
+.export-item-sub{font-size:10px;color:var(--tt);margin-top:1px;}
+.export-item-arrow{font-size:12px;color:var(--tt);}
+.export-divider{height:1px;background:var(--br);margin:4px 0;}
+
+/* BADGES */
+.bd{font-size:10px;font-weight:600;padding:2px 7px;border-radius:9999px;white-space:nowrap;}
+.bd-new{background:var(--al);color:var(--a);}
+.bd-hi{background:var(--sub);color:var(--su);}
+.bd-med{background:var(--wab);color:var(--wa);}
+.bd-ag{background:rgba(245,166,35,.15);color:#9A6600;}
+.bd-bee{background:#FEF3C7;color:#92400E;}
+
+/* UB */
+.ub{border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.ub.ind{background:var(--al);border:1px solid var(--am);}
+.ub.drk{background:var(--ag);border:1px solid #3D3D7E;}
+.ub-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.ub.ind .ub-ic{background:#fff;}
+.ub.drk .ub-ic{background:rgba(245,166,35,.15);}
+.ub-body{flex:1;}
+.ub-ttl{font-size:12px;font-weight:700;}
+.ub.ind .ub-ttl{color:var(--a);}
+.ub.drk .ub-ttl{color:#fff;}
+.ub-sub{font-size:11px;margin-top:1px;}
+.ub.ind .ub-sub{color:var(--ts);}
+.ub.drk .ub-sub{color:rgba(255,255,255,.55);}
+.ub-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;}
+.ut-i{font-size:10px;font-weight:600;padding:2px 6px;border-radius:9999px;background:var(--al);color:var(--a);}
+.ut-d{font-size:10px;font-weight:600;padding:2px 6px;border-radius:9999px;background:rgba(245,166,35,.15);color:#9A6600;}
+
+/* STATS */
+.sg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px;}
+.sc{background:#fff;border:1px solid var(--br);border-radius:10px;padding:11px 13px;}
+.sc-l{font-size:10px;font-weight:600;color:var(--ts);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+.sc-v{font-size:19px;font-weight:700;color:var(--tp);}
+.sc-s{font-size:10px;color:var(--tt);margin-top:1px;}
+
+/* WS TABS */
+.ws-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;}
+.wst{height:28px;padding:0 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:5px;}
+.wst.on{background:var(--ag);color:#fff;}
+.wst.off{background:#fff;color:var(--ts);border:1px solid var(--br);}
+.wst.add{background:transparent;color:var(--ts);border:1px dashed var(--brs);}
+.wct{font-size:10px;border-radius:9999px;padding:1px 5px;}
+.wct-on{background:rgba(255,255,255,.2);color:#fff;}
+.wct-off{background:var(--bm);color:var(--tt);}
+
+/* GEN PANEL */
+.gen-panel{background:#fff;border:1px solid var(--br);border-radius:12px;padding:12px 15px;margin-bottom:14px;}
+.gen-panel-top{display:flex;align-items:center;gap:10px;}
+.gen-panel-inputs{display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--br);flex-wrap:wrap;align-items:center;}
+.fsel{height:28px;padding:0 8px;border-radius:7px;border:1px solid var(--br);font-size:11px;color:var(--ts);background:#fff;font-family:inherit;cursor:pointer;outline:none;}
+.src-toggle{display:flex;border:1px solid var(--br);border-radius:8px;overflow:hidden;}
+.src-opt{height:28px;padding:0 10px;font-size:11px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:5px;background:#fff;color:var(--ts);}
+.src-opt.on{background:var(--al);color:var(--a);}
+.src-opt.on-ag{background:rgba(245,166,35,.15);color:#9A6600;}
+.src-opt+.src-opt{border-left:1px solid var(--br);}
+
+/* FILTER */
+.frow{display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.fc{height:26px;padding:0 10px;border-radius:9999px;font-size:11px;font-weight:600;cursor:pointer;border:none;}
+.fc.on{background:var(--a);color:#fff;}
+.fc.on-ag{background:var(--ag);color:#fff;}
+.fc.off{background:#fff;color:var(--ts);border:1px solid var(--br);}
+
+/* NL CARDS */
+.nl-list{display:flex;flex-direction:column;gap:10px;}
+.nlc{background:#fff;border:1px solid var(--br);border-radius:13px;overflow:hidden;cursor:pointer;transition:box-shadow .15s;}
+.nlc:hover{box-shadow:0 4px 16px rgba(91,95,199,.10);}
+.nlc.feat-p{border-left:3px solid var(--a);}
+.nlc.feat-ag{border-left:3px solid var(--agb);}
+.nlc-strip{display:flex;align-items:center;gap:8px;padding:10px 14px 8px;border-bottom:1px solid var(--br);}
+.nlc-niche{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.nlc-niche.p{color:var(--a);}
+.nlc-niche.ag{color:#9A6600;}
+.nlc-strip-right{margin-left:auto;display:flex;align-items:center;gap:5px;}
+.nlc-email{padding:12px 14px;}
+.nlc-subj-lbl{font-size:10px;font-weight:600;color:var(--tt);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+.nlc-subj{font-size:14px;font-weight:700;color:var(--tp);margin-bottom:5px;line-height:1.35;}
+.nlc-prev{font-size:12px;color:var(--ts);line-height:1.6;margin-bottom:8px;}
+.nlc-secs{display:flex;gap:5px;flex-wrap:wrap;}
+.nlc-sec{font-size:10px;font-weight:500;padding:2px 8px;border-radius:9999px;background:var(--bm);color:var(--ts);border:1px solid var(--br);}
+.nlc-foot{display:flex;align-items:center;gap:5px;padding:8px 12px;border-top:1px solid var(--br);background:var(--bm);}
+
+/* LOCKED */
+.lock-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:50px 20px;text-align:center;}
+.lock-icon-bg{width:56px;height:56px;border-radius:16px;background:var(--dab);display:flex;align-items:center;justify-content:center;}
+.lock-icon-bg svg{width:24px;height:24px;stroke:var(--da);fill:none;stroke-width:1.5;stroke-linecap:round;}
+.lock-feats{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:420px;width:100%;}
+.lf{background:#fff;border:1px solid var(--br);border-radius:9px;padding:10px 12px;display:flex;gap:8px;align-items:flex-start;text-align:left;}
+.lf svg{width:13px;height:13px;stroke:var(--a);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;margin-top:2px;}
+.lf-ttl{font-size:12px;font-weight:600;color:var(--tp);}
+.lf-sub{font-size:11px;color:var(--tt);margin-top:1px;}
+
+/* VIEWS */
+.pg{display:none;flex-direction:column;overflow:hidden;flex:1;}
+.pg.on{display:flex;}
+.bc{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tt);margin-bottom:12px;}
+.bc .lnk{color:var(--a);cursor:pointer;font-weight:600;}
+.bc svg{width:10px;height:10px;stroke:var(--tt);fill:none;stroke-width:1.5;stroke-linecap:round;}
+
+/* DETAIL */
+.pub-strip{border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.pub-strip.bee{background:#FFFBF0;border:1px solid #FDE68A;}
+.pub-strip.wl{background:var(--ag);border:1px solid #3D3D7E;}
+
+.nl-doc{background:#fff;border:1px solid var(--br);border-radius:14px;overflow:hidden;margin-bottom:12px;}
+.nl-meta{padding:14px 20px;border-bottom:1px solid var(--br);background:var(--bm);}
+.nl-meta-row{display:flex;align-items:baseline;gap:8px;margin-bottom:4px;}
+.nl-meta-row:last-child{margin-bottom:0;}
+.nl-meta-lbl{font-size:10px;font-weight:700;color:var(--tt);width:52px;flex-shrink:0;text-transform:uppercase;letter-spacing:.3px;}
+.nl-meta-val{font-size:12px;color:var(--tp);font-weight:500;}
+.nl-meta-val.subj{font-size:13px;font-weight:700;}
+.nl-hero{padding:22px 24px 16px;border-bottom:1px solid var(--br);}
+.nl-issue{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--tt);margin-bottom:5px;}
+.nl-headline{font-size:19px;font-weight:800;color:var(--tp);line-height:1.28;margin-bottom:8px;letter-spacing:-.3px;}
+.nl-sub{font-size:13px;color:var(--ts);line-height:1.7;margin-bottom:10px;}
+.nl-pills{display:flex;gap:5px;flex-wrap:wrap;}
+.nlp{font-size:10px;font-weight:600;padding:2px 8px;border-radius:9999px;}
+.nlp-a{background:var(--al);color:var(--a);}
+.nlp-s{background:var(--sub);color:var(--su);}
+.nlp-d{background:var(--bp);color:var(--ts);border:1px solid var(--br);}
+.nlp-ag{background:rgba(245,166,35,.15);color:#9A6600;}
+.nl-section{padding:15px 24px;border-bottom:1px solid var(--br);}
+.nl-section:last-of-type{border-bottom:none;}
+.nl-sec-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--tt);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.nl-sec-lbl::after{content:'';flex:1;height:1px;background:var(--br);}
+.nl-story{font-size:13px;color:var(--tp);line-height:1.85;}
+.nl-story p{margin-bottom:10px;}
+.nl-story p:last-child{margin-bottom:0;}
+.cite{display:inline-block;background:var(--al);color:var(--a);border-radius:4px;font-size:10px;font-weight:700;padding:1px 5px;margin:0 1px;border:1px solid var(--am);}
+.cite.eu{background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE;}
+.nl-signals{display:flex;flex-direction:column;gap:10px;}
+.nl-sig{display:flex;gap:10px;align-items:flex-start;}
+.nl-sig-num{width:22px;height:22px;border-radius:6px;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.nl-sig-num.hi{background:var(--sub);color:var(--su);}
+.nl-sig-num.hi-ag{background:rgba(245,166,35,.2);color:#9A6600;}
+.nl-sig-num.med{background:var(--wab);color:var(--wa);}
+.nl-sig-title{font-size:13px;font-weight:700;color:var(--tp);margin-bottom:3px;}
+.nl-sig-txt{font-size:12px;color:var(--ts);line-height:1.6;}
+.nl-sig-src{font-size:10px;color:var(--tt);margin-top:3px;}
+.nl-eu-list{display:flex;flex-direction:column;gap:7px;}
+.nl-eu-item{display:flex;gap:8px;align-items:flex-start;padding:9px 11px;border-radius:8px;border:1px solid #BFDBFE;background:#EFF6FF;}
+.nl-eu-src{font-size:10px;font-weight:700;color:#1D4ED8;width:65px;flex-shrink:0;margin-top:1px;}
+.nl-eu-txt{font-size:12px;color:var(--tp);line-height:1.55;}
+.nl-watch-list{display:flex;flex-direction:column;gap:6px;}
+.nl-watch{display:flex;gap:8px;align-items:flex-start;}
+.nl-watch-dot{width:6px;height:6px;border-radius:9999px;background:var(--tt);flex-shrink:0;margin-top:6px;}
+.nl-watch-txt{font-size:12px;color:var(--ts);line-height:1.6;}
+.nl-cta{margin:0;padding:14px 16px;border-radius:10px;border:1px solid var(--br);background:var(--bm);display:flex;align-items:center;gap:12px;}
+.nl-cta-lbl{font-size:12px;font-weight:700;color:var(--tp);margin-bottom:2px;}
+.nl-cta-sub{font-size:11px;color:var(--ts);}
+.nl-foot{padding:12px 24px;border-top:1px solid var(--br);background:var(--bm);display:flex;align-items:center;gap:8px;}
+.nl-foot-txt{font-size:11px;color:var(--tt);flex:1;}
+.nl-foot-txt strong{color:var(--ts);}
+
+/* PUBLISH ROW */
+.publish-row{background:#fff;border:1px solid var(--br);border-radius:13px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
+</style>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <div class="tab-group">
+    <button class="tt ts" onclick="setTier('s')">Starter €49</button>
+    <button class="tt" id="tt-p" onclick="setTier('p')">Pro €99</button>
+    <button class="tt" id="tt-ag" onclick="setTier('ag')">Agency €249</button>
+  </div>
+  <div class="tab-group">
+    <button class="vt on" id="vt-list" onclick="showPage('list')">📋 Newsletter list</button>
+    <button class="vt" id="vt-detail" onclick="showPage('detail')">📧 Newsletter view</button>
+  </div>
+</div>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sb">
+    <div class="slogo">
+      <div class="sli" id="sb-li" style="background:var(--a);"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+      <span class="slt" id="sb-lt">PulseLoop</span>
+    </div>
+    <div class="snav">
+      <div class="snl">Workspace</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>Niches</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Trend Reports</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="5" rx="1"/><rect x="13" y="3" width="8" height="9" rx="1"/><rect x="3" y="10" width="8" height="9" rx="1"/><rect x="13" y="14" width="8" height="5" rx="1"/></svg><span id="ni-db-txt">Dashboards</span></div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>Signal Briefs</div>
+      <div class="sni act" id="ni-nl"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Newsletters</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn Posts</div>
+    </div>
+    <div class="snav" style="padding-top:4px;">
+      <div class="snl">Settings</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Brand Voice</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2"/></svg>Sources</div>
+    </div>
+    <div class="sbot">
+      <div class="sav" id="sb-av" style="background:var(--al);color:var(--a);">VB</div>
+      <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:500;" id="sb-un">Vaibhav</div><span class="spb" id="sb-pb" style="background:var(--al);color:var(--a);">PRO</span></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- LIST PAGE -->
+    <div class="pg on" id="pg-list">
+      <div class="tb">
+        <div class="tb-title">Newsletters</div>
+        <div style="flex:1;"></div>
+        <div class="sav" id="top-av" style="background:var(--al);color:var(--a);">VB</div>
+        <button class="btnp ind" id="new-btn"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" style="width:11px;height:11px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Generate newsletter</button>
+      </div>
+      <div class="scroll"><div id="list-body"></div></div>
+    </div>
+
+    <!-- DETAIL PAGE -->
+    <div class="pg" id="pg-detail">
+      <div class="tb">
+        <div class="tb-title">Newsletter</div>
+        <div style="flex:1;"></div>
+        <button class="btns" onclick="showPage('list')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:11px;height:11px;fill:none;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>All newsletters</button>
+        <button class="btns" id="share-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:11px;height:11px;fill:none;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Share</button>
+        <!-- EXPORT BUTTON + DROPDOWN -->
+        <div class="export-wrap" id="export-wrap">
+          <button class="export-btn" id="export-btn" onclick="toggleExport()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:11px;height:11px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="export-dropdown" id="export-dropdown">
+            <div class="export-section-lbl">Email platforms</div>
+            <div class="export-item" onclick="closeExport()">
+              <div class="export-item-icon" style="background:#FEF3C7;">🐝</div>
+              <div class="export-item-body">
+                <div class="export-item-lbl">Beehiiv</div>
+                <div class="export-item-sub">Import directly into your publication</div>
+              </div>
+              <div class="export-item-arrow">→</div>
+            </div>
+            <div class="export-item" onclick="closeExport()">
+              <div class="export-item-icon" style="background:#FEE2E2;">📮</div>
+              <div class="export-item-body">
+                <div class="export-item-lbl">Brevo</div>
+                <div class="export-item-sub">Structured HTML for Brevo campaigns</div>
+              </div>
+              <div class="export-item-arrow">→</div>
+            </div>
+            <div class="export-item" onclick="closeExport()">
+              <div class="export-item-icon" style="background:#FEF9C3;">🦁</div>
+              <div class="export-item-body">
+                <div class="export-item-lbl">Mailchimp</div>
+                <div class="export-item-sub">Import-ready template format</div>
+              </div>
+              <div class="export-item-arrow">→</div>
+            </div>
+            <div class="export-divider"></div>
+            <div class="export-section-lbl">Content formats</div>
+            <div class="export-item" onclick="closeExport()">
+              <div class="export-item-icon" style="background:#EFF6FF;">📝</div>
+              <div class="export-item-body">
+                <div class="export-item-lbl">Plain text / Markdown</div>
+                <div class="export-item-sub">For Substack, Kit, or any editor</div>
+              </div>
+              <div class="export-item-arrow">→</div>
+            </div>
+            <div class="export-item" onclick="closeExport()">
+              <div class="export-item-icon" style="background:#F0F9FF;">🌐</div>
+              <div class="export-item-body">
+                <div class="export-item-lbl">HTML</div>
+                <div class="export-item-sub">Raw HTML for custom sending setups</div>
+              </div>
+              <div class="export-item-arrow">→</div>
+            </div>
+            <div class="export-divider"></div>
+            <div class="export-section-lbl">Documents</div>
+            <div class="export-item" onclick="closeExport()">
+              <div class="export-item-icon" style="background:var(--dab);">📄</div>
+              <div class="export-item-body">
+                <div class="export-item-lbl">PDF</div>
+                <div class="export-item-sub">Formatted document for sharing or archiving</div>
+              </div>
+              <div class="export-item-arrow">→</div>
+            </div>
+          </div>
+        </div>
+        <button class="btnp ind" id="main-cta-btn" style="margin-left:2px;"></button>
+      </div>
+      <div class="scroll"><div id="detail-body"></div></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var T = 'p';
+var lkSvg = '<svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:var(--tt);fill:none;stroke-width:1.5;stroke-linecap:round;margin-left:auto;flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+
+var NLS = [
+  { emoji:'🤖', niche:'AI Tooling for B2B SaaS', date:'24 Mar 2026', week:'Week 12', issue:14, latest:true, strength:'hi',
+    subject:'The CNIL ruling your clients haven\'t read yet — and 3 signals that change the AI conversation this week',
+    preview:'Mistral\'s €600M round is the news. But the CNIL binding guidance creates an actual 90-day obligation for your clients…',
+    sections:['Opening story','3 signals','EU spotlight','What to watch','CTA'] },
+  { emoji:'🇫🇷', niche:'French SaaS Funding', date:'17 Mar 2026', week:'Week 11', issue:13, latest:false, strength:'med',
+    subject:'French SaaS Q1: €1.2B raised, 3 companies in pre-exit — the signal beneath the headline',
+    preview:'The Q1 numbers look strong. But the more interesting story is what the VC language has shifted to this quarter…',
+    sections:['Opening story','3 signals','EU spotlight','What to watch'] },
+  { emoji:'🤖', niche:'AI Tooling for B2B SaaS', date:'10 Mar 2026', week:'Week 10', issue:13, latest:false, strength:'hi',
+    subject:'Claude 4 just triggered the fastest French SaaS integration wave since GPT-4 — 46 repos in 72 hours',
+    preview:'The GitHub data tells a story most executives haven\'t heard yet. Here\'s why it matters for your clients…',
+    sections:['Opening story','3 signals','EU spotlight','CTA'] },
+];
+
+function toggleExport() {
+  var btn = document.getElementById('export-btn');
+  var dd = document.getElementById('export-dropdown');
+  btn.classList.toggle('open');
+  dd.classList.toggle('open');
+}
+function closeExport() {
+  document.getElementById('export-btn').classList.remove('open');
+  document.getElementById('export-dropdown').classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('export-wrap');
+  if (wrap && !wrap.contains(e.target)) closeExport();
+});
+
+function setTier(t) {
+  T = t;
+  var isS=t==='s', isAg=t==='ag';
+  document.querySelectorAll('.tt').forEach(function(b){b.className='tt';});
+  if(t==='s') document.querySelectorAll('.tt')[0].className='tt ts';
+  if(t==='p') document.querySelectorAll('.tt')[1].className='tt tp';
+  if(t==='ag') document.querySelectorAll('.tt')[2].className='tt tag';
+
+  var sb=document.getElementById('sb'), sbLi=document.getElementById('sb-li');
+  var sbAv=document.getElementById('sb-av'), topAv=document.getElementById('top-av');
+  var sbPb=document.getElementById('sb-pb'), sbLt=document.getElementById('sb-lt');
+  var sbUn=document.getElementById('sb-un'), newBtn=document.getElementById('new-btn');
+  var niNl=document.getElementById('ni-nl'), niDbTxt=document.getElementById('ni-db-txt');
+  var mainCta=document.getElementById('main-cta-btn');
+
+  if (isAg) {
+    sb.className='sidebar dark'; sbLi.style.background='var(--agb)';
+    sbAv.style.background='rgba(245,166,35,.2)'; sbAv.style.color='var(--agb)';
+    topAv.style.background='rgba(245,166,35,.2)'; topAv.style.color='var(--agb)';
+    sbPb.style.cssText='background:var(--ag);color:var(--agb);'; sbPb.textContent='AGENCY';
+    sbLt.style.color='#fff'; sbUn.style.color='#fff';
+    newBtn.className='btnp drk';
+    niNl.className='sni act'; niNl.style.background='rgba(245,166,35,.15)'; niNl.style.color='var(--agb)';
+    niDbTxt.textContent='Dashboards';
+    mainCta.className='btnp drk'; mainCta.style.display='inline-flex'; mainCta.innerHTML='🎨 White-label PDF';
+  } else if (isS) {
+    sb.className='sidebar'; sbLi.style.background='var(--a)';
+    sbAv.style.background='var(--al)'; sbAv.style.color='var(--a)';
+    topAv.style.background='var(--al)'; topAv.style.color='var(--a)';
+    sbPb.style.cssText='background:var(--bp);color:var(--ts);border:1px solid var(--br);'; sbPb.textContent='STARTER';
+    sbLt.style.color='var(--tp)'; sbUn.style.color='var(--tp)';
+    newBtn.className='btnp ind'; newBtn.style.opacity='0.35'; newBtn.setAttribute('disabled','');
+    niNl.className='sni act'; niNl.style.background=''; niNl.style.color='';
+    niDbTxt.innerHTML='Dashboards '+lkSvg;
+    mainCta.style.display='none';
+  } else {
+    sb.className='sidebar'; sbLi.style.background='var(--a)';
+    sbAv.style.background='var(--al)'; sbAv.style.color='var(--a)';
+    topAv.style.background='var(--al)'; topAv.style.color='var(--a)';
+    sbPb.style.cssText='background:var(--al);color:var(--a);'; sbPb.textContent='PRO';
+    sbLt.style.color='var(--tp)'; sbUn.style.color='var(--tp)';
+    newBtn.className='btnp ind'; newBtn.style.opacity='1'; newBtn.removeAttribute('disabled');
+    niNl.className='sni act'; niNl.style.background=''; niNl.style.color='';
+    niDbTxt.textContent='Dashboards';
+    mainCta.style.display='none';
+  }
+  renderList(); renderDetail();
+}
+
+function showPage(p) {
+  document.getElementById('pg-list').className='pg'+(p==='list'?' on':'');
+  document.getElementById('pg-detail').className='pg'+(p==='detail'?' on':'');
+  document.getElementById('vt-list').className='vt'+(p==='list'?' on':'');
+  document.getElementById('vt-detail').className='vt'+(p==='detail'?' on':'');
+}
+
+function renderList() {
+  var isS=T==='s', isAg=T==='ag';
+  var nClr=isAg?'ag':'p', ghCls=isAg?' ag':' p', fcOn=isAg?'fc on-ag':'fc on';
+  var out='';
+
+  if (isS) {
+    out += '<div class="ub ind"><div class="ub-ic">📧</div><div class="ub-body"><div class="ub-ttl">Newsletters are locked on Starter</div><div class="ub-sub">Generate a full newsletter from your Trend Report or Signal Brief — written in your brand voice, every signal cited, ready to export to Beehiiv, Brevo, Mailchimp, Substack or HTML. Upgrade to Pro to unlock.</div><div class="ub-tags"><span class="ut-i">4/niche per month</span><span class="ut-i">From Trend Report or Signal Brief</span><span class="ut-i">Beehiiv, Brevo, Mailchimp</span><span class="ut-i">Substack, HTML, PDF</span><span class="ut-i">White-label on Agency</span></div></div><button class="btn-up p">Upgrade to Pro →</button></div>';
+    out += '<div class="lock-wrap"><div class="lock-icon-bg"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div style="font-size:17px;font-weight:700;color:var(--tp);">Newsletters unlock on Pro</div><div style="font-size:13px;color:var(--ts);max-width:380px;line-height:1.65;text-align:center;">From your Trend Report or Signal Brief, PulseLoop drafts a complete weekly newsletter — opening story, signals, EU spotlight, what to watch — then export it in one click to any platform you use.</div><div class="lock-feats"><div class="lf"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><div><div class="lf-ttl">From report or brief</div><div class="lf-sub">Trend Report or Signal Brief as input</div></div></div><div class="lf"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><div><div class="lf-ttl">Brand voice applied</div><div class="lf-sub">Written in your defined tone</div></div></div><div class="lf"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><div><div class="lf-ttl">6 export formats</div><div class="lf-sub">Beehiiv, Brevo, Mailchimp, Substack, HTML, PDF</div></div></div><div class="lf"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg><div><div class="lf-ttl">Weekly cadence</div><div class="lf-sub">4 per niche per month</div></div></div></div><button class="btn-up p" style="height:36px;padding:0 24px;border-radius:10px;font-size:13px;">Upgrade to Pro — from €99/mo →</button></div>';
+    document.getElementById('list-body').innerHTML = out; return;
+  }
+
+  if (isAg) {
+    out += '<div style="font-size:10px;font-weight:700;color:var(--tt);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;">Workspace</div><div class="ws-tabs"><button class="wst on">🏢 Acme Corp <span class="wct wct-on">4</span></button><button class="wst off">🚀 Mistral AI <span class="wct wct-off">4</span></button><button class="wst off">📊 Pennylane <span class="wct wct-off">2</span></button><button class="wst add">+ Add workspace</button></div>';
+  } else {
+    out += '<div class="ub drk"><div class="ub-ic">🏢</div><div class="ub-body"><div class="ub-ttl">Send white-label newsletters under your client\'s brand — upgrade to Agency.</div><div class="ub-sub">Pro newsletters carry your branding. Agency delivers fully branded newsletters per workspace — custom signals, private data woven in, Power BI export.</div><div class="ub-tags"><span class="ut-d">White-label per workspace</span><span class="ut-d">Custom signals in content</span><span class="ut-d">Private data woven in</span><span class="ut-d">Power BI export</span></div></div><button class="btn-up a">Upgrade to Agency →</button></div>';
+  }
+
+  out += '<div class="sg"><div class="sc"><div class="sc-l">This month</div><div class="sc-v">7</div><div class="sc-s">of '+(isAg?'4/workspace':'4/niche (up to 28)')+'</div></div><div class="sc"><div class="sc-l">Cadence</div><div class="sc-v" style="font-size:14px;padding-top:4px;">Weekly</div><div class="sc-s">'+(isAg?'per workspace':'per niche')+'</div></div><div class="sc"><div class="sc-l">Sources</div><div class="sc-v" style="font-size:13px;padding-top:4px;">'+(isAg?'18 + custom':'18 EU')+'</div><div class="sc-s">90-day RAG memory</div></div><div class="sc"><div class="sc-l">White-label</div><div class="sc-v" style="font-size:14px;padding-top:4px;">'+(isAg?'Active':'Locked')+'</div><div class="sc-s">'+(isAg?'Client-branded':'Agency only')+'</div></div></div>';
+
+  var wsSel = isAg ? '<select class="fsel" style="width:125px;"><option>🏢 Acme Corp</option><option>🚀 Mistral AI</option></select>' : '';
+  out += '<div class="gen-panel"><div class="gen-panel-top"><div style="width:32px;height:32px;border-radius:8px;background:'+(isAg?'rgba(245,166,35,.15)':'var(--al)')+';display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">📧</div><div style="flex:1;"><div style="font-size:12px;font-weight:600;color:var(--tp);">Generate a newsletter</div><div style="font-size:11px;color:var(--tt);margin-top:1px;">Brand voice applied · every signal cited · export to Beehiiv, Brevo, Mailchimp, Substack, HTML or PDF'+(isAg?' · white-label':'')+'</div></div>'+(isAg?'<span class="bd bd-ag">✦ White-label</span>':'')+'</div><div class="gen-panel-inputs"><span style="font-size:11px;color:var(--tt);font-weight:500;flex-shrink:0;">Generate from:</span><div class="src-toggle"><button class="src-opt on'+(isAg?'-ag':'')+'" id="src-report">📊 Trend Report</button><button class="src-opt" id="src-brief">📋 Signal Brief</button></div>'+wsSel+'<select class="fsel" style="flex:1;min-width:150px;"><option>🤖 AI Tooling — Week 12</option><option>🇫🇷 French SaaS — Week 11</option><option>🤖 AI Tooling — Week 10</option></select><button class="btnp '+(isAg?'drk':'ind')+'">Generate →</button></div></div>';
+
+  out += '<div class="frow"><button class="'+fcOn+'">All niches</button><button class="fc off">🤖 AI Tooling</button><button class="fc off">🇫🇷 French SaaS</button><button class="fc off">📋 EU Compliance</button><div style="margin-left:auto;"><select class="fsel"><option>Newest first</option><option>Most exported</option></select></div></div>';
+
+  out += '<div class="nl-list">';
+  NLS.forEach(function(n, i) {
+    var feat = i===0?(isAg?' feat-ag':' feat-p'):'';
+    out += '<div class="nlc'+feat+'" onclick="showPage(\'detail\')">'
+      +'<div class="nlc-strip"><span style="font-size:16px;">'+n.emoji+'</span><span class="nlc-niche '+nClr+'">'+n.niche+'</span><div class="nlc-strip-right">'
+      +(n.latest?'<span class="bd bd-new">Latest</span>':'')
+      +'<span class="bd bd-bee">Issue #'+n.issue+'</span>'
+      +'<span class="bd '+(n.strength==='hi'?'bd-hi':'bd-med')+'">'+(n.strength==='hi'?'High signal':'Medium')+'</span>'
+      +(isAg?'<span class="bd bd-ag">✦ White-label</span>':'')
+      +'<span style="font-size:10px;color:var(--tt);">'+n.date+'</span>'
+      +'</div></div>'
+      +'<div class="nlc-email"><div class="nlc-subj-lbl">Subject line</div><div class="nlc-subj">'+n.subject+'</div><div class="nlc-prev">'+n.preview+'</div><div class="nlc-secs">'+n.sections.map(function(s){return '<span class="nlc-sec">'+s+'</span>';}).join('')+'</div></div>'
+      +'<div class="nlc-foot"><span style="font-size:10px;color:var(--tt);">'+n.week+' · from Trend Report</span>'
+      +'<div style="margin-left:auto;display:flex;gap:3px;">'
+      +'<button class="btng'+ghCls+'" onclick="event.stopPropagation();showPage(\'detail\')">View →</button>'
+      +(isAg?'<button class="btng ag" onclick="event.stopPropagation()">🎨 White-label</button>':'')
+      +'<button class="btng'+ghCls+'" onclick="event.stopPropagation()">Export</button>'
+      +'</div></div>'
+      +'</div>';
+  });
+  out += '</div>';
+
+  document.getElementById('list-body').innerHTML = out;
+  document.querySelectorAll('.fc').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.fc').forEach(function(x){x.className='fc off';});this.className='fc '+(T==='ag'?'on-ag':'on');});});
+  document.querySelectorAll('.wst').forEach(function(b){b.addEventListener('click',function(){if(this.classList.contains('add'))return;document.querySelectorAll('.wst').forEach(function(x){x.className='wst off';});this.className='wst on';});});
+  var srcR=document.getElementById('src-report'), srcB=document.getElementById('src-brief');
+  if(srcR&&srcB){
+    var onCls='src-opt on'+(T==='ag'?'-ag':'');
+    srcR.addEventListener('click',function(){srcR.className=onCls;srcB.className='src-opt';});
+    srcB.addEventListener('click',function(){srcB.className=onCls;srcR.className='src-opt';});
+  }
+}
+
+function renderDetail() {
+  var isS=T==='s', isAg=T==='ag';
+  var numHiCls=isAg?'hi-ag':'hi';
+  var accentColor=isAg?'var(--agb)':'var(--a)';
+  var out='';
+
+  out += '<div class="bc"><span class="lnk" onclick="showPage(\'list\')">Newsletters</span><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg><span>Week 12 · AI Tooling for B2B SaaS · Issue #14</span></div>';
+
+  /* STRIP */
+  if (isAg) {
+    out += '<div class="pub-strip wl"><div style="width:30px;height:30px;border-radius:7px;background:rgba(245,166,35,.15);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">🎨</div><div style="flex:1;"><div style="font-size:12px;font-weight:700;color:#fff;">White-label active — Acme Corp workspace</div><div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:1px;">Delivered under Acme Corp\'s brand. Private data from uploaded files is woven into the content.</div></div><button style="height:26px;padding:0 10px;border-radius:7px;background:rgba(245,166,35,.2);color:var(--agb);font-size:11px;font-weight:600;border:1px solid rgba(245,166,35,.3);cursor:pointer;">Configure →</button></div>';
+  } else {
+    out += '<div class="pub-strip bee"><div style="width:30px;height:30px;border-radius:7px;background:#FEF3C7;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">🐝</div><div style="flex:1;"><div style="font-size:12px;font-weight:700;color:#92400E;">Beehiiv-ready format</div><div style="font-size:11px;color:#78350F;margin-top:1px;">Structured for direct import. Hit Export → Beehiiv in the toolbar to send to your publication.</div></div><span style="font-size:10px;color:#92400E;font-weight:600;">Also: Brevo · Mailchimp · Substack · HTML · PDF</span></div>';
+  }
+
+  /* NEWSLETTER DOCUMENT */
+  out += '<div class="nl-doc">'
+    /* EMAIL META */
+    +'<div class="nl-meta">'
+    +'<div class="nl-meta-row"><span class="nl-meta-lbl">From</span><span class="nl-meta-val">'+(isAg?'Acme Corp Intelligence · acmecorp@intelligence.co':'PulseLoop · hello@pulseloop.io')+'</span></div>'
+    +'<div class="nl-meta-row"><span class="nl-meta-lbl">To</span><span class="nl-meta-val">Your subscriber list · AI Tooling for B2B SaaS</span></div>'
+    +'<div class="nl-meta-row"><span class="nl-meta-lbl">Subject</span><span class="nl-meta-val subj">The CNIL ruling your clients haven\'t read yet — and 3 signals that change the AI conversation this week</span></div>'
+    +'<div class="nl-meta-row"><span class="nl-meta-lbl">Preview</span><span class="nl-meta-val" style="color:var(--tt);">Mistral\'s €600M round is the news. But the CNIL binding guidance creates an actual 90-day obligation…</span></div>'
+    +'</div>'
+    /* HERO */
+    +'<div class="nl-hero">'
+    +'<div class="nl-issue">'+(isAg?'Acme Corp Intelligence Brief':'PulseLoop Signal Newsletter')+' · Issue #14 · Week 12</div>'
+    +'<div class="nl-headline">The CNIL ruling your clients haven\'t read yet — and 3 signals that change the AI conversation this week</div>'
+    +'<div class="nl-sub">Mistral\'s €600M round is everywhere. But the signal that creates an actual obligation for your clients landed quietly on Friday. Here\'s what matters this week.</div>'
+    +'<div class="nl-pills"><span class="nlp nlp-a">24 Mar 2026</span><span class="nlp nlp-s">High signal week</span><span class="nlp nlp-d">AI Tooling for B2B SaaS</span>'+(isAg?'<span class="nlp nlp-ag">✦ Private data woven in</span>':'')+'</div>'
+    +'</div>'
+    /* OPENING STORY */
+    +'<div class="nl-section"><div class="nl-sec-lbl">Opening story</div><div class="nl-story"><p>Last Monday, Mistral AI announced a €600M Series C at a €6B valuation <span class="cite">FrenchWeb</span> <span class="cite">LinkedIn</span>. If you work in French B2B SaaS, you\'ve seen the posts. But the announcement that actually changes something landed two days later and is getting far less coverage.</p><p>On Wednesday, CNIL published binding guidance on LLM data retention <span class="cite eu">CNIL</span>. Not a recommendation — binding. Any SaaS product that processes EU user data through a language model now has a named, dated obligation: prompt logs must be deleted within 30 days.'+(isAg?' Your own internal data confirms this is urgent: 3 of 5 Acme Corp departments are evaluating LLM tooling with no data retention review in place.':'')+'</p><p>The combination of a funded EU sovereign alternative and a regulatory forcing function is what makes this week structurally different.</p></div></div>'
+    /* SIGNALS */
+    +'<div class="nl-section"><div class="nl-sec-lbl">This week\'s signals</div><div class="nl-signals">'
+    +'<div class="nl-sig"><div class="nl-sig-num '+numHiCls+'">1</div><div><div class="nl-sig-title">Mistral AI raises €600M at €6B — EU sovereign AI now has a flagship procurement option</div><div class="nl-sig-txt">Enterprise procurement teams who needed a funded EU-native LLM vendor with sufficient scale now have one. Expect this to appear in RFPs from Q2.</div><div class="nl-sig-src">FrenchWeb · LinkedIn · 24 Mar</div></div></div>'
+    +'<div class="nl-sig"><div class="nl-sig-num '+numHiCls+'">2</div><div><div class="nl-sig-title">CNIL binding LLM data retention guidance — 90-day compliance window opens now</div><div class="nl-sig-txt">Prompt logs and model outputs must be deleted within 30 days. First enforcement-grade LLM-specific ruling in France. Affects every SaaS product using Claude, GPT, or Mistral APIs for EU users.</div><div class="nl-sig-src">CNIL · EU Parliament · 22 Mar</div></div></div>'
+    +'<div class="nl-sig"><div class="nl-sig-num '+numHiCls+'">3</div><div><div class="nl-sig-title">French LLM repos on GitHub up 3× — developers integrating 6–8 weeks ahead of procurement</div><div class="nl-sig-txt">The same bottoms-up pattern that preceded the Notion and Figma enterprise waves. Engineering teams have decided. Procurement hasn\'t caught up.</div><div class="nl-sig-src">GitHub · 21 Mar</div></div></div>'
+    +'</div></div>'
+    /* EU SPOTLIGHT */
+    +'<div class="nl-section"><div class="nl-sec-lbl">EU spotlight</div><div class="nl-eu-list">'
+    +'<div class="nl-eu-item"><span class="nl-eu-src">CNIL</span><div class="nl-eu-txt">LLM prompt logs — binding 30-day deletion requirement · affects all SaaS processing EU user data through any LLM API</div></div>'
+    +'<div class="nl-eu-item"><span class="nl-eu-src">Malt.fr</span><div class="nl-eu-txt">AI specialist daily rates hit €1,200 — up 50% since Q4 2025. Rate inflation signals a clear productisation window for mid-market SaaS.</div></div>'
+    +(isAg?'<div class="nl-eu-item" style="border-color:#F5D87A;background:rgba(245,166,35,.06);"><span class="nl-eu-src" style="color:#9A6600;">Private ✦</span><div class="nl-eu-txt">Internal Acme Corp data: 3 of 5 departments in active LLM evaluation — procurement team not yet involved. Governance risk emerging.</div></div>':'')
+    +'</div></div>'
+    /* WHAT TO WATCH */
+    +'<div class="nl-section"><div class="nl-sec-lbl">What to watch next week</div><div class="nl-watch-list">'
+    +'<div class="nl-watch"><div class="nl-watch-dot"></div><div class="nl-watch-txt">Mistral enterprise partnership programme — expected Q2. Will name anchor French SaaS partners. Timing: likely before May.</div></div>'
+    +'<div class="nl-watch"><div class="nl-watch-dot"></div><div class="nl-watch-txt">CNIL follow-up on AI Act high-risk categories — EU Parliament vote confirmed for April. Affects SaaS with HR, credit and access control features.</div></div>'
+    +'<div class="nl-watch"><div class="nl-watch-dot"></div><div class="nl-watch-txt">GitHub LLM volume W13 — if the 3× spike sustains a second consecutive week, the Q3 enterprise procurement wave is confirmed.</div></div>'
+    +'</div></div>'
+    /* CTA */
+    +'<div class="nl-section"><div class="nl-cta"><div class="nl-cta-body"><div class="nl-cta-lbl">Forward this to a client still thinking about AI as optional</div><div class="nl-cta-sub">The CNIL guidance makes it a compliance question. Send them the summary — it opens the conversation without you needing to push.</div></div><button class="btnp '+(isAg?'drk':'ind')+'" style="height:28px;font-size:11px;flex-shrink:0;">Copy share link</button></div></div>'
+    /* FOOTER */
+    +'<div class="nl-foot"><div class="nl-foot-txt"><strong>'+(isAg?'Acme Corp Intelligence Brief':'PulseLoop Signal Newsletter')+'</strong> · Sources: FrenchWeb, LinkedIn, CNIL, GitHub, Malt.fr, EU Parliament · 18 EU-focused sources · 90-day RAG · Week 12 · 24 Mar 2026</div><span style="font-size:10px;color:var(--tt);">Unsubscribe · Manage preferences</span></div>'
+    +'</div>';
+
+  document.getElementById('detail-body').innerHTML = out;
+}
+
+setTier('p');
+</script>

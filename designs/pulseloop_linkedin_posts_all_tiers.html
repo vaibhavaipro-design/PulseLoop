@@ -1,0 +1,456 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --a:#5B5FC7;--al:#EEEEFF;--am:#A3A6E8;
+  --bp:#F0F0F7;--bm:#F7F7FC;
+  --tp:#1A1A3E;--ts:#6B6B8A;--tt:#A0A0BE;
+  --br:#E4E4F0;--brs:#C5C5E0;
+  --su:#4CAF82;--sub:#E8F7EF;
+  --wa:#F5A623;--wab:#FFF4E0;
+  --da:#E85757;--dab:#FDEAEA;
+  --ag:#1A1A3E;--agb:#F5A623;
+  --li:#0A66C2;--li-l:#E8F0FE;
+}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bp);}
+
+.controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.tab-group{display:flex;gap:3px;padding:3px;background:#fff;border:1px solid var(--br);border-radius:10px;}
+.tt{height:30px;padding:0 14px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--tt);}
+.tt.ts{background:var(--bp);color:var(--tp);}
+.tt.tp{background:var(--a);color:#fff;}
+.tt.tag{background:var(--ag);color:var(--agb);}
+.vt{height:30px;padding:0 13px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--tt);}
+.vt.on{background:var(--a);color:#fff;}
+
+.shell{display:flex;height:720px;background:var(--bp);border-radius:14px;overflow:hidden;border:1px solid var(--br);}
+
+/* SIDEBAR */
+.sidebar{width:215px;min-width:215px;background:#fff;border-right:1px solid var(--br);display:flex;flex-direction:column;flex-shrink:0;}
+.sidebar.dark{background:var(--ag);border-color:#2D2D5E;}
+.slogo{height:56px;display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0;}
+.sidebar .slogo{border-bottom:1px solid var(--br);}
+.sidebar.dark .slogo{border-bottom:1px solid #2D2D5E;}
+.sli{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.slt{font-size:14px;font-weight:700;}
+.sidebar .slt{color:var(--tp);}
+.sidebar.dark .slt{color:#fff;}
+.snav{padding:12px 8px 6px;}
+.snl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:0 8px;margin-bottom:4px;color:var(--tt);}
+.sidebar.dark .snl{color:rgba(255,255,255,.3);}
+.sni{display:flex;align-items:center;gap:8px;height:38px;padding:0 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--ts);margin-bottom:1px;}
+.sidebar.dark .sni{color:rgba(255,255,255,.45);}
+.sni.act{background:var(--al);color:var(--a);}
+.sidebar.dark .sni.act{background:rgba(245,166,35,.15);color:var(--agb);}
+.sni svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.sbot{margin-top:auto;padding:10px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.sidebar .sbot{border-top:1px solid var(--br);}
+.sidebar.dark .sbot{border-top:1px solid #2D2D5E;}
+.sav{width:28px;height:28px;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.spb{font-size:10px;font-weight:700;padding:1px 7px;border-radius:9999px;}
+
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.tb{height:56px;background:#fff;border-bottom:1px solid var(--br);display:flex;align-items:center;padding:0 20px;gap:8px;flex-shrink:0;}
+.tb-title{font-size:16px;font-weight:600;color:var(--tp);flex:1;}
+.scroll{flex:1;overflow-y:auto;padding:18px 20px;background:var(--bm);}
+
+.btnp{height:30px;padding:0 12px;border-radius:8px;color:#fff;font-size:12px;font-weight:600;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.btnp.ind{background:var(--a);}
+.btnp.drk{background:var(--ag);}
+.btnp.li{background:var(--li);}
+.btns{height:30px;padding:0 10px;border-radius:8px;background:#fff;color:var(--tp);font-size:12px;font-weight:500;border:1px solid var(--br);cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
+.btng{height:26px;padding:0 8px;border-radius:6px;background:transparent;font-size:11px;font-weight:500;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:3px;}
+.btng.p{color:var(--a);}
+.btng.p:hover{background:var(--al);}
+.btng.ag{color:#9A6600;}
+.btng.ag:hover{background:rgba(245,166,35,.08);}
+.btn-up{height:24px;padding:0 11px;border-radius:9999px;font-size:11px;font-weight:600;border:none;cursor:pointer;white-space:nowrap;}
+.btn-up.p{background:var(--a);color:#fff;}
+.btn-up.a{background:var(--ag);color:var(--agb);}
+.btn-copy{height:26px;padding:0 10px;border-radius:7px;background:var(--li-l);color:var(--li);font-size:11px;font-weight:600;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .15s;}
+.btn-copy:hover{background:#D0E3FF;}
+.btn-copy.ag{background:rgba(245,166,35,.15);color:#9A6600;}
+.btn-copy.ag:hover{background:rgba(245,166,35,.25);}
+
+.bd{font-size:10px;font-weight:600;padding:2px 7px;border-radius:9999px;white-space:nowrap;}
+.bd-new{background:var(--al);color:var(--a);}
+.bd-hi{background:var(--sub);color:var(--su);}
+.bd-med{background:var(--wab);color:var(--wa);}
+.bd-ag{background:rgba(245,166,35,.15);color:#9A6600;}
+.bd-li{background:var(--li-l);color:var(--li);}
+.bd-cs{background:#F0FDF4;color:#166534;border:1px solid #BBF7D0;}
+
+.ub{border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.ub.ind{background:var(--al);border:1px solid var(--am);}
+.ub.drk{background:var(--ag);border:1px solid #3D3D7E;}
+.ub-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.ub.ind .ub-ic{background:#fff;}
+.ub.drk .ub-ic{background:rgba(245,166,35,.15);}
+.ub-body{flex:1;}
+.ub-ttl{font-size:12px;font-weight:700;}
+.ub.ind .ub-ttl{color:var(--a);}
+.ub.drk .ub-ttl{color:#fff;}
+.ub-sub{font-size:11px;margin-top:1px;}
+.ub.ind .ub-sub{color:var(--ts);}
+.ub.drk .ub-sub{color:rgba(255,255,255,.55);}
+.ub-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;}
+.ut-i{font-size:10px;font-weight:600;padding:2px 6px;border-radius:9999px;background:var(--al);color:var(--a);}
+.ut-d{font-size:10px;font-weight:600;padding:2px 6px;border-radius:9999px;background:rgba(245,166,35,.15);color:#9A6600;}
+
+.sg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px;}
+.sc{background:#fff;border:1px solid var(--br);border-radius:10px;padding:11px 13px;}
+.sc-l{font-size:10px;font-weight:600;color:var(--ts);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+.sc-v{font-size:19px;font-weight:700;color:var(--tp);}
+.sc-s{font-size:10px;color:var(--tt);margin-top:1px;}
+
+.ws-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;}
+.wst{height:28px;padding:0 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:5px;}
+.wst.on{background:var(--ag);color:#fff;}
+.wst.off{background:#fff;color:var(--ts);border:1px solid var(--br);}
+.wst.add{background:transparent;color:var(--ts);border:1px dashed var(--brs);}
+.wct{font-size:10px;border-radius:9999px;padding:1px 5px;}
+.wct-on{background:rgba(255,255,255,.2);color:#fff;}
+.wct-off{background:var(--bm);color:var(--tt);}
+
+/* GEN PANEL */
+.gen-panel{background:#fff;border:1px solid var(--br);border-radius:12px;padding:12px 15px;margin-bottom:14px;}
+.gen-top{display:flex;align-items:center;gap:10px;}
+.gen-inputs{display:flex;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--br);flex-wrap:wrap;align-items:center;}
+.fsel{height:28px;padding:0 8px;border-radius:7px;border:1px solid var(--br);font-size:11px;color:var(--ts);background:#fff;font-family:inherit;cursor:pointer;outline:none;}
+.src-toggle{display:flex;border:1px solid var(--br);border-radius:8px;overflow:hidden;}
+.src-opt{height:28px;padding:0 10px;font-size:11px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:5px;background:#fff;color:var(--ts);}
+.src-opt.on{background:var(--al);color:var(--a);}
+.src-opt.on-ag{background:rgba(245,166,35,.15);color:#9A6600;}
+.src-opt.dis{opacity:.4;cursor:not-allowed;}
+.src-opt+.src-opt{border-left:1px solid var(--br);}
+
+/* FILTER */
+.frow{display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.fc{height:26px;padding:0 10px;border-radius:9999px;font-size:11px;font-weight:600;cursor:pointer;border:none;}
+.fc.on{background:var(--a);color:#fff;}
+.fc.on-ag{background:var(--ag);color:#fff;}
+.fc.off{background:#fff;color:var(--ts);border:1px solid var(--br);}
+
+/* POST SET CARD — the container for one generation (3 variants) */
+.psc{background:#fff;border:1px solid var(--br);border-radius:13px;overflow:hidden;margin-bottom:12px;}
+.psc.feat-p{border-left:3px solid var(--a);}
+.psc.feat-ag{border-left:3px solid var(--agb);}
+.psc-header{padding:12px 14px 10px;border-bottom:1px solid var(--br);display:flex;align-items:center;gap:8px;}
+.psc-emoji{font-size:16px;flex-shrink:0;}
+.psc-niche{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.psc-niche.p{color:var(--a);}
+.psc-niche.ag{color:#9A6600;}
+.psc-title{font-size:13px;font-weight:600;color:var(--tp);flex:1;}
+.psc-right{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+
+/* 3-VARIANT GRID inside each set */
+.variants-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-top:1px solid var(--br);}
+.variant{padding:12px 14px;border-right:1px solid var(--br);}
+.variant:last-child{border-right:none;}
+.v-type-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.v-type{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.v-type.hook{color:var(--a);}
+.v-type.insight{color:var(--su);}
+.v-type.cta{color:var(--wa);}
+.v-type.ag-hook{color:#9A6600;}
+.v-type.ag-insight{color:var(--su);}
+.v-type.ag-cta{color:var(--wa);}
+
+/* The actual post text — looks like a LinkedIn post */
+.post-text{font-size:12px;color:var(--tp);line-height:1.7;margin-bottom:10px;}
+.post-text .post-hook{font-weight:700;display:block;margin-bottom:4px;}
+.post-text .post-hashtags{color:var(--li);font-size:11px;margin-top:6px;line-height:1.8;}
+.post-cite{font-size:10px;color:var(--tt);margin-bottom:8px;}
+.post-cite span{color:var(--a);font-weight:600;}
+
+/* VARIANTS FOOTER */
+.psc-foot{display:flex;align-items:center;gap:5px;padding:8px 12px;border-top:1px solid var(--br);background:var(--bm);}
+
+/* COMING SOON PILL */
+.cs-pill{display:inline-flex;align-items:center;gap:4px;background:#F0FDF4;color:#166534;border:1px solid #BBF7D0;border-radius:9999px;font-size:10px;font-weight:600;padding:2px 8px;}
+
+/* LOCKED */
+.lock-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:50px 20px;text-align:center;}
+.lock-icon-bg{width:56px;height:56px;border-radius:16px;background:var(--dab);display:flex;align-items:center;justify-content:center;}
+.lock-icon-bg svg{width:24px;height:24px;stroke:var(--da);fill:none;stroke-width:1.5;stroke-linecap:round;}
+.lock-feats{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:420px;width:100%;}
+.lf{background:#fff;border:1px solid var(--br);border-radius:9px;padding:10px 12px;display:flex;gap:8px;align-items:flex-start;text-align:left;}
+.lf svg{width:13px;height:13px;stroke:var(--a);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;margin-top:2px;}
+.lf-ttl{font-size:12px;font-weight:600;color:var(--tp);}
+.lf-sub{font-size:11px;color:var(--tt);margin-top:1px;}
+
+.pg{display:none;flex-direction:column;overflow:hidden;flex:1;}
+.pg.on{display:flex;}
+</style>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <div class="tab-group">
+    <button class="tt ts" onclick="setTier('s')">Starter €49</button>
+    <button class="tt" id="tt-p" onclick="setTier('p')">Pro €99</button>
+    <button class="tt" id="tt-ag" onclick="setTier('ag')">Agency €249</button>
+  </div>
+</div>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sb">
+    <div class="slogo">
+      <div class="sli" id="sb-li" style="background:var(--a);"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+      <span class="slt" id="sb-lt">PulseLoop</span>
+    </div>
+    <div class="snav">
+      <div class="snl">Workspace</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>Niches</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Trend Reports</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="5" rx="1"/><rect x="13" y="3" width="8" height="9" rx="1"/><rect x="3" y="10" width="8" height="9" rx="1"/><rect x="13" y="14" width="8" height="5" rx="1"/></svg>Dashboards</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>Signal Briefs</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Newsletters</div>
+      <div class="sni act" id="ni-li"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn Posts</div>
+    </div>
+    <div class="snav" style="padding-top:4px;">
+      <div class="snl">Settings</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Brand Voice</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2"/></svg>Sources</div>
+    </div>
+    <div class="sbot">
+      <div class="sav" id="sb-av" style="background:var(--al);color:var(--a);">VB</div>
+      <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:500;" id="sb-un">Vaibhav</div><span class="spb" id="sb-pb" style="background:var(--al);color:var(--a);">PRO</span></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="pg on" id="pg-main">
+      <div class="tb">
+        <div class="tb-title">LinkedIn Posts</div>
+        <div style="flex:1;"></div>
+        <div class="sav" id="top-av" style="background:var(--al);color:var(--a);">VB</div>
+        <button class="btnp li" id="new-btn"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" style="width:11px;height:11px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Generate posts</button>
+      </div>
+      <div class="scroll"><div id="main-body"></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var T = 'p';
+var lkSvg = '<svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:var(--tt);fill:none;stroke-width:1.5;stroke-linecap:round;margin-left:auto;flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+
+var POST_SETS = [
+  {
+    emoji:'🤖', niche:'AI Tooling for B2B SaaS', source:'Trend Report W12', date:'24 Mar 2026', latest:true, strength:'hi',
+    title:'Mistral €600M & CNIL ruling — 3 post variants',
+    posts:[
+      { type:'Hook', variant:'1', text:'Your engineers are using Mistral before your legal team has heard of it.\n\nGitHub data: French LLM repos up 3× this week.\nThe procurement conversation will happen in Q2.\nYour legal team\'s 90-day CNIL clock started Friday.\n\nThe gap between where your tech team is and where your compliance team is — that\'s the window right now.', hashtags:'#FrenchTech #AI #B2BSaaS #LLM' },
+      { type:'Insight', variant:'2', text:'Mistral\'s €600M round matters less than the CNIL ruling that came two days later.\n\nThe round is a signal. The regulation is an obligation.\n\nWhat changed on Friday: any SaaS product using a language model to process EU user data now has 30 days to delete prompt logs. First enforcement-grade ruling specifically targeting LLMs in France.\n\nThis converts "GDPR risk" from vague concern to a named, dated deadline.', hashtags:'#GDPR #CNIL #AIAct #SaaS' },
+      { type:'CTA', variant:'3', text:'Three signals your clients need to know about this week:\n\n1/ Mistral raises €600M — EU sovereign AI now has a procurement-ready vendor\n2/ CNIL binding LLM guidance — 90-day compliance clock starts now\n3/ GitHub: French LLM repos up 3× — developers are 6–8 weeks ahead of procurement\n\nThe structural shift is here. Not next year.\n\nWhat\'s your take on EU vs US LLM strategy for your clients?', hashtags:'#FrenchTech #AITooling #B2BSaaS #LLM #Compliance' }
+    ]
+  },
+  {
+    emoji:'🇫🇷', niche:'French SaaS Funding', source:'Trend Report W11', date:'17 Mar 2026', latest:false, strength:'med',
+    title:'€1.2B Q1 funding — 3 post variants',
+    posts:[
+      { type:'Hook', variant:'1', text:'French SaaS raised €1.2B in Q1 2026.\n\nBut the number isn\'t the story.\n\nThe story is that 40% went to AI-native companies — not AI-added ones.\n\nVCs aren\'t betting on SaaS with an AI feature anymore. They\'re betting on AI with a SaaS business model.', hashtags:'#FrenchTech #VentureCapital #SaaS #AI' },
+      { type:'Insight', variant:'2', text:'The language in French VC conversations has shifted this quarter.\n\nQ4 2025: "What\'s your AI roadmap?"\nQ1 2026: "Is this AI-first or AI-added architecture?"\n\nThat\'s a fundamental distinction. One means you bolt AI onto an existing product. The other means AI is load-bearing from day one.\n\nDealroom data confirms: AI-native rounds now command 2× the valuation multiple.', hashtags:'#FrenchTech #AIFirst #SaaS #Fundraising' },
+      { type:'CTA', variant:'3', text:'Q1 2026 French SaaS funding in 3 signals:\n\n€1.2B raised — up 34% vs Q1 2025\n3 late-stage companies in pre-exit talks\nAI-native taking 40% of deal volume\n\nIf your clients are still building "AI features" rather than AI-native products, they\'re not playing the same game VCs are funding.\n\nWhat does your AI architecture actually look like?', hashtags:'#FrenchTech #SaaS #VentureCapital #ProductStrategy' }
+    ]
+  }
+];
+
+function setTier(t) {
+  T = t;
+  var isS=t==='s', isAg=t==='ag';
+  document.querySelectorAll('.tt').forEach(function(b){b.className='tt';});
+  if(t==='s') document.querySelectorAll('.tt')[0].className='tt ts';
+  if(t==='p') document.querySelectorAll('.tt')[1].className='tt tp';
+  if(t==='ag') document.querySelectorAll('.tt')[2].className='tt tag';
+
+  var sb=document.getElementById('sb'), sbLi=document.getElementById('sb-li');
+  var sbAv=document.getElementById('sb-av'), topAv=document.getElementById('top-av');
+  var sbPb=document.getElementById('sb-pb'), sbLt=document.getElementById('sb-lt');
+  var sbUn=document.getElementById('sb-un'), newBtn=document.getElementById('new-btn');
+  var niLi=document.getElementById('ni-li');
+
+  if (isAg) {
+    sb.className='sidebar dark'; sbLi.style.background='var(--agb)';
+    sbAv.style.background='rgba(245,166,35,.2)'; sbAv.style.color='var(--agb)';
+    topAv.style.background='rgba(245,166,35,.2)'; topAv.style.color='var(--agb)';
+    sbPb.style.cssText='background:var(--ag);color:var(--agb);'; sbPb.textContent='AGENCY';
+    sbLt.style.color='#fff'; sbUn.style.color='#fff';
+    newBtn.className='btnp drk';
+    niLi.className='sni act'; niLi.style.background='rgba(245,166,35,.15)'; niLi.style.color='var(--agb)';
+  } else if (isS) {
+    sb.className='sidebar'; sbLi.style.background='var(--a)';
+    sbAv.style.background='var(--al)'; sbAv.style.color='var(--a)';
+    topAv.style.background='var(--al)'; topAv.style.color='var(--a)';
+    sbPb.style.cssText='background:var(--bp);color:var(--ts);border:1px solid var(--br);'; sbPb.textContent='STARTER';
+    sbLt.style.color='var(--tp)'; sbUn.style.color='var(--tp)';
+    newBtn.className='btnp li';
+    niLi.className='sni act'; niLi.style.background=''; niLi.style.color='';
+  } else {
+    sb.className='sidebar'; sbLi.style.background='var(--a)';
+    sbAv.style.background='var(--al)'; sbAv.style.color='var(--a)';
+    topAv.style.background='var(--al)'; topAv.style.color='var(--a)';
+    sbPb.style.cssText='background:var(--al);color:var(--a);'; sbPb.textContent='PRO';
+    sbLt.style.color='var(--tp)'; sbUn.style.color='var(--tp)';
+    newBtn.className='btnp li';
+    niLi.className='sni act'; niLi.style.background=''; niLi.style.color='';
+  }
+  render();
+}
+
+function render() {
+  var isS=T==='s', isAg=T==='ag';
+  var nClr=isAg?'ag':'p', ghCls=isAg?' ag':' p', fcOn=isAg?'fc on-ag':'fc on';
+  var copyCls=isAg?'ag':'';
+  var typeHook=isAg?'ag-hook':'hook', typeInsight=isAg?'ag-insight':'insight', typeCta=isAg?'ag-cta':'cta';
+  var out='';
+
+  /* ── STARTER: LinkedIn is included but from Trend Reports only ── */
+  if (isS) {
+    out += '<div class="ub ind"><div class="ub-ic">💼</div><div class="ub-body"><div class="ub-ttl">LinkedIn Posts included on Starter — from Trend Reports only</div><div class="ub-sub">You get 3 copy-paste ready post variants per Trend Report — up to 4 sets/month. Upgrade to Pro to also generate from Signal Briefs and Newsletters, and get up to 12 sets/month.</div><div class="ub-tags"><span class="ut-i">3 variants per set</span><span class="ut-i">From Trend Reports only</span><span class="ut-i">Up to 4 sets/mo</span><span class="ut-i">Pro: briefs + newsletters too</span></div></div><button class="btn-up p">Upgrade to Pro →</button></div>';
+  }
+  if (isAg) {
+    out += '<div class="ub drk"><div class="ub-ic">🏢</div><div class="ub-body"><div class="ub-ttl">Agency — white-label posts, custom signals, private data reflected</div><div class="ub-sub">Posts are attributed to your client\'s brand voice per workspace. Custom signal types and uploaded private data are woven into post content. Up to 60 sets/month across 5 workspaces.</div><div class="ub-tags"><span class="ut-d">White-label per workspace</span><span class="ut-d">Custom signals in posts</span><span class="ut-d">Private data reflected</span><span class="ut-d">Up to 60 sets/mo total</span></div></div></div>';
+  }
+  if (!isS && !isAg) {
+    out += '<div class="ub drk"><div class="ub-ic">🏢</div><div class="ub-body"><div class="ub-ttl">Upgrade to Agency for white-label posts and custom signal types.</div><div class="ub-sub">Pro posts carry your brand voice. Agency lets you write posts attributed to each client workspace — custom signals and private data woven in.</div><div class="ub-tags"><span class="ut-d">White-label per workspace</span><span class="ut-d">Custom signal types</span><span class="ut-d">Private data in posts</span><span class="ut-d">Up to 60 sets/mo total</span></div></div><button class="btn-up a">Upgrade to Agency →</button></div>';
+  }
+
+  /* STATS */
+  var setsUsed = isS?3:isAg?11:9;
+  var setsAllowed = isS?'4/mo (report cadence)':isAg?'12/workspace · 60 total':'12/mo';
+  var sources = isAg?'18 + custom':'18 EU sources';
+  var wlVal = isAg?'Active':'Locked';
+  out += '<div class="sg">'
+    +'<div class="sc"><div class="sc-l">Sets generated</div><div class="sc-v">'+setsUsed+'</div><div class="sc-s">'+setsAllowed+'</div></div>'
+    +'<div class="sc"><div class="sc-l">Variants/set</div><div class="sc-v">3</div><div class="sc-s">Hook · Insight · CTA</div></div>'
+    +'<div class="sc"><div class="sc-l">Sources</div><div class="sc-v" style="font-size:13px;padding-top:4px;">'+sources+'</div><div class="sc-s">90-day RAG memory</div></div>'
+    +'<div class="sc"><div class="sc-l">White-label</div><div class="sc-v" style="font-size:14px;padding-top:4px;">'+wlVal+'</div><div class="sc-s">'+(isAg?'Client brand voice':'Agency only')+'</div></div>'
+    +'</div>';
+
+  /* AGENCY WORKSPACE TABS */
+  if (isAg) {
+    out += '<div style="font-size:10px;font-weight:700;color:var(--tt);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;">Workspace</div>'
+      +'<div class="ws-tabs"><button class="wst on">🏢 Acme Corp <span class="wct wct-on">11</span></button><button class="wst off">🚀 Mistral AI <span class="wct wct-off">12</span></button><button class="wst off">📊 Pennylane <span class="wct wct-off">6</span></button><button class="wst add">+ Add workspace</button></div>';
+  }
+
+  /* GEN PANEL */
+  var srcOpts = '';
+  if (isS) {
+    srcOpts = '<div class="src-toggle">'
+      +'<button class="src-opt on">📊 Trend Report</button>'
+      +'<button class="src-opt dis" title="Upgrade to Pro">📋 Signal Brief</button>'
+      +'<button class="src-opt dis" title="Upgrade to Pro">📧 Newsletter</button>'
+      +'</div>';
+  } else {
+    var onCls = 'src-opt on'+(isAg?'-ag':'');
+    srcOpts = '<div class="src-toggle" id="src-toggle">'
+      +'<button class="src-opt '+onCls.replace('src-opt ','')+'" data-src="report">📊 Trend Report</button>'
+      +'<button class="src-opt" data-src="brief">📋 Signal Brief</button>'
+      +'<button class="src-opt" data-src="nl">📧 Newsletter</button>'
+      +'</div>';
+  }
+  var wsSel = isAg ? '<select class="fsel" style="width:125px;"><option>🏢 Acme Corp</option><option>🚀 Mistral AI</option></select>' : '';
+  var csNote = isS ? '' : '<span class="cs-pill">🗓 Direct scheduling — coming soon</span>';
+
+  out += '<div class="gen-panel">'
+    +'<div class="gen-top">'
+    +'<div style="width:32px;height:32px;border-radius:8px;background:'+(isAg?'rgba(245,166,35,.15)':'var(--li-l)')+';display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">💼</div>'
+    +'<div style="flex:1;"><div style="font-size:12px;font-weight:600;color:var(--tp);">Generate 3 LinkedIn post variants</div>'
+    +'<div style="font-size:11px;color:var(--tt);margin-top:1px;">Hook · Insight · CTA — all in your brand voice · copy-paste ready · cited sources'+(isAg?' · white-label · custom signals · private data':'')+'</div></div>'
+    +(isAg?'<span class="bd bd-ag">✦ White-label</span>':'')
+    +'</div>'
+    +'<div class="gen-inputs">'
+    +'<span style="font-size:11px;color:var(--tt);font-weight:500;flex-shrink:0;">From:</span>'
+    +srcOpts+wsSel
+    +'<select class="fsel" style="flex:1;min-width:150px;">'+(isS?'<option>🤖 AI Tooling — Report W12</option><option>🇫🇷 French SaaS — Report W11</option>':'<option>🤖 AI Tooling — Report W12</option><option>📋 AI Tooling Brief W12</option><option>🇫🇷 French SaaS — Report W11</option><option>📧 AI Tooling Newsletter W12</option>')+'</select>'
+    +'<button class="btnp '+(isAg?'drk':'li')+'">Generate →</button>'
+    +(csNote?'<div style="width:100%;display:flex;align-items:center;gap:6px;padding-top:4px;">'+csNote+'<span style="font-size:11px;color:var(--tt);">Posts are copy-paste ready — direct LinkedIn scheduling is planned for a future release</span></div>':'')
+    +'</div></div>';
+
+  /* FILTER */
+  out += '<div class="frow">'
+    +'<button class="'+fcOn+'">All sources</button>'
+    +'<button class="fc off">📊 From Reports</button>'
+    +(isS?'':('<button class="fc off">📋 From Briefs</button><button class="fc off">📧 From Newsletters</button>'))
+    +'<button class="fc off">🤖 AI Tooling</button>'
+    +'<button class="fc off">🇫🇷 French SaaS</button>'
+    +'<div style="margin-left:auto;"><select class="fsel"><option>Newest first</option><option>Most copied</option></select></div>'
+    +'</div>';
+
+  /* POST SET CARDS */
+  POST_SETS.forEach(function(set, si) {
+    var feat = si===0?(isAg?' feat-ag':' feat-p'):'';
+    out += '<div class="psc'+feat+'">';
+
+    /* HEADER */
+    out += '<div class="psc-header">'
+      +'<span class="psc-emoji">'+set.emoji+'</span>'
+      +'<div style="flex:1;min-width:0;">'
+      +'<div class="psc-niche '+nClr+'">'+set.niche+' · from '+set.source+'</div>'
+      +'<div class="psc-title">'+set.title+'</div>'
+      +'</div>'
+      +'<div class="psc-right">'
+      +(set.latest?'<span class="bd bd-new">Latest</span>':'')
+      +'<span class="bd '+(set.strength==='hi'?'bd-hi':'bd-med')+'">'+(set.strength==='hi'?'High signal':'Medium')+'</span>'
+      +(isAg?'<span class="bd bd-ag">✦ White-label</span>':'')
+      +'<span style="font-size:10px;color:var(--tt);">'+set.date+'</span>'
+      +'</div>'
+      +'</div>';
+
+    /* 3 VARIANTS */
+    out += '<div class="variants-grid">';
+    var types=[{lbl:'Hook',cls:typeHook},{lbl:'Insight',cls:typeInsight},{lbl:'CTA',cls:typeCta}];
+    set.posts.forEach(function(p, pi) {
+      var lines = p.text.split('\n').map(function(l,i){
+        if(i===0) return '<span class="post-hook">'+l+'</span>';
+        return l===''?'<br>':l+'<br>';
+      }).join('');
+      out += '<div class="variant">'
+        +'<div class="v-type-row">'
+        +'<span class="v-type '+types[pi].cls+'">'+types[pi].lbl+'</span>'
+        +'<button class="btn-copy '+copyCls+'">'
+        +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:10px;height:10px;"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>'
+        +'Copy'
+        +'</button>'
+        +'</div>'
+        +'<div class="post-text">'+lines+'<div class="post-hashtags">'+p.hashtags+'</div></div>'
+        +'<div class="post-cite">Source: <span>'+set.source+'</span>'+(isAg?' · private data woven in ✦':'')+'</div>'
+        +'</div>';
+    });
+    out += '</div>';
+
+    /* SET FOOTER */
+    out += '<div class="psc-foot">'
+      +'<span style="font-size:10px;color:var(--tt);">3 variants · copy-paste ready</span>'
+      +'<div style="margin-left:auto;display:flex;gap:4px;">'
+      +'<button class="btn-copy '+copyCls+'" style="height:24px;font-size:10px;gap:3px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:9px;height:9px;"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy all 3</button>'
+      +(isAg?'<button class="btng ag">🎨 White-label voice</button>':'')
+      +'<button class="btng'+ghCls+'">Regenerate</button>'
+      +'</div>'
+      +'</div>';
+
+    out += '</div>';
+  });
+
+  document.getElementById('main-body').innerHTML = out;
+  document.querySelectorAll('.fc').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.fc').forEach(function(x){x.className='fc off';});this.className='fc '+(T==='ag'?'on-ag':'on');});});
+  document.querySelectorAll('.wst').forEach(function(b){b.addEventListener('click',function(){if(this.classList.contains('add'))return;document.querySelectorAll('.wst').forEach(function(x){x.className='wst off';});this.className='wst on';});});
+  var tgl=document.getElementById('src-toggle');
+  if(tgl){
+    tgl.querySelectorAll('.src-opt').forEach(function(b){
+      b.addEventListener('click',function(){
+        if(this.classList.contains('dis'))return;
+        var onCls='src-opt on'+(T==='ag'?'-ag':'');
+        tgl.querySelectorAll('.src-opt').forEach(function(x){x.className='src-opt';});
+        this.className=onCls;
+      });
+    });
+  }
+}
+
+setTier('p');
+</script>

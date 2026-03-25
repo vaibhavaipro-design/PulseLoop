@@ -1,0 +1,46 @@
+{
+  "name": "pulseloop",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "check:bundle": "grep -rE 'sk-ant-api|AIzaSy|re_[a-zA-Z0-9]{20,}|LMSQ_|SERVICE_ROLE_KEY' .next/static/ 2>/dev/null && echo 'KEY LEAK DETECTED' && exit 1 || echo 'Bundle clean'",
+    "check:security": "grep -rn 'SERVICE_ROLE_KEY' ./app --include='*.tsx' --include='*.ts' | grep -v '/api/' && echo '❌ SERVICE_ROLE_KEY in wrong location' || echo '✅ Service role key placement OK'"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.80.0",
+    "@google/generative-ai": "^0.24.1",
+    "@supabase/ssr": "^0.9.0",
+    "@supabase/supabase-js": "^2.100.0",
+    "@tailwindcss/typography": "^0.5.19",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.37.0",
+    "axios": "^1.13.6",
+    "cheerio": "^1.2.0",
+    "date-fns": "^4.1.0",
+    "file-type": "^21.3.4",
+    "next": "14.2.35",
+    "react": "^18",
+    "react-dom": "^18",
+    "react-markdown": "^10.1.0",
+    "resend": "^6.9.4",
+    "rss-parser": "^3.13.0",
+    "server-only": "^0.0.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/cheerio": "^0.22.35",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.0.1",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.35",
+    "postcss": "^8",
+    "tailwindcss": "^3.3.0",
+    "typescript": "^5"
+  }
+}

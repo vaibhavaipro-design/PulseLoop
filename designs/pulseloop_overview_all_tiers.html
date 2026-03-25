@@ -1,0 +1,551 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --a:#5B5FC7;--al:#EEEEFF;--am:#A3A6E8;
+  --bp:#F0F0F7;--bm:#F7F7FC;
+  --tp:#1A1A3E;--ts:#6B6B8A;--tt:#A0A0BE;
+  --br:#E4E4F0;--brs:#C5C5E0;
+  --su:#4CAF82;--sub:#E8F7EF;
+  --wa:#F5A623;--wab:#FFF4E0;
+  --da:#E85757;--dab:#FDEAEA;
+  --ag:#1A1A3E;--agb:#F5A623;
+}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bp);}
+
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
+.tab-group{display:flex;gap:3px;padding:3px;background:#fff;border:1px solid var(--br);border-radius:10px;}
+.tt{height:30px;padding:0 14px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--tt);}
+.tt.ts{background:var(--bp);color:var(--tp);}
+.tt.tp{background:var(--a);color:#fff;}
+.tt.tag{background:var(--ag);color:var(--agb);}
+.vt{height:30px;padding:0 13px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--tt);}
+.vt.on{background:var(--a);color:#fff;}
+.vt.on-ag{background:var(--ag);color:var(--agb);}
+
+.shell{display:flex;height:720px;background:var(--bp);border-radius:14px;overflow:hidden;border:1px solid var(--br);}
+
+/* SIDEBAR */
+.sidebar{width:215px;min-width:215px;background:#fff;border-right:1px solid var(--br);display:flex;flex-direction:column;flex-shrink:0;}
+.sidebar.dark{background:var(--ag);border-color:#2D2D5E;}
+.slogo{height:56px;display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0;}
+.sidebar .slogo{border-bottom:1px solid var(--br);}
+.sidebar.dark .slogo{border-bottom:1px solid #2D2D5E;}
+.sli{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.slt{font-size:14px;font-weight:700;}
+.sidebar .slt{color:var(--tp);}
+.sidebar.dark .slt{color:#fff;}
+.snav{padding:12px 8px 6px;}
+.snl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:0 8px;margin-bottom:4px;color:var(--tt);}
+.sidebar.dark .snl{color:rgba(255,255,255,.3);}
+.sni{display:flex;align-items:center;gap:8px;height:38px;padding:0 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--ts);margin-bottom:1px;}
+.sidebar.dark .sni{color:rgba(255,255,255,.45);}
+.sni.act{background:var(--al);color:var(--a);}
+.sidebar.dark .sni.act{background:rgba(245,166,35,.15);color:var(--agb);}
+.sni svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.sbot{margin-top:auto;padding:10px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.sidebar .sbot{border-top:1px solid var(--br);}
+.sidebar.dark .sbot{border-top:1px solid #2D2D5E;}
+.sav{width:28px;height:28px;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.spb{font-size:10px;font-weight:700;padding:1px 7px;border-radius:9999px;}
+
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.tb{height:56px;background:#fff;border-bottom:1px solid var(--br);display:flex;align-items:center;padding:0 20px;gap:8px;flex-shrink:0;}
+.tb-title{font-size:16px;font-weight:600;color:var(--tp);flex:1;}
+.scroll{flex:1;overflow-y:auto;padding:20px 22px;background:var(--bm);}
+
+.btnp{height:30px;padding:0 12px;border-radius:8px;color:#fff;font-size:12px;font-weight:600;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.btnp.ind{background:var(--a);}
+.btnp.drk{background:var(--ag);}
+.btns{height:30px;padding:0 10px;border-radius:8px;background:#fff;color:var(--tp);font-size:12px;font-weight:500;border:1px solid var(--br);cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
+
+/* GREETING */
+.greeting{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;}
+.g-name{font-size:20px;font-weight:700;color:var(--tp);margin-bottom:3px;}
+.g-sub{font-size:13px;color:var(--ts);}
+
+/* ── STATS ROW (3 cards only) ── */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;}
+.sc{background:#fff;border:1px solid var(--br);border-radius:11px;padding:13px 15px;}
+.sc-l{font-size:10px;font-weight:600;color:var(--ts);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+.sc-v{font-size:24px;font-weight:700;color:var(--tp);line-height:1;}
+.sc-sub{font-size:11px;color:var(--tt);margin-top:4px;}
+/* usage bar */
+.usage-bar{height:4px;border-radius:9999px;background:var(--bp);margin-top:10px;overflow:hidden;}
+.usage-fill{height:100%;border-radius:9999px;transition:width .3s;}
+
+/* ── NUDGE (Starter) ── */
+.nudge{background:var(--al);border:1px solid var(--am);border-radius:12px;padding:11px 14px;display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.nudge-ic{width:30px;height:30px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.nudge-body{flex:1;}
+.nudge-ttl{font-size:12px;font-weight:700;color:var(--a);}
+.nudge-sub{font-size:11px;color:var(--ts);margin-top:1px;}
+
+/* WS TABS */
+.ws-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px;}
+.wst{height:28px;padding:0 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:5px;}
+.wst.on{background:var(--ag);color:#fff;}
+.wst.off{background:#fff;color:var(--ts);border:1px solid var(--br);}
+.wst.add{background:transparent;color:var(--ts);border:1px dashed var(--brs);}
+.wct{font-size:10px;border-radius:9999px;padding:1px 5px;}
+.wct-on{background:rgba(255,255,255,.2);color:#fff;}
+.wct-off{background:var(--bm);color:var(--tt);}
+
+/* SEC LABEL */
+.sec-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--tt);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.sec-lbl::after{content:'';flex:1;height:1px;background:var(--br);}
+
+/* TWO COL */
+.two-col{display:grid;grid-template-columns:1fr 320px;gap:14px;}
+
+/* ── NICHE STATUS CARD ── */
+.nc{background:#fff;border:1px solid var(--br);border-radius:13px;overflow:hidden;margin-bottom:10px;}
+.nc.has-action-p{border-left:3px solid var(--a);}
+.nc.has-action-ag{border-left:3px solid var(--agb);}
+.nc.complete{border-left:3px solid var(--su);}
+
+/* CARD HEADER */
+.nc-hd{display:flex;align-items:center;gap:10px;padding:12px 14px 10px;}
+.nc-emoji{font-size:18px;flex-shrink:0;}
+.nc-name{font-size:13px;font-weight:700;color:var(--tp);flex:1;}
+.nc-week{font-size:11px;color:var(--tt);}
+.nc-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:9999px;}
+.nc-done-badge{background:var(--sub);color:var(--su);}
+.nc-active-badge{background:var(--al);color:var(--a);}
+.nc-active-badge-ag{background:rgba(245,166,35,.15);color:#9A6600;}
+
+/* STATUS ITEMS GRID — done vs pending at a glance */
+.nc-items{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 14px 12px;}
+.nc-item{border-radius:9px;padding:8px 9px;display:flex;flex-direction:column;gap:4px;}
+.nc-item.done{background:var(--sub);border:1px solid #BBF7D0;}
+.nc-item.active{background:var(--al);border:1px solid var(--am);}
+.nc-item.active-ag{background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.35);}
+.nc-item.pending{background:var(--bm);border:1px solid var(--br);}
+.nc-item.locked{background:var(--bp);border:1px dashed var(--brs);}
+.nc-item-top{display:flex;align-items:center;gap:5px;}
+.nc-item-ic{width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.nc-item-ic.done{background:var(--su);}
+.nc-item-ic.active{background:var(--a);}
+.nc-item-ic.active-ag{background:var(--agb);}
+.nc-item-ic.pending{background:#fff;border:1px solid var(--br);}
+.nc-item-ic.locked{background:var(--bp);border:1px dashed var(--brs);}
+.nc-item-ic svg{width:10px;height:10px;fill:none;stroke-width:2;stroke-linecap:round;}
+.nc-item-ic.done svg,.nc-item-ic.active svg{stroke:#fff;}
+.nc-item-ic.active-ag svg{stroke:var(--ag);}
+.nc-item-ic.pending svg,.nc-item-ic.locked svg{stroke:var(--tt);}
+.nc-item-label{font-size:10px;font-weight:700;}
+.nc-item-label.done{color:var(--su);}
+.nc-item-label.active{color:var(--a);}
+.nc-item-label.active-ag{color:#9A6600;}
+.nc-item-label.pending{color:var(--tt);}
+.nc-item-label.locked{color:var(--brs);}
+.nc-item-note{font-size:10px;line-height:1.3;}
+.nc-item-note.done{color:var(--ts);}
+.nc-item-note.active{color:var(--ts);}
+.nc-item-note.pending{color:var(--tt);}
+.nc-item-note.locked{color:var(--brs);}
+
+/* CARD FOOTER CTA */
+.nc-foot{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-top:1px solid var(--br);background:var(--bm);}
+.nc-foot-txt{font-size:11px;color:var(--ts);}
+.nc-foot-txt b{color:var(--tp);font-weight:600;}
+.nc-cta-btn{height:26px;padding:0 11px;border-radius:7px;font-size:11px;font-weight:600;border:none;cursor:pointer;white-space:nowrap;}
+.nc-cta-btn.ind{background:var(--a);color:#fff;}
+.nc-cta-btn.ag{background:var(--ag);color:var(--agb);}
+.nc-cta-btn.view{background:transparent;color:var(--a);border:1px solid var(--am);}
+.nc-cta-btn.view-ag{background:transparent;color:#9A6600;border:1px solid rgba(245,166,35,.4);}
+.nc-cta-btn.nudge{background:var(--a);color:#fff;}
+
+/* STARTER: add niche teaser */
+.add-niche-card{border:2px dashed var(--brs);border-radius:13px;padding:16px;display:flex;align-items:center;gap:12px;background:#fff;cursor:pointer;transition:all .15s;}
+.add-niche-card:hover{border-color:var(--a);background:var(--al);}
+
+/* ── ACTIVITY FEED ── */
+.af{background:#fff;border:1px solid var(--br);border-radius:13px;overflow:hidden;display:flex;flex-direction:column;height:100%;}
+.af-hd{padding:12px 14px 10px;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.af-ttl{font-size:13px;font-weight:700;color:var(--tp);}
+.af-body{flex:1;overflow-y:auto;}
+.af-day{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--tt);padding:8px 14px 5px;background:var(--bm);border-bottom:1px solid var(--br);}
+.af-row{display:flex;align-items:center;gap:9px;padding:9px 14px;border-bottom:1px solid var(--br);cursor:pointer;transition:background .1s;}
+.af-row:hover{background:var(--bm);}
+.af-row:last-child{border-bottom:none;}
+.af-ic{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;}
+.af-action{font-size:12px;font-weight:600;color:var(--tp);}
+.af-niche{font-size:10px;color:var(--ts);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;}
+.af-right{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;}
+.af-time{font-size:10px;color:var(--tt);}
+.af-link{font-size:10px;font-weight:600;color:var(--a);}
+.af-link.ag{color:#9A6600;}
+
+/* EMPTY STATE */
+.empty-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:60px 20px;text-align:center;}
+.empty-ic{width:64px;height:64px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:28px;}
+.empty-steps{display:flex;flex-direction:column;gap:8px;max-width:360px;width:100%;}
+.es{background:#fff;border:1px solid var(--br);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;text-align:left;}
+.es-n{width:22px;height:22px;border-radius:6px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.es-n.p{background:var(--al);color:var(--a);}
+.es-n.ag{background:rgba(245,166,35,.15);color:#9A6600;}
+</style>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <div class="tab-group">
+    <button class="tt ts" onclick="setTier('s')">Starter €49</button>
+    <button class="tt" id="tt-p" onclick="setTier('p')">Pro €99</button>
+    <button class="tt" id="tt-ag" onclick="setTier('ag')">Agency €249</button>
+  </div>
+  <div class="tab-group" id="view-grp">
+    <button class="vt on" id="vt-a" onclick="setView('active')">Active user</button>
+    <button class="vt" id="vt-e" onclick="setView('empty')">New user</button>
+  </div>
+</div>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sb">
+    <div class="slogo">
+      <div class="sli" id="sb-li" style="background:var(--a);"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+      <span class="slt" id="sb-lt">PulseLoop</span>
+    </div>
+    <div class="snav">
+      <div class="snl">Workspace</div>
+      <div class="sni act" id="ni-ov"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>Niches</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Trend Reports</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="5" rx="1"/><rect x="13" y="3" width="8" height="9" rx="1"/><rect x="3" y="10" width="8" height="9" rx="1"/><rect x="13" y="14" width="8" height="5" rx="1"/></svg>Dashboards</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>Signal Briefs</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Newsletters</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn Posts</div>
+    </div>
+    <div class="snav" style="padding-top:4px;">
+      <div class="snl">Settings</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Brand Voice</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2"/></svg>Sources</div>
+    </div>
+    <div class="sbot">
+      <div class="sav" id="sb-av" style="background:var(--al);color:var(--a);">VB</div>
+      <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:500;" id="sb-un">Vaibhav</div><span class="spb" id="sb-pb" style="background:var(--al);color:var(--a);">PRO</span></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="tb">
+      <div class="tb-title">Overview</div>
+      <div style="flex:1;"></div>
+      <div class="sav" id="top-av" style="background:var(--al);color:var(--a);">VB</div>
+      <div id="tb-right"></div>
+    </div>
+    <div class="scroll"><div id="page-body"></div></div>
+  </div>
+</div>
+
+<script>
+var T='p', VIEW='active';
+
+var NICHES_PRO = [
+  {
+    emoji:'🤖', name:'AI Tooling for B2B SaaS', week:'Week 12', signals:847,
+    items:[
+      { key:'report',     label:'Trend Report',  status:'done',    note:'Generated 24 Mar',    icon:'rpt' },
+      { key:'brief',      label:'Signal Brief',  status:'done',    note:'Generated 24 Mar',    icon:'brf' },
+      { key:'newsletter', label:'Newsletter',    status:'active',  note:'Ready to generate',   icon:'nl'  },
+      { key:'linkedin',   label:'LinkedIn Posts',status:'pending', note:'After newsletter',    icon:'li'  },
+    ],
+    footTxt:'Next step: <b>Newsletter</b> is ready', footBtn:'Generate', footType:'ind'
+  },
+  {
+    emoji:'🇫🇷', name:'French SaaS Funding', week:'Week 11', signals:312,
+    items:[
+      { key:'report',     label:'Trend Report',  status:'done',    note:'Generated 17 Mar',    icon:'rpt' },
+      { key:'brief',      label:'Signal Brief',  status:'pending', note:'Not started',         icon:'brf' },
+      { key:'newsletter', label:'Newsletter',    status:'pending', note:'After brief',         icon:'nl'  },
+      { key:'linkedin',   label:'LinkedIn Posts',status:'pending', note:'After newsletter',    icon:'li'  },
+    ],
+    footTxt:'Next step: <b>Signal Brief</b>', footBtn:'Generate', footType:'ind'
+  },
+  {
+    emoji:'📋', name:'EU Compliance & GDPR', week:'Week 12', signals:204,
+    items:[
+      { key:'report',     label:'Trend Report',  status:'done', note:'Generated 24 Mar', icon:'rpt' },
+      { key:'brief',      label:'Signal Brief',  status:'done', note:'Generated 24 Mar', icon:'brf' },
+      { key:'newsletter', label:'Newsletter',    status:'done', note:'Generated 24 Mar', icon:'nl'  },
+      { key:'linkedin',   label:'LinkedIn Posts',status:'done', note:'3 posts ready',    icon:'li'  },
+    ],
+    footTxt:'All done for this niche this week', footBtn:'View report', footType:'view'
+  },
+];
+
+var NICHES_STARTER = [
+  {
+    emoji:'🤖', name:'AI Tooling for B2B SaaS', week:'Week 12', signals:847,
+    items:[
+      { key:'report',     label:'Trend Report',  status:'done',   note:'Generated 24 Mar',  icon:'rpt' },
+      { key:'brief',      label:'Signal Brief',  status:'locked', note:'Pro only',           icon:'brf' },
+      { key:'newsletter', label:'Newsletter',    status:'locked', note:'Pro only',           icon:'nl'  },
+      { key:'linkedin',   label:'LinkedIn Posts',status:'pending',note:'From report',        icon:'li'  },
+    ],
+    footTxt:'Briefs & newsletters locked on Starter', footBtn:'Upgrade to Pro', footType:'nudge'
+  },
+];
+
+var NICHES_AGENCY = [
+  {
+    emoji:'🤖', name:'AI Tooling for B2B SaaS', week:'Week 12', signals:847,
+    items:[
+      { key:'report',     label:'Trend Report',  status:'done',    note:'24 Mar',            icon:'rpt' },
+      { key:'brief',      label:'Signal Brief',  status:'done',    note:'24 Mar',            icon:'brf' },
+      { key:'newsletter', label:'Newsletter',    status:'active',  note:'Ready',             icon:'nl'  },
+      { key:'linkedin',   label:'LinkedIn Posts',status:'pending', note:'After newsletter',  icon:'li'  },
+    ],
+    footTxt:'Next: <b>Newsletter</b> ready to generate', footBtn:'Generate', footType:'ag'
+  },
+  {
+    emoji:'📋', name:'EU Compliance & GDPR', week:'Week 12', signals:204,
+    items:[
+      { key:'report', label:'Trend Report', status:'done', note:'24 Mar', icon:'rpt' },
+      { key:'brief',  label:'Signal Brief', status:'done', note:'24 Mar', icon:'brf' },
+      { key:'newsletter',label:'Newsletter',status:'done', note:'24 Mar', icon:'nl'  },
+      { key:'linkedin',label:'LinkedIn Posts',status:'done',note:'3 posts',icon:'li' },
+    ],
+    footTxt:'All done for this niche this week', footBtn:'View report', footType:'view-ag'
+  },
+];
+
+var ACTIVITY = {
+  'Today':[
+    { ic:'📊', bg:'var(--al)',  action:'Trend Report generated',  niche:'AI Tooling for B2B SaaS', time:'2h ago'  },
+    { ic:'📋', bg:'#EFF6FF',   action:'Signal Brief generated',   niche:'AI Tooling for B2B SaaS', time:'2h ago'  },
+    { ic:'📊', bg:'var(--al)',  action:'Trend Report generated',   niche:'EU Compliance & GDPR',    time:'4h ago'  },
+    { ic:'📧', bg:'#FEF3C7',   action:'Newsletter generated',     niche:'EU Compliance & GDPR',    time:'5h ago'  },
+    { ic:'💼', bg:'#DBEAFE',   action:'LinkedIn Posts generated', niche:'EU Compliance & GDPR',    time:'5h ago'  },
+  ],
+  'Yesterday':[
+    { ic:'📊', bg:'var(--al)',  action:'Trend Report generated',  niche:'French SaaS Funding',     time:'9:14'   },
+    { ic:'📋', bg:'#EFF6FF',   action:'Signal Brief generated',   niche:'French SaaS Funding',     time:'9:15'   },
+  ],
+  'This week':[
+    { ic:'🎯', bg:'var(--bm)', action:'Niche added',              niche:'EU Compliance & GDPR',    time:'Mon 9:00' },
+    { ic:'⚡', bg:'var(--al)', action:'Sources refreshed',         niche:'All niches',              time:'Mon 6:00' },
+  ]
+};
+
+function getIcon(key) {
+  var icons={
+    rpt:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+    brf:'<path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/>',
+    nl: '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
+    li: '<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>',
+    done:'<polyline points="20 6 9 17 4 12"/>',
+    lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  };
+  return icons[key]||'';
+}
+
+function setTier(t) {
+  T=t; var isAg=t==='ag', isS=t==='s';
+  document.querySelectorAll('.tt').forEach(function(b){b.className='tt';});
+  if(t==='s') document.querySelectorAll('.tt')[0].className='tt ts';
+  if(t==='p') document.querySelectorAll('.tt')[1].className='tt tp';
+  if(t==='ag') document.querySelectorAll('.tt')[2].className='tt tag';
+
+  var sb=document.getElementById('sb'),sbLi=document.getElementById('sb-li');
+  var sbAv=document.getElementById('sb-av'),topAv=document.getElementById('top-av');
+  var sbPb=document.getElementById('sb-pb'),sbLt=document.getElementById('sb-lt'),sbUn=document.getElementById('sb-un');
+  var niOv=document.getElementById('ni-ov');
+  var vtA=document.getElementById('vt-a'),vtE=document.getElementById('vt-e');
+
+  if (isAg) {
+    sb.className='sidebar dark';sbLi.style.background='var(--agb)';
+    sbAv.style.background='rgba(245,166,35,.2)';sbAv.style.color='var(--agb)';
+    topAv.style.background='rgba(245,166,35,.2)';topAv.style.color='var(--agb)';
+    sbPb.style.cssText='background:var(--ag);color:var(--agb);';sbPb.textContent='AGENCY';
+    sbLt.style.color='#fff';sbUn.style.color='#fff';
+    niOv.style.background='rgba(245,166,35,.15)';niOv.style.color='var(--agb)';
+    vtA.className=VIEW==='active'?'vt on-ag':'vt';vtE.className=VIEW==='empty'?'vt on-ag':'vt';
+    document.getElementById('tb-right').innerHTML='<select style="height:28px;padding:0 8px;border-radius:7px;border:1px solid #3D3D7E;font-size:11px;color:rgba(255,255,255,.7);background:var(--ag);font-family:inherit;cursor:pointer;outline:none;"><option>🏢 Acme Corp</option><option>🚀 Mistral AI</option><option>📊 Pennylane</option></select>';
+  } else {
+    sb.className='sidebar';sbLi.style.background='var(--a)';
+    sbAv.style.background='var(--al)';sbAv.style.color='var(--a)';
+    topAv.style.background='var(--al)';topAv.style.color='var(--a)';
+    if(t==='p'){sbPb.style.cssText='background:var(--al);color:var(--a);';sbPb.textContent='PRO';}
+    else{sbPb.style.cssText='background:var(--bp);color:var(--ts);border:1px solid var(--br);';sbPb.textContent='STARTER';}
+    sbLt.style.color='var(--tp)';sbUn.style.color='var(--tp)';
+    niOv.style.background='';niOv.style.color='';
+    vtA.className=VIEW==='active'?'vt on':'vt';vtE.className=VIEW==='empty'?'vt on':'vt';
+    document.getElementById('tb-right').innerHTML='';
+  }
+  render();
+}
+
+function setView(v) {
+  VIEW=v; var isAg=T==='ag';
+  var on=isAg?'vt on-ag':'vt on';
+  document.getElementById('vt-a').className=v==='active'?on:'vt';
+  document.getElementById('vt-e').className=v==='empty'?on:'vt';
+  render();
+}
+
+function renderNicheCard(n, isAg) {
+  var allDone = n.items.every(function(i){return i.status==='done';});
+  var hasActive = n.items.some(function(i){return i.status==='active';});
+  var borderCls = allDone ? 'complete' : hasActive ? (isAg?'has-action-ag':'has-action-p') : '';
+
+  var html='<div class="nc '+borderCls+'">';
+
+  /* header */
+  var badgeCls = allDone ? 'nc-done-badge' : isAg ? 'nc-active-badge-ag' : 'nc-active-badge';
+  var badgeTxt = allDone ? '✓ Complete' : 'In progress';
+  html += '<div class="nc-hd">'
+    +'<span class="nc-emoji">'+n.emoji+'</span>'
+    +'<div class="nc-name">'+n.name+'</div>'
+    +'<span class="nc-week" style="margin-right:6px;">'+n.week+'</span>'
+    +'<span class="nc-badge '+badgeCls+'">'+badgeTxt+'</span>'
+    +'</div>';
+
+  /* items grid */
+  html += '<div class="nc-items">';
+  n.items.forEach(function(item) {
+    var s = item.status;
+    var agActive = isAg && s==='active' ? '-ag' : '';
+    var icKey = s==='done' ? 'done' : s==='locked' ? 'lock' : item.icon;
+    var itemCls = s==='active' ? 'active'+agActive : s;
+    var icCls   = s==='active' ? 'active'+agActive : s;
+    html += '<div class="nc-item '+itemCls+'">'
+      +'<div class="nc-item-top">'
+      +'<div class="nc-item-ic '+icCls+'"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round">'+getIcon(icKey)+'</svg></div>'
+      +'<div class="nc-item-label '+itemCls+'">'+item.label+'</div>'
+      +'</div>'
+      +'<div class="nc-item-note '+s+'">'+item.note+'</div>'
+      +'</div>';
+  });
+  html += '</div>';
+
+  /* footer */
+  html += '<div class="nc-foot">'
+    +'<span class="nc-foot-txt">'+n.footTxt+'</span>'
+    +'<button class="nc-cta-btn '+n.footType+'">'+n.footBtn+'</button>'
+    +'</div>';
+
+  html += '</div>';
+  return html;
+}
+
+function render() {
+  var isAg=T==='ag',isS=T==='s';
+  var lnkCls=isAg?'ag':'';
+  var body='';
+
+  /* ── EMPTY STATE ── */
+  if (VIEW==='empty') {
+    var nc=isAg?'ag':'p';
+    body='<div class="empty-wrap">'
+      +'<div class="empty-ic" style="background:'+(isAg?'rgba(245,166,35,.15)':'var(--al)')+';">🌱</div>'
+      +'<div style="font-size:18px;font-weight:700;color:var(--tp);">Welcome to PulseLoop, Vaibhav</div>'
+      +'<div style="font-size:13px;color:var(--ts);max-width:340px;line-height:1.65;">You\'re 3 steps away from your first weekly intelligence loop. Takes about 5 minutes.</div>'
+      +'<div class="empty-steps">'
+      +'<div class="es"><div class="es-n '+nc+'">1</div><div><div style="font-size:12px;font-weight:600;color:var(--tp);">Set up your first niche</div><div style="font-size:11px;color:var(--tt);margin-top:2px;">Define the market you want to track — e.g. "AI Tooling for French B2B SaaS"</div></div></div>'
+      +'<div class="es"><div class="es-n '+nc+'">2</div><div><div style="font-size:12px;font-weight:600;color:var(--tp);">Configure your brand voice</div><div style="font-size:11px;color:var(--tt);margin-top:2px;">Paste 3 samples of your writing — takes 2 minutes</div></div></div>'
+      +'<div class="es"><div class="es-n '+nc+'">3</div><div><div style="font-size:12px;font-weight:600;color:var(--tp);">Run your first Trend Report</div><div style="font-size:11px;color:var(--tt);margin-top:2px;">PulseLoop scrapes 18 EU sources and generates your first intelligence brief</div></div></div>'
+      +'</div>'
+      +'<button class="btnp '+(isAg?'drk':'ind')+'" style="height:38px;padding:0 28px;font-size:13px;border-radius:10px;">Set up my first niche →</button>'
+      +'</div>';
+    document.getElementById('page-body').innerHTML=body; return;
+  }
+
+  /* ── ACTIVE STATE ── */
+
+  /* GREETING */
+  body += '<div class="greeting">'
+    +'<div><div class="g-name">Good morning, Vaibhav 👋</div>'
+    +'<div class="g-sub">Week 12 · Monday 24 March 2026'+(isAg?' · Acme Corp workspace':'')+'</div></div>'
+    +'</div>';
+
+  /* STARTER NUDGE */
+  if (isS) {
+    body += '<div class="nudge"><div class="nudge-ic">⚡</div><div class="nudge-body"><div class="nudge-ttl">Unlock the full weekly loop — upgrade to Pro</div><div class="nudge-sub">Signal Briefs and Newsletters are locked on Starter. Pro unlocks all 4 content types from every Trend Report.</div></div><button class="btnp ind" style="flex-shrink:0;height:28px;font-size:11px;">Upgrade to Pro →</button></div>';
+  }
+
+  /* STATS ROW — 3 cards */
+  var used=isS?3:isAg?11:9, total=isS?4:12;
+  var pct=Math.round(used/total*100);
+  var barColor=pct>=90?'var(--da)':isAg?'var(--agb)':'var(--a)';
+  var content=isS?2:14;
+
+  body += '<div class="stats-row">'
+    /* reports */
+    +'<div class="sc"><div class="sc-l">Reports this month</div><div class="sc-v">'+used+'</div><div class="sc-sub">of '+(isAg?'12/workspace · Agency':'total · '+(isS?'Starter':'Pro'))+'</div>'
+    +'<div class="usage-bar"><div class="usage-fill" style="width:'+pct+'%;background:'+barColor+';"></div></div>'
+    +'</div>'
+    /* content */
+    +'<div class="sc"><div class="sc-l">Content published</div><div class="sc-v">'+content+'</div><div class="sc-sub">'+(isS?'LinkedIn posts only · upgrade for more':'Briefs + newsletters + posts')+'</div></div>'
+    /* usage */
+    +'<div class="sc"><div class="sc-l">Plan usage</div><div class="sc-v" style="font-size:16px;padding-top:4px;">'+used+' / '+total+'</div><div class="sc-sub">reports used · '+(pct>=90?'<span style="color:var(--da);font-weight:600;">Near limit</span>':Math.round(total-used)+' remaining')+'</div>'
+    +'<div class="usage-bar"><div class="usage-fill" style="width:'+pct+'%;background:'+barColor+';"></div></div>'
+    +'</div>'
+    +'</div>';
+
+  /* AGENCY WORKSPACE TABS */
+  if (isAg) {
+    body += '<div style="font-size:10px;font-weight:700;color:var(--tt);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px;">Workspace</div>'
+      +'<div class="ws-tabs">'
+      +'<button class="wst on">🏢 Acme Corp <span class="wct wct-on">3 niches</span></button>'
+      +'<button class="wst off">🚀 Mistral AI <span class="wct wct-off">3 niches</span></button>'
+      +'<button class="wst off">📊 Pennylane <span class="wct wct-off">2 niches</span></button>'
+      +'<button class="wst add">+ Add workspace</button>'
+      +'</div>';
+  }
+
+  /* TWO COL */
+  body += '<div class="two-col">';
+
+  /* LEFT: NICHE STATUS CARDS */
+  body += '<div>';
+  body += '<div class="sec-lbl">Weekly loop status</div>';
+
+  var niches = isS ? NICHES_STARTER : isAg ? NICHES_AGENCY : NICHES_PRO;
+  niches.forEach(function(n){ body += renderNicheCard(n, isAg); });
+
+  /* Starter: teaser for locked niches */
+  if (isS) {
+    body += '<div class="add-niche-card">'
+      +'<div style="width:32px;height:32px;border-radius:8px;background:var(--bm);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg viewBox="0 0 24 24" fill="none" stroke="var(--tt)" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>'
+      +'<div style="flex:1;"><div style="font-size:12px;font-weight:600;color:var(--ts);">2 more niches available on Pro</div><div style="font-size:11px;color:var(--tt);margin-top:2px;">Starter includes 1 niche · Pro gives you 7 with the full loop</div></div>'
+      +'<button class="btnp ind" style="height:26px;font-size:11px;flex-shrink:0;">Upgrade →</button>'
+      +'</div>';
+  }
+
+  body += '</div>'; /* end left */
+
+  /* RIGHT: ACTIVITY FEED */
+  body += '<div class="af">'
+    +'<div class="af-hd"><div class="af-ttl">Recent activity</div><span style="font-size:10px;color:var(--tt);">This week</span></div>'
+    +'<div class="af-body">';
+
+  Object.keys(ACTIVITY).forEach(function(day){
+    body += '<div class="af-day">'+day+'</div>';
+    ACTIVITY[day].forEach(function(a){
+      body += '<div class="af-row">'
+        +'<div class="af-ic" style="background:'+a.bg+';">'+a.ic+'</div>'
+        +'<div style="flex:1;min-width:0;"><div class="af-action">'+a.action+'</div><div class="af-niche">'+a.niche+'</div></div>'
+        +'<div class="af-right"><span class="af-time">'+a.time+'</span><span class="af-link '+lnkCls+'">View →</span></div>'
+        +'</div>';
+    });
+  });
+
+  body += '</div></div>'; /* af-body, af */
+  body += '</div>'; /* two-col */
+
+  document.getElementById('page-body').innerHTML=body;
+
+  document.querySelectorAll('.wst').forEach(function(b){
+    b.addEventListener('click',function(){
+      if(this.classList.contains('add')) return;
+      document.querySelectorAll('.wst').forEach(function(x){x.className='wst off';});
+      this.className='wst on';
+    });
+  });
+}
+
+setTier('p');
+</script>

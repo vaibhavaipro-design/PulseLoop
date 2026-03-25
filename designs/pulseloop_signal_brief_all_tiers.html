@@ -1,0 +1,542 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --a:#5B5FC7;--al:#EEEEFF;--am:#A3A6E8;
+  --bp:#F0F0F7;--bm:#F7F7FC;
+  --tp:#1A1A3E;--ts:#6B6B8A;--tt:#A0A0BE;
+  --br:#E4E4F0;--brs:#C5C5E0;
+  --su:#4CAF82;--sub:#E8F7EF;
+  --wa:#F5A623;--wab:#FFF4E0;
+  --da:#E85757;--dab:#FDEAEA;
+  --ag:#1A1A3E;--agb:#F5A623;
+}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bp);}
+
+.controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.tab-group{display:flex;gap:3px;padding:3px;background:#fff;border:1px solid var(--br);border-radius:10px;}
+.tt{height:30px;padding:0 14px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--tt);}
+.tt.ts{background:var(--bp);color:var(--tp);}
+.tt.tp{background:var(--a);color:#fff;}
+.tt.tag{background:var(--ag);color:var(--agb);}
+.vt{height:30px;padding:0 13px;border-radius:7px;border:none;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--tt);}
+.vt.on{background:var(--a);color:#fff;}
+
+.shell{display:flex;height:720px;background:var(--bp);border-radius:14px;overflow:hidden;border:1px solid var(--br);}
+
+/* SIDEBAR */
+.sidebar{width:215px;min-width:215px;background:#fff;border-right:1px solid var(--br);display:flex;flex-direction:column;flex-shrink:0;}
+.sidebar.dark{background:var(--ag);border-color:#2D2D5E;}
+.slogo{height:56px;display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0;}
+.sidebar .slogo{border-bottom:1px solid var(--br);}
+.sidebar.dark .slogo{border-bottom:1px solid #2D2D5E;}
+.sli{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.slt{font-size:14px;font-weight:700;}
+.sidebar .slt{color:var(--tp);}
+.sidebar.dark .slt{color:#fff;}
+.snav{padding:12px 8px 6px;}
+.snl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:0 8px;margin-bottom:4px;color:var(--tt);}
+.sidebar.dark .snl{color:rgba(255,255,255,.3);}
+.sni{display:flex;align-items:center;gap:8px;height:38px;padding:0 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--ts);margin-bottom:1px;}
+.sidebar.dark .sni{color:rgba(255,255,255,.45);}
+.sni.act{background:var(--al);color:var(--a);}
+.sidebar.dark .sni.act{background:rgba(245,166,35,.15);color:var(--agb);}
+.sni svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.sbot{margin-top:auto;padding:10px;display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.sidebar .sbot{border-top:1px solid var(--br);}
+.sidebar.dark .sbot{border-top:1px solid #2D2D5E;}
+.sav{width:28px;height:28px;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.spb{font-size:10px;font-weight:700;padding:1px 7px;border-radius:9999px;}
+
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.tb{height:56px;background:#fff;border-bottom:1px solid var(--br);display:flex;align-items:center;padding:0 20px;gap:8px;flex-shrink:0;}
+.tb-title{font-size:16px;font-weight:600;color:var(--tp);flex:1;}
+.scroll{flex:1;overflow-y:auto;padding:18px 20px;background:var(--bm);}
+
+.btnp{height:30px;padding:0 12px;border-radius:8px;color:#fff;font-size:12px;font-weight:600;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.btnp.ind{background:var(--a);}
+.btnp.drk{background:var(--ag);}
+.btns{height:30px;padding:0 10px;border-radius:8px;background:#fff;color:var(--tp);font-size:12px;font-weight:500;border:1px solid var(--br);cursor:pointer;display:inline-flex;align-items:center;gap:5px;}
+.btng{height:26px;padding:0 8px;border-radius:6px;background:transparent;font-size:11px;font-weight:500;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:3px;}
+.btng.p{color:var(--a);}
+.btng.p:hover{background:var(--al);}
+.btng.ag{color:#9A6600;}
+.btng.ag:hover{background:rgba(245,166,35,.08);}
+.btn-up{height:24px;padding:0 11px;border-radius:9999px;font-size:11px;font-weight:600;border:none;cursor:pointer;white-space:nowrap;}
+.btn-up.p{background:var(--a);color:#fff;}
+.btn-up.a{background:var(--ag);color:var(--agb);}
+
+.bd{font-size:10px;font-weight:600;padding:2px 7px;border-radius:9999px;white-space:nowrap;}
+.bd-new{background:var(--al);color:var(--a);}
+.bd-hi{background:var(--sub);color:var(--su);}
+.bd-med{background:var(--wab);color:var(--wa);}
+.bd-ag{background:rgba(245,166,35,.15);color:#9A6600;}
+.bd-eu{background:#EFF6FF;color:#1D4ED8;}
+
+.ub{border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.ub.ind{background:var(--al);border:1px solid var(--am);}
+.ub.drk{background:var(--ag);border:1px solid #3D3D7E;}
+.ub-ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.ub.ind .ub-ic{background:#fff;}
+.ub.drk .ub-ic{background:rgba(245,166,35,.15);}
+.ub-body{flex:1;}
+.ub-ttl{font-size:12px;font-weight:700;}
+.ub.ind .ub-ttl{color:var(--a);}
+.ub.drk .ub-ttl{color:#fff;}
+.ub-sub{font-size:11px;margin-top:1px;}
+.ub.ind .ub-sub{color:var(--ts);}
+.ub.drk .ub-sub{color:rgba(255,255,255,.55);}
+.ub-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;}
+.ut-i{font-size:10px;font-weight:600;padding:2px 6px;border-radius:9999px;background:var(--al);color:var(--a);}
+.ut-d{font-size:10px;font-weight:600;padding:2px 6px;border-radius:9999px;background:rgba(245,166,35,.15);color:#9A6600;}
+
+.sg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px;}
+.sc{background:#fff;border:1px solid var(--br);border-radius:10px;padding:11px 13px;}
+.sc-l{font-size:10px;font-weight:600;color:var(--ts);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+.sc-v{font-size:19px;font-weight:700;color:var(--tp);}
+.sc-s{font-size:10px;color:var(--tt);margin-top:1px;}
+
+.ws-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px;}
+.wst{height:28px;padding:0 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:5px;}
+.wst.on{background:var(--ag);color:#fff;}
+.wst.off{background:#fff;color:var(--ts);border:1px solid var(--br);}
+.wst.add{background:transparent;color:var(--ts);border:1px dashed var(--brs);}
+.wct{font-size:10px;border-radius:9999px;padding:1px 5px;}
+.wct-on{background:rgba(255,255,255,.2);color:#fff;}
+.wct-off{background:var(--bm);color:var(--tt);}
+
+.gen-panel{background:#fff;border:1px solid var(--br);border-radius:12px;padding:12px 15px;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.fsel{height:28px;padding:0 8px;border-radius:7px;border:1px solid var(--br);font-size:11px;color:var(--ts);background:#fff;font-family:inherit;cursor:pointer;outline:none;}
+
+.frow{display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.fc{height:26px;padding:0 10px;border-radius:9999px;font-size:11px;font-weight:600;cursor:pointer;border:none;}
+.fc.on{background:var(--a);color:#fff;}
+.fc.on-ag{background:var(--ag);color:#fff;}
+.fc.off{background:#fff;color:var(--ts);border:1px solid var(--br);}
+
+/* BRIEF CARDS */
+.brief-list{display:flex;flex-direction:column;gap:10px;}
+.brc{background:#fff;border:1px solid var(--br);border-radius:13px;overflow:hidden;cursor:pointer;transition:box-shadow .15s;}
+.brc:hover{box-shadow:0 4px 16px rgba(91,95,199,.10);}
+.brc.feat-p{border-left:3px solid var(--a);}
+.brc.feat-ag{border-left:3px solid var(--agb);}
+.brc-strip{display:flex;align-items:center;gap:8px;padding:10px 14px 8px;border-bottom:1px solid var(--br);}
+.brc-emoji{font-size:16px;flex-shrink:0;}
+.brc-niche{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.brc-niche.p{color:var(--a);}
+.brc-niche.ag{color:#9A6600;}
+.brc-strip-right{margin-left:auto;display:flex;align-items:center;gap:5px;}
+.brc-doc{padding:12px 14px;}
+.brc-headline{font-size:15px;font-weight:700;color:var(--tp);line-height:1.35;margin-bottom:8px;}
+.brc-lede{font-size:12px;color:var(--ts);line-height:1.7;margin-bottom:10px;}
+.brc-bullets{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}
+.brc-bullet{display:flex;align-items:baseline;gap:8px;font-size:12px;color:var(--tp);line-height:1.5;}
+.brc-bullet-dot{width:5px;height:5px;border-radius:9999px;flex-shrink:0;margin-top:6px;}
+.brc-bullet-dot.hi{background:var(--su);}
+.brc-bullet-dot.med{background:var(--wa);}
+.brc-sowhat{background:var(--bm);border:1px solid var(--br);border-radius:8px;padding:8px 11px;font-size:12px;color:var(--tp);line-height:1.55;}
+.brc-sowhat strong{color:var(--a);}
+.brc-sowhat.ag strong{color:#9A6600;}
+.brc-foot{display:flex;align-items:center;gap:5px;padding:8px 12px;border-top:1px solid var(--br);background:var(--bm);}
+.brc-date{font-size:10px;color:var(--tt);}
+
+/* LOCKED */
+.lock-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:50px 20px;text-align:center;}
+.lock-icon-bg{width:56px;height:56px;border-radius:16px;background:var(--dab);display:flex;align-items:center;justify-content:center;}
+.lock-icon-bg svg{width:24px;height:24px;stroke:var(--da);fill:none;stroke-width:1.5;stroke-linecap:round;}
+.lock-feats{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:400px;width:100%;}
+.lf{background:#fff;border:1px solid var(--br);border-radius:9px;padding:10px 12px;display:flex;gap:8px;align-items:flex-start;text-align:left;}
+.lf svg{width:13px;height:13px;stroke:var(--a);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0;margin-top:2px;}
+.lf-ttl{font-size:12px;font-weight:600;color:var(--tp);}
+.lf-sub{font-size:11px;color:var(--tt);margin-top:1px;}
+
+/* DETAIL VIEW */
+.pg{display:none;flex-direction:column;overflow:hidden;flex:1;}
+.pg.on{display:flex;}
+.bc{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tt);margin-bottom:12px;}
+.bc .lnk{color:var(--a);cursor:pointer;font-weight:600;}
+.bc svg{width:10px;height:10px;stroke:var(--tt);fill:none;stroke-width:1.5;stroke-linecap:round;}
+
+.brief-1pager{background:#fff;border:1px solid var(--br);border-radius:14px;overflow:hidden;margin-bottom:12px;}
+.doc-header{padding:22px 24px 18px;border-bottom:1px solid var(--br);}
+.doc-from{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--tt);margin-bottom:6px;}
+.doc-headline{font-size:20px;font-weight:800;color:var(--tp);line-height:1.25;margin-bottom:10px;letter-spacing:-.3px;}
+.doc-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.doc-pill{font-size:10px;font-weight:600;padding:3px 9px;border-radius:9999px;}
+.doc-pill-a{background:var(--al);color:var(--a);}
+.doc-pill-s{background:var(--sub);color:var(--su);}
+.doc-pill-d{background:var(--bp);color:var(--ts);border:1px solid var(--br);}
+.doc-pill-ag{background:rgba(245,166,35,.15);color:#9A6600;}
+.doc-lede{font-size:14px;color:var(--tp);line-height:1.8;font-weight:400;}
+.doc-lede strong{font-weight:700;}
+.doc-div{height:1px;background:var(--br);margin:0 24px;}
+.doc-section{padding:16px 24px;}
+.doc-section-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--tt);margin-bottom:12px;}
+.signal-bullets{display:flex;flex-direction:column;gap:8px;}
+.sb2{display:flex;gap:10px;align-items:flex-start;}
+.sb2-num{width:18px;height:18px;border-radius:5px;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.sb2-num.hi{background:var(--sub);color:var(--su);}
+.sb2-num.hi-ag{background:rgba(245,166,35,.2);color:#9A6600;}
+.sb2-num.med{background:var(--wab);color:var(--wa);}
+.sb2-text{font-size:13px;color:var(--tp);line-height:1.55;font-weight:500;flex:1;}
+.sb2-source{font-size:10px;color:var(--tt);margin-top:2px;}
+.so-what-box{background:var(--bm);border-left:3px solid var(--a);border-radius:0 9px 9px 0;padding:12px 14px;margin:0 24px;}
+.so-what-box.ag{border-color:var(--agb);}
+.so-what-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;}
+.so-what-lbl.p{color:var(--a);}
+.so-what-lbl.ag{color:#9A6600;}
+.so-what-text{font-size:13px;color:var(--tp);line-height:1.65;}
+.one-action{padding:14px 24px;border-top:1px solid var(--br);background:var(--bm);display:flex;align-items:center;gap:10px;}
+.oa-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--tt);flex-shrink:0;}
+.oa-text{font-size:12px;font-weight:600;color:var(--tp);flex:1;}
+.doc-footer{padding:12px 24px;border-top:1px solid var(--br);display:flex;align-items:center;gap:10px;}
+.doc-footer-brand{font-size:11px;color:var(--tt);flex:1;}
+.doc-footer-brand strong{color:var(--ts);}
+
+/* SEND ROW */
+.send-row{background:#fff;border:1px solid var(--br);border-radius:13px;padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.send-lbl{font-size:13px;font-weight:600;color:var(--tp);}
+.send-sub{font-size:11px;color:var(--tt);margin-top:2px;}
+
+/* ── REPURPOSE ROW — Newsletter + LinkedIn only ── */
+.repurpose-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.rp-btn{border:1px solid var(--br);background:#fff;border-radius:12px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .15s;text-align:left;}
+.rp-btn:hover{box-shadow:0 4px 16px rgba(91,95,199,.10);}
+.rp-btn:not(.lk):hover{border-color:var(--a);background:var(--al);}
+.rp-btn.ag-s:not(.lk):hover{border-color:var(--agb);background:rgba(245,166,35,.07);}
+.rp-btn.lk{opacity:.42;cursor:not-allowed;}
+.rp-ic{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.rp-ic.ind{background:var(--al);}
+.rp-ic.gold{background:rgba(245,166,35,.12);}
+.rp-ic svg{width:16px;height:16px;stroke:var(--a);fill:none;stroke-width:1.5;stroke-linecap:round;transition:all .15s;}
+.rp-ic.gold svg{stroke:var(--agb);}
+.rp-btn:not(.lk):hover .rp-ic{background:var(--a);}
+.rp-btn:not(.lk):hover .rp-ic svg{stroke:#fff;}
+.rp-btn.ag-s:not(.lk):hover .rp-ic{background:var(--ag);}
+.rp-body{flex:1;min-width:0;}
+.rp-lbl{font-size:13px;font-weight:700;color:var(--tp);margin-bottom:2px;}
+.rp-sub{font-size:11px;color:var(--ts);}
+.rp-meta{font-size:10px;color:var(--tt);margin-top:3px;}
+.rp-arrow{font-size:16px;color:var(--tt);flex-shrink:0;transition:all .15s;}
+.rp-btn:not(.lk):hover .rp-arrow{color:var(--a);transform:translateX(2px);}
+.rp-btn.ag-s:not(.lk):hover .rp-arrow{color:#9A6600;}
+.lk-badge{width:22px;height:22px;background:var(--dab);border-radius:9999px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.lk-badge svg{width:10px;height:10px;stroke:var(--da);fill:none;stroke-width:2;stroke-linecap:round;}
+</style>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <div class="tab-group">
+    <button class="tt ts" onclick="setTier('s')">Starter €49</button>
+    <button class="tt" id="tt-p" onclick="setTier('p')">Pro €99</button>
+    <button class="tt" id="tt-ag" onclick="setTier('ag')">Agency €249</button>
+  </div>
+  <div class="tab-group">
+    <button class="vt on" id="vt-list" onclick="showPage('list')">📋 Brief list</button>
+    <button class="vt" id="vt-detail" onclick="showPage('detail')">📄 Brief (1-pager)</button>
+  </div>
+</div>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sb">
+    <div class="slogo">
+      <div class="sli" id="sb-li" style="background:var(--a);"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" style="width:14px;height:14px;"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+      <span class="slt" id="sb-lt">PulseLoop</span>
+    </div>
+    <div class="snav">
+      <div class="snl">Workspace</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>Niches</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Trend Reports</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="5" rx="1"/><rect x="13" y="3" width="8" height="9" rx="1"/><rect x="3" y="10" width="8" height="9" rx="1"/><rect x="13" y="14" width="8" height="5" rx="1"/></svg><span id="ni-db-txt">Dashboards</span></div>
+      <div class="sni act" id="ni-sb"><svg viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>Signal Briefs</div>
+      <div class="sni" id="ni-nl"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span id="nl-txt">Newsletters</span></div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn Posts</div>
+    </div>
+    <div class="snav" style="padding-top:4px;">
+      <div class="snl">Settings</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Brand Voice</div>
+      <div class="sni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>Sources</div>
+    </div>
+    <div class="sbot">
+      <div class="sav" id="sb-av" style="background:var(--al);color:var(--a);">VB</div>
+      <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:500;" id="sb-un">Vaibhav</div><span class="spb" id="sb-pb" style="background:var(--al);color:var(--a);">PRO</span></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- LIST PAGE -->
+    <div class="pg on" id="pg-list">
+      <div class="tb">
+        <div class="tb-title">Signal Briefs</div>
+        <div style="flex:1;"></div>
+        <div class="sav" id="top-av" style="background:var(--al);color:var(--a);">VB</div>
+        <button class="btnp ind" id="new-btn"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" style="width:11px;height:11px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Generate brief</button>
+      </div>
+      <div class="scroll"><div id="list-body"></div></div>
+    </div>
+
+    <!-- DETAIL PAGE -->
+    <div class="pg" id="pg-detail">
+      <div class="tb">
+        <div class="tb-title">Signal Brief</div>
+        <div style="flex:1;"></div>
+        <button class="btns" onclick="showPage('list')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:11px;height:11px;fill:none;"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>All briefs</button>
+        <button class="btns" id="share-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:11px;height:11px;fill:none;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Share</button>
+        <button class="btnp ind" id="pdf-btn"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" style="width:11px;height:11px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</button>
+      </div>
+      <div class="scroll"><div id="detail-body"></div></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+var T = 'p';
+var lkSvg = '<svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:var(--tt);fill:none;stroke-width:1.5;stroke-linecap:round;margin-left:auto;flex-shrink:0;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+
+var BRIEFS = [
+  { emoji:'🤖', niche:'AI Tooling for B2B SaaS', date:'24 Mar 2026', week:'Week 12', latest:true,  signals:847, strength:'hi',
+    headline:'EU AI tooling is shifting from experimentation to enterprise procurement — here\'s what\'s driving it this week',
+    lede:'Mistral\'s €600M round has changed the conversation. Three signals this week confirm this is structural, not cyclical.',
+    bullets:[
+      {txt:'Mistral AI raises €600M at €6B — EU sovereign AI now has a flagship company enterprise procurement teams can reference', src:'FrenchWeb · LinkedIn', str:'hi'},
+      {txt:'CNIL issues binding LLM data retention rules — 90 days to comply, now is the moment to position EU-native tools as the safe default', src:'CNIL · EU Parliament', str:'hi'},
+      {txt:'French LLM repos on GitHub up 3× — developers are integrating Mistral and Claude 6–8 weeks ahead of formal procurement sign-off', src:'GitHub', str:'hi'}
+    ],
+    sowhat:'Your clients\' engineering teams have already decided. The question now is whether procurement catches up in Q2 or Q3.'
+  },
+  { emoji:'🇫🇷', niche:'French SaaS Funding', date:'17 Mar 2026', week:'Week 11', latest:false, signals:312, strength:'med',
+    headline:'French SaaS Q1 funding hit €1.2B — three signals suggest the next wave is AI-native, not AI-added',
+    lede:'The Dealroom Q1 data landed this week. The headline number is strong, but the signal underneath it matters more.',
+    bullets:[
+      {txt:'€1.2B raised in Q1 2026 — up 34% vs Q1 2025, with AI-native companies taking 40% of deal volume', src:'Dealroom · FrenchWeb', str:'hi'},
+      {txt:'3 late-stage companies in pre-exit discussions — Pennylane, Payfit and one undisclosed — all confirmed AI roadmaps this week', src:'Maddyness · LinkedIn', str:'med'},
+      {txt:'VC conversations shifting from "AI features" to "AI-first architecture" as a deal criterion', src:'LinkedIn', str:'med'}
+    ],
+    sowhat:'The funding conversation has moved on from AI as a feature. If your clients are still thinking in add-ons, they\'re behind the VC lens.'
+  },
+  { emoji:'🤖', niche:'AI Tooling for B2B SaaS', date:'10 Mar 2026', week:'Week 10', latest:false, signals:691, strength:'hi',
+    headline:'Claude 4 API release triggered the fastest French SaaS integration wave since GPT-4',
+    lede:'46 new French-authored Claude integrations appeared on GitHub in 72 hours. Here\'s what the pattern says.',
+    bullets:[
+      {txt:'46 new Claude 4 integration repos from French developers within 72 hours of release — fastest adoption since GPT-4', src:'GitHub', str:'hi'},
+      {txt:'Pennylane and Payfit both confirmed Claude API integrations publicly — incumbents moving, not watching', src:'LinkedIn', str:'hi'},
+      {txt:'Hacker News "Claude for B2B SaaS" hit #3 EU timezone trending — 340 comments, mostly French and German developers', src:'Hacker News', str:'med'}
+    ],
+    sowhat:'The integration window is open right now. Teams that ship AI features in the next 6 weeks capture the adoption narrative.'
+  },
+];
+
+function setTier(t) {
+  T = t;
+  var isS=t==='s', isAg=t==='ag';
+  document.querySelectorAll('.tt').forEach(function(b){b.className='tt';});
+  if(t==='s') document.querySelectorAll('.tt')[0].className='tt ts';
+  if(t==='p') document.querySelectorAll('.tt')[1].className='tt tp';
+  if(t==='ag') document.querySelectorAll('.tt')[2].className='tt tag';
+
+  var sb=document.getElementById('sb');
+  var sbLi=document.getElementById('sb-li');
+  var sbAv=document.getElementById('sb-av');
+  var topAv=document.getElementById('top-av');
+  var sbPb=document.getElementById('sb-pb');
+  var sbLt=document.getElementById('sb-lt');
+  var sbUn=document.getElementById('sb-un');
+  var newBtn=document.getElementById('new-btn');
+  var pdfBtn=document.getElementById('pdf-btn');
+  var shareBtn=document.getElementById('share-btn');
+  var niSb=document.getElementById('ni-sb');
+  var niNl=document.getElementById('ni-nl');
+  var nlTxt=document.getElementById('nl-txt');
+  var niDbTxt=document.getElementById('ni-db-txt');
+
+  if (isAg) {
+    sb.className='sidebar dark';
+    sbLi.style.background='var(--agb)';
+    sbAv.style.background='rgba(245,166,35,.2)'; sbAv.style.color='var(--agb)';
+    topAv.style.background='rgba(245,166,35,.2)'; topAv.style.color='var(--agb)';
+    sbPb.style.cssText='background:var(--ag);color:var(--agb);'; sbPb.textContent='AGENCY';
+    sbLt.style.color='#fff'; sbUn.style.color='#fff';
+    newBtn.className='btnp drk'; pdfBtn.className='btnp drk';
+    niSb.className='sni act'; niSb.style.background='rgba(245,166,35,.15)'; niSb.style.color='var(--agb)';
+    niNl.style.opacity='1'; nlTxt.textContent='Newsletters';
+    niDbTxt.textContent='Dashboards';
+  } else if (isS) {
+    sb.className='sidebar';
+    sbLi.style.background='var(--a)';
+    sbAv.style.background='var(--al)'; sbAv.style.color='var(--a)';
+    topAv.style.background='var(--al)'; topAv.style.color='var(--a)';
+    sbPb.style.cssText='background:var(--bp);color:var(--ts);border:1px solid var(--br);'; sbPb.textContent='STARTER';
+    sbLt.style.color='var(--tp)'; sbUn.style.color='var(--tp)';
+    newBtn.className='btnp ind'; newBtn.style.opacity='0.35'; newBtn.setAttribute('disabled','');
+    pdfBtn.className='btnp ind';
+    niSb.className='sni act'; niSb.style.background=''; niSb.style.color='';
+    niNl.style.opacity='0.35'; nlTxt.innerHTML='Newsletters '+lkSvg;
+    niDbTxt.innerHTML='Dashboards '+lkSvg;
+  } else {
+    sb.className='sidebar';
+    sbLi.style.background='var(--a)';
+    sbAv.style.background='var(--al)'; sbAv.style.color='var(--a)';
+    topAv.style.background='var(--al)'; topAv.style.color='var(--a)';
+    sbPb.style.cssText='background:var(--al);color:var(--a);'; sbPb.textContent='PRO';
+    sbLt.style.color='var(--tp)'; sbUn.style.color='var(--tp)';
+    newBtn.className='btnp ind'; newBtn.style.opacity='1'; newBtn.removeAttribute('disabled');
+    pdfBtn.className='btnp ind';
+    niSb.className='sni act'; niSb.style.background=''; niSb.style.color='';
+    niNl.style.opacity='1'; nlTxt.textContent='Newsletters';
+    niDbTxt.textContent='Dashboards';
+  }
+  renderList(); renderDetail();
+}
+
+function showPage(p) {
+  document.getElementById('pg-list').className='pg'+(p==='list'?' on':'');
+  document.getElementById('pg-detail').className='pg'+(p==='detail'?' on':'');
+  document.getElementById('vt-list').className='vt'+(p==='list'?' on':'');
+  document.getElementById('vt-detail').className='vt'+(p==='detail'?' on':'');
+}
+
+function renderList() {
+  var isS=T==='s', isAg=T==='ag';
+  var nClr=isAg?'ag':'p';
+  var ghCls=isAg?' ag':' p';
+  var fcOn=isAg?'fc on-ag':'fc on';
+  var out='';
+
+  if (isS) {
+    out += '<div class="ub ind"><div class="ub-ic">📋</div><div class="ub-body"><div class="ub-ttl">Signal Briefs are locked on Starter</div><div class="ub-sub">The client-facing highlight reel of your weekly Trend Report — short, punchy, ready to share. Upgrade to Pro to unlock.</div><div class="ub-tags"><span class="ut-i">12 briefs/mo</span><span class="ut-i">3× per week</span><span class="ut-i">Cited sources always</span><span class="ut-i">Feeds Newsletter & LinkedIn</span><span class="ut-i">White-label on Agency</span></div></div><button class="btn-up p">Upgrade to Pro →</button></div>';
+    out += '<div class="lock-wrap"><div class="lock-icon-bg"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div style="font-size:17px;font-weight:700;color:var(--tp);">Signal Briefs unlock on Pro</div><div style="font-size:13px;color:var(--ts);max-width:360px;line-height:1.65;text-align:center;">Your Trend Report stays internal. The Signal Brief is what you send to clients — a punchy, cited 1-pager distilled from your full report, written in your brand voice. From there, generate a Newsletter or LinkedIn posts in one click.</div><div class="lock-feats"><div class="lf"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><div><div class="lf-ttl">From your Trend Report</div><div class="lf-sub">Extracted & distilled automatically</div></div></div><div class="lf"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><div><div class="lf-ttl">Your brand voice</div><div class="lf-sub">Not generic — sounds like you</div></div></div><div class="lf"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><div><div class="lf-ttl">Feeds Newsletter</div><div class="lf-sub">Brief becomes newsletter input</div></div></div><div class="lf"><svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg><div><div class="lf-ttl">Feeds LinkedIn Posts</div><div class="lf-sub">3 post variants from brief</div></div></div></div><button class="btn-up p" style="height:36px;padding:0 24px;border-radius:10px;font-size:13px;">Upgrade to Pro — from €99/mo →</button></div>';
+    document.getElementById('list-body').innerHTML = out; return;
+  }
+
+  if (isAg) {
+    out += '<div style="font-size:10px;font-weight:700;color:var(--tt);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;">Workspace</div><div class="ws-tabs"><button class="wst on">🏢 Acme Corp <span class="wct wct-on">8</span></button><button class="wst off">🚀 Mistral AI <span class="wct wct-off">12</span></button><button class="wst off">📊 Pennylane <span class="wct wct-off">4</span></button><button class="wst add">+ Add workspace</button></div>';
+  } else {
+    out += '<div class="ub drk"><div class="ub-ic">🏢</div><div class="ub-body"><div class="ub-ttl">Deliver white-label briefs to clients — upgrade to Agency.</div><div class="ub-sub">Pro briefs carry PulseLoop branding. Agency replaces it with your client\'s logo. The natural upgrade when you start delivering to 3+ clients professionally.</div><div class="ub-tags"><span class="ut-d">White-label delivery</span><span class="ut-d">Custom signals in brief</span><span class="ut-d">Private data reflected</span><span class="ut-d">Power BI from brief data</span></div></div><button class="btn-up a">Upgrade to Agency →</button></div>';
+  }
+
+  out += '<div class="sg"><div class="sc"><div class="sc-l">Briefs this month</div><div class="sc-v">8</div><div class="sc-s">of '+(isAg?'12/workspace':'12')+'</div></div><div class="sc"><div class="sc-l">Cadence</div><div class="sc-v" style="font-size:14px;padding-top:4px;">3× / week</div><div class="sc-s">'+(isAg?'per workspace':'on Pro')+'</div></div><div class="sc"><div class="sc-l">Avg read time</div><div class="sc-v" style="font-size:14px;padding-top:4px;">&lt; 60s</div><div class="sc-s">client-facing format</div></div><div class="sc"><div class="sc-l">White-label</div><div class="sc-v" style="font-size:14px;padding-top:4px;">'+(isAg?'Active':'Locked')+'</div><div class="sc-s">'+(isAg?'Client-branded':'Agency only')+'</div></div></div>';
+
+  var wsSel = isAg ? '<select class="fsel" style="width:125px;"><option>🏢 Acme Corp</option><option>🚀 Mistral AI</option></select>' : '';
+  out += '<div class="gen-panel"><div style="width:32px;height:32px;border-radius:8px;background:'+(isAg?'rgba(245,166,35,.15)':'var(--al)')+';display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">⚡</div><div style="flex:1;"><div style="font-size:12px;font-weight:600;color:var(--tp);">Generate a Signal Brief from a Trend Report</div><div style="font-size:11px;color:var(--tt);margin-top:1px;">Distils your full report into a client-ready 1-pager · brand voice applied · every signal cited · feeds Newsletter & LinkedIn</div></div>'+(isAg?'<span class="bd bd-ag" style="flex-shrink:0;">✦ White-label</span>':'')+wsSel+'<select class="fsel" style="width:170px;"><option>🤖 AI Tooling — Week 12</option><option>🇫🇷 French SaaS — Week 11</option><option>🤖 AI Tooling — Week 10</option></select><button class="btnp '+(isAg?'drk':'ind')+'">Generate →</button></div>';
+
+  out += '<div class="frow"><button class="'+fcOn+'">All</button><button class="fc off">🤖 AI Tooling</button><button class="fc off">🇫🇷 French SaaS</button><button class="fc off">📋 EU Compliance</button><div style="margin-left:auto;"><select class="fsel"><option>Newest first</option><option>Most shared</option></select></div></div>';
+
+  out += '<div class="brief-list">';
+  BRIEFS.forEach(function(b,i) {
+    var feat = i===0?(isAg?' feat-ag':' feat-p'):'';
+    out += '<div class="brc'+feat+'" onclick="showPage(\'detail\')">'
+      +'<div class="brc-strip"><span class="brc-emoji">'+b.emoji+'</span><span class="brc-niche '+nClr+'">'+b.niche+'</span><div class="brc-strip-right">'
+      +(b.latest?'<span class="bd bd-new">Latest</span>':'')
+      +'<span class="bd '+(b.strength==='hi'?'bd-hi':'bd-med')+'">'+b.signals+' signals</span>'
+      +(isAg?'<span class="bd bd-ag">✦ White-label</span>':'')
+      +'<span style="font-size:10px;color:var(--tt);">'+b.date+'</span></div></div>'
+      +'<div class="brc-doc"><div class="brc-headline">'+b.headline+'</div><div class="brc-lede">'+b.lede+'</div>'
+      +'<div class="brc-bullets">'+b.bullets.map(function(bl){return '<div class="brc-bullet"><div class="brc-bullet-dot '+(bl.str==='hi'?'hi':'med')+'"></div><span>'+bl.txt+'<span style="font-size:10px;color:var(--tt);font-weight:400;display:block;margin-top:1px;">'+bl.src+'</span></span></div>';}).join('')+'</div>'
+      +'<div class="brc-sowhat'+(isAg?' ag':'')+'"><strong>So what:</strong> '+b.sowhat+'</div></div>'
+      +'<div class="brc-foot"><span class="brc-date">'+b.week+'</span><div style="margin-left:auto;display:flex;gap:3px;">'
+      +'<button class="btng'+ghCls+'" onclick="event.stopPropagation();showPage(\'detail\')">View →</button>'
+      +(isAg?'<button class="btng ag" onclick="event.stopPropagation()">White-label</button>':'')
+      +'<button class="btng'+ghCls+'" onclick="event.stopPropagation()">Newsletter</button>'
+      +'<button class="btng'+ghCls+'" onclick="event.stopPropagation()">LinkedIn</button>'
+      +'<button class="btng'+ghCls+'" onclick="event.stopPropagation()">Share</button>'
+      +'<button class="btng'+ghCls+'" onclick="event.stopPropagation()">PDF</button>'
+      +'</div></div></div>';
+  });
+  out += '</div>';
+
+  document.getElementById('list-body').innerHTML = out;
+  document.querySelectorAll('.fc').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('.fc').forEach(function(x){x.className='fc off';});this.className='fc '+(T==='ag'?'on-ag':'on');});});
+  document.querySelectorAll('.wst').forEach(function(b){b.addEventListener('click',function(){if(this.classList.contains('add'))return;document.querySelectorAll('.wst').forEach(function(x){x.className='wst off';});this.className='wst on';});});
+}
+
+function renderDetail() {
+  var isS=T==='s', isAg=T==='ag';
+  var accentColor=isAg?'var(--agb)':'var(--a)';
+  var nClr=isAg?'ag':'p';
+  var sowhatCls=isAg?' ag':'';
+  var sowhatLblCls=isAg?'ag':'p';
+  var numHiCls=isAg?'hi-ag':'hi';
+  var rpBtnCls=isAg?'ag-s':'';
+  var rpIcCls=isAg?'gold':'ind';
+  var out='';
+
+  out += '<div class="bc"><span class="lnk" onclick="showPage(\'list\')">Signal Briefs</span><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg><span>Week 12 — AI Tooling for B2B SaaS</span></div>';
+
+  if (isAg) {
+    out += '<div style="background:var(--ag);border:1px solid #3D3D7E;border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;"><div style="width:30px;height:30px;border-radius:7px;background:rgba(245,166,35,.15);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">🎨</div><div style="flex:1;"><div style="font-size:12px;font-weight:700;color:#fff;">White-label active — delivering as Acme Corp</div><div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:1px;">Client logo and brand colours applied. Configure in Brand Voice settings.</div></div><button style="height:26px;padding:0 10px;border-radius:7px;background:rgba(245,166,35,.2);color:var(--agb);font-size:11px;font-weight:600;border:1px solid rgba(245,166,35,.3);cursor:pointer;">Configure →</button></div>';
+  }
+
+  /* 1-PAGER */
+  out += '<div class="brief-1pager">'
+    +'<div class="doc-header">'
+    +'<div class="doc-from">'+(isAg?'Acme Corp Intelligence Brief · Powered by PulseLoop':'Intelligence Brief · AI Tooling for B2B SaaS')+'</div>'
+    +'<div class="doc-headline">EU AI tooling is shifting from experimentation to enterprise procurement — here\'s what\'s driving it this week</div>'
+    +'<div class="doc-pills"><span class="doc-pill doc-pill-a">Week 12 · 24 Mar 2026</span><span class="doc-pill doc-pill-s">High signal week</span><span class="doc-pill doc-pill-d">Distilled from Trend Report W12</span>'+(isAg?'<span class="doc-pill doc-pill-ag">✦ Private data reflected</span>':'')+'</div>'
+    +'<div class="doc-lede">Mistral\'s €600M round has changed the conversation. <strong>Three signals this week confirm this is structural, not cyclical.</strong> Here\'s what your clients need to know — and one thing they should act on now.</div>'
+    +'</div>'
+    +'<div class="doc-div"></div>'
+    +'<div class="doc-section"><div class="doc-section-lbl">This week\'s signals</div><div class="signal-bullets">'
+    +'<div class="sb2"><div class="sb2-num '+numHiCls+'">1</div><div><div class="sb2-text">Mistral AI raises €600M at €6B valuation — EU sovereign AI now has a flagship company that enterprise procurement teams can reference on an RFP</div><div class="sb2-source">FrenchWeb · LinkedIn · 24 Mar</div></div></div>'
+    +'<div class="sb2"><div class="sb2-num '+numHiCls+'">2</div><div><div class="sb2-text">CNIL issues binding LLM data retention rules — 90 days to comply, this is the moment to position EU-native tools as the safe default</div><div class="sb2-source">CNIL · EU Parliament · 22 Mar</div></div></div>'
+    +'<div class="sb2"><div class="sb2-num '+numHiCls+'">3</div><div><div class="sb2-text">French LLM repos on GitHub up 3× this week — developers are integrating Mistral and Claude 6–8 weeks ahead of formal procurement sign-off</div><div class="sb2-source">GitHub · 21 Mar</div></div></div>'
+    +'<div class="sb2"><div class="sb2-num med">4</div><div><div class="sb2-text">AI consultant daily rates on Malt.fr hit €1,200 — rate inflation signals a clear productisation window for mid-market SaaS</div><div class="sb2-source">Malt.fr · 20 Mar</div></div></div>'
+    +'</div></div>'
+    +'<div class="doc-div"></div>'
+    +'<div class="doc-section"><div class="so-what-box'+sowhatCls+'"><div class="so-what-lbl '+sowhatLblCls+'">So what</div><div class="so-what-text">Your clients\' engineering teams have already decided — the GitHub data makes that clear. The question now is whether procurement catches up in Q2 or Q3. The CNIL ruling gives you the compliance argument to accelerate the conversation today.'+(isAg?' Based on Acme Corp\'s internal AI readiness document, 3 of 5 departments are already in active evaluation — procurement is 4–6 weeks behind their own teams.':'')+'</div></div></div>'
+    +'<div class="doc-div"></div>'
+    +'<div class="one-action"><span class="oa-lbl">One thing</span><span class="oa-text">Send clients the CNIL guidance summary before their legal team finds it first. It positions you as the intelligence layer in the relationship.</span></div>'
+    +'<div class="doc-footer"><div class="doc-footer-brand"><strong>'+(isAg?'Acme Corp Intelligence Brief':'PulseLoop Signal Brief')+'</strong> · Sources: FrenchWeb, LinkedIn, CNIL, GitHub, Malt.fr · 18 EU-focused sources · 90-day RAG memory</div><span style="font-size:10px;color:var(--tt);">Week 12 · 24 Mar 2026</span></div>'
+    +'</div>';
+
+  /* SEND ROW */
+  out += '<div class="send-row">'
+    +'<div><div class="send-lbl">Send this brief</div><div style="font-size:11px;color:var(--tt);margin-top:2px;">Share as a link, export as PDF'+(isAg?' or send white-label to client':'')+'</div></div>'
+    +'<div style="display:flex;gap:7px;flex-shrink:0;">'
+    +'<button class="btnp '+(isAg?'drk':'ind')+'" style="height:30px;"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" style="width:11px;height:11px;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>Share link</button>'
+    +'<button class="btns" style="height:30px;font-size:11px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="width:11px;height:11px;fill:none;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>PDF</button>'
+    +(isAg?'<button class="btns" style="height:30px;font-size:11px;">🎨 White-label PDF</button>':'')
+    +'</div></div>';
+
+  /* ── REPURPOSE ROW — Newsletter + LinkedIn only ── */
+  var icNl='<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>';
+  var icLi='<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>';
+
+  out += '<div style="margin-top:10px;">'
+    +'<div style="font-size:10px;font-weight:700;color:var(--tt);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">Repurpose this brief</div>'
+    +'<div class="repurpose-row">'
+
+    /* Newsletter button */
+    +'<button class="rp-btn '+rpBtnCls+'">'
+    +'<div class="rp-ic '+rpIcCls+'"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round">'+icNl+'</svg></div>'
+    +'<div class="rp-body">'
+    +'<div class="rp-lbl">Generate Newsletter</div>'
+    +'<div class="rp-sub">Turns this brief into a full Beehiiv-ready email draft</div>'
+    +'<div class="rp-meta">'+(isAg?'4 per workspace · white-label':'4 per niche · Pro')+'</div>'
+    +'</div>'
+    +'<div class="rp-arrow">→</div>'
+    +'</button>'
+
+    /* LinkedIn button */
+    +'<button class="rp-btn '+rpBtnCls+'">'
+    +'<div class="rp-ic '+rpIcCls+'"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round">'+icLi+'</svg></div>'
+    +'<div class="rp-body">'
+    +'<div class="rp-lbl">Generate LinkedIn Posts</div>'
+    +'<div class="rp-sub">3 post variants from the brief — hook, insight and CTA styles</div>'
+    +'<div class="rp-meta">3 variants · included on all paid plans</div>'
+    +'</div>'
+    +'<div class="rp-arrow">→</div>'
+    +'</button>'
+
+    +'</div></div>';
+
+  document.getElementById('detail-body').innerHTML = out;
+}
+
+setTier('p');
+</script>

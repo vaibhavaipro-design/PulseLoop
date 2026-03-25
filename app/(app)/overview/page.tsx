@@ -1,67 +1,46 @@
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getUser, getWorkspace, getSubscription } from '@/lib/data/queries'
 import { getPlanLimits } from '@/lib/plans'
 import Topbar from '@/components/layout/Topbar'
 import UsageBar from '@/components/ui/UsageBar'
 
 export default async function OverviewPage() {
-  const supabase = createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  // These three calls are already resolved by the layout — React.cache()
+  // returns the memoised values with zero additional network round-trips.
+  const user = await getUser()
+  if (!user) redirect('/login')
 
-  if (!user) {
-    redirect('/login')
-  }
+  const workspace = await getWorkspace(user.id)
+  const subscription = workspace ? await getSubscription(workspace.id) : null
 
-  const displayName = user?.email?.split('@')[0] ?? 'User'
-
-  // Load workspace (agency users can have multiple — take the first)
-  const { data: workspaceRows } = await supabase
-    .from('workspaces')
-    .select('id, name')
-    .eq('user_id', user!.id)
-    .order('created_at', { ascending: true })
-    .limit(1)
-  const workspace = workspaceRows?.[0] ?? null
-
-  // Load subscription
-  let plan = 'trial'
-  let trialEndsAt: string | null = null
-  if (workspace) {
-    const { data: sub } = await supabaseAdmin
-      .from('subscriptions')
-      .select('plan, trial_ends_at')
-      .eq('workspace_id', workspace.id)
-      .single()
-    if (sub) {
-      plan = sub.plan
-      trialEndsAt = sub.trial_ends_at
-    }
-  }
-
-  // Load usage stats
+  const plan = subscription?.plan ?? 'trial'
+  const trialEndsAt = subscription?.trial_ends_at ?? null
+  const displayName = user.email?.split('@')[0] ?? 'User'
   const currentMonth = new Date().toISOString().slice(0, 7)
-  const { data: usageLogs } = workspace
-    ? await supabaseAdmin
-        .from('usage_logs')
-        .select('action_type, count')
-        .eq('workspace_id', workspace.id)
-        .eq('month', currentMonth)
-    : { data: [] }
+
+  // Fetch usage + niches in parallel — neither depends on the other.
+  const supabase = createSupabaseServerClient()
+  const [usageResult, nichesResult] = workspace
+    ? await Promise.all([
+        supabaseAdmin
+          .from('usage_logs')
+          .select('action_type, count')
+          .eq('workspace_id', workspace.id)
+          .eq('month', currentMonth),
+        supabase
+          .from('niches')
+          .select('id, name, slug, is_active, last_scraped_at')
+          .eq('workspace_id', workspace.id)
+          .order('name'),
+      ])
+    : [{ data: [] }, { data: [] }]
 
   const usageMap: Record<string, number> = {}
-  usageLogs?.forEach(log => { usageMap[log.action_type] = log.count })
+  usageResult.data?.forEach(log => { usageMap[log.action_type] = log.count })
+  const niches = nichesResult.data ?? []
 
-  // Load niches
-  const { data: niches } = workspace
-    ? await supabase
-        .from('niches')
-        .select('id, name, slug, is_active, last_scraped_at')
-        .eq('workspace_id', workspace.id)
-        .order('name')
-    : { data: [] }
-
-  // Calculate trial days left
   const trialDaysLeft = trialEndsAt
     ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0
@@ -128,7 +107,7 @@ export default async function OverviewPage() {
           {/* Active niches */}
           <div className="bg-white border border-slate-200 rounded-xl p-3.5">
             <div className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Active niches</div>
-            <div className="text-2xl font-bold text-slate-800">{niches?.filter(n => n.is_active).length ?? 0}</div>
+            <div className="text-2xl font-bold text-slate-800">{niches.filter(n => n.is_active).length}</div>
             <div className="text-[11px] text-slate-400 mt-1">of {limits.nichesPerWorkspace} allowed</div>
           </div>
         </div>
@@ -177,7 +156,7 @@ export default async function OverviewPage() {
               <div className="flex-1 h-px bg-slate-200" />
             </div>
 
-            {(!niches || niches.length === 0) ? (
+            {niches.length === 0 ? (
               /* Empty state */
               <div className="flex flex-col items-center justify-center gap-4 py-16 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center text-3xl">🌱</div>

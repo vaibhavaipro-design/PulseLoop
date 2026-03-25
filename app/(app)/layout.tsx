@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getUser, getWorkspace, getSubscription } from '@/lib/data/queries'
 import Shell from '@/components/layout/Shell'
 
 export default async function AppLayout({
@@ -8,35 +7,16 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getUser()
+  if (!user) redirect('/login')
 
-  if (!user) {
-    redirect('/login')
-  }
+  // workspace + subscription: subscription depends on workspace.id so these
+  // must be sequential, but React.cache() means child pages pay nothing for
+  // these same calls.
+  const workspace = await getWorkspace(user.id)
+  const subscription = workspace ? await getSubscription(workspace.id) : null
 
-  // Load workspace and subscription info for the shell
-  const { data: workspaceRows } = await supabase
-    .from('workspaces')
-    .select('id, name')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: true })
-    .limit(1)
-  const workspace = workspaceRows?.[0] ?? null
-
-  let planName = 'TRIAL'
-  if (workspace) {
-    const { data: subscription } = await supabaseAdmin
-      .from('subscriptions')
-      .select('plan')
-      .eq('workspace_id', workspace.id)
-      .single()
-
-    if (subscription) {
-      planName = subscription.plan.toUpperCase()
-    }
-  }
-
+  const planName = subscription?.plan?.toUpperCase() ?? 'TRIAL'
   const displayName = user.email?.split('@')[0] ?? 'User'
 
   return (

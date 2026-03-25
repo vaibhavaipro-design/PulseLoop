@@ -1,7 +1,15 @@
 import 'server-only'
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Lazily initialize Resend to avoid build-time crashes if key is missing
+function getResend() {
+  const key = process.env.RESEND_API_KEY
+  if (!key || key.includes('placeholder')) {
+    console.warn('RESEND_API_KEY is missing or placeholder. Emails will not be sent.')
+    return null
+  }
+  return new Resend(key)
+}
 
 const FROM_EMAIL = 'PulseLoop <hello@pulseloop.io>'
 
@@ -9,6 +17,9 @@ const FROM_EMAIL = 'PulseLoop <hello@pulseloop.io>'
  * Send welcome email after signup.
  */
 export async function sendWelcomeEmail(email: string) {
+  const resend = getResend()
+  if (!resend) return
+
   await resend.emails.send({
     from: FROM_EMAIL,
     to: email,
@@ -27,7 +38,7 @@ export async function sendWelcomeEmail(email: string) {
         <p style="color: #475569; font-size: 16px; line-height: 1.6;">
           <strong>Pro tip:</strong> Set up your brand voice first — every output will match your writing style.
         </p>
-        <a href="${process.env.NEXT_PUBLIC_SUPABASE_URL ? 'https://pulseloop.io' : 'http://localhost:3000'}/overview"
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/overview"
           style="display: inline-block; background: #6366F1; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 16px;">
           Go to your Dashboard →
         </a>
@@ -43,6 +54,9 @@ export async function sendWelcomeEmail(email: string) {
  * Send trial expiry warning emails (Day 5, 6, 7).
  */
 export async function sendTrialWarningEmail(email: string, daysLeft: number) {
+  const resend = getResend()
+  if (!resend) return
+
   const subjects: Record<number, string> = {
     3: 'Your PulseLoop trial ends in 3 days',
     2: 'Your PulseLoop trial ends tomorrow',
@@ -64,7 +78,7 @@ export async function sendTrialWarningEmail(email: string, daysLeft: number) {
             ? 'Your signals are still being collected. Choose a plan to keep generating reports.'
             : 'Your 847 signals are waiting for you. Choose a plan to unlock them.'}
         </p>
-        <a href="${process.env.NEXT_PUBLIC_SUPABASE_URL ? 'https://pulseloop.io' : 'http://localhost:3000'}/settings"
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/settings"
           style="display: inline-block; background: #6366F1; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 16px;">
           Choose a Plan →
         </a>
@@ -83,6 +97,9 @@ export async function sendMondayDigest(
   weekOf: string,
   reportPreview: string
 ) {
+  const resend = getResend()
+  if (!resend) return
+
   await resend.emails.send({
     from: FROM_EMAIL,
     to: email,
@@ -100,7 +117,7 @@ export async function sendMondayDigest(
             ${reportPreview}
           </p>
         </div>
-        <a href="${process.env.NEXT_PUBLIC_SUPABASE_URL ? 'https://pulseloop.io' : 'http://localhost:3000'}/overview"
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/overview"
           style="display: inline-block; background: #6366F1; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">
           View Full Report →
         </a>
@@ -121,6 +138,9 @@ export async function sendUsageWarningEmail(
   used: number,
   limit: number
 ) {
+  const resend = getResend()
+  if (!resend) return
+
   await resend.emails.send({
     from: FROM_EMAIL,
     to: email,
@@ -134,7 +154,7 @@ export async function sendUsageWarningEmail(
           You've used ${used} of ${limit} ${feature} this month.
           Upgrade your plan for higher limits.
         </p>
-        <a href="${process.env.NEXT_PUBLIC_SUPABASE_URL ? 'https://pulseloop.io' : 'http://localhost:3000'}/settings"
+        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/settings"
           style="display: inline-block; background: #6366F1; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 16px;">
           Upgrade Plan →
         </a>
@@ -142,3 +162,4 @@ export async function sendUsageWarningEmail(
     `,
   })
 }
+

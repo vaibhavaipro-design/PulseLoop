@@ -2,8 +2,10 @@
 const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
-  serverExternalPackages: ['file-type'],
-  transpilePackages: ['react-markdown', 'remark']
+  transpilePackages: ['react-markdown', 'remark'],
+  experimental: {
+    serverComponentsExternalPackages: ['file-type']
+  }
 }
 
 export default nextConfig

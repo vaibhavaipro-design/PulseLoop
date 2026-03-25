@@ -1,7 +1,15 @@
 import 'server-only'
 import Anthropic from '@anthropic-ai/sdk'
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+// Lazily initialize Anthropic to avoid build-time crashes if key is missing
+function getAnthropicClient() {
+  const key = process.env.ANTHROPIC_API_KEY
+  if (!key || key.includes('placeholder')) {
+    console.warn('ANTHROPIC_API_KEY is missing or placeholder. Claude features will not work.')
+    return null
+  }
+  return new Anthropic({ apiKey: key })
+}
 
 export function getModel(plan: string): string {
   return (plan === 'trial' || plan === 'starter') ? 'claude-haiku-4-5' : 'claude-sonnet-4-6'
@@ -23,6 +31,9 @@ export async function generateReport(
   plan: string,
   privateContext?: string
 ): Promise<{ title: string; content_md: string; source_health: object }> {
+  const client = getAnthropicClient()
+  if (!client) throw new Error('ANTHROPIC_CLIENT_NOT_INITIALIZED')
+
   try {
     const response = await client.messages.create({
       model: getModel(plan),
@@ -98,6 +109,9 @@ export async function generateSignalBrief(
   brandVoice: string | null,
   plan: string
 ): Promise<string> {
+  const client = getAnthropicClient()
+  if (!client) throw new Error('ANTHROPIC_CLIENT_NOT_INITIALIZED')
+
   const response = await client.messages.create({
     model: getModel(plan),
     max_tokens: 800,
@@ -126,6 +140,9 @@ export async function generateNewsletter(
   brandVoice: string | null,
   plan: string
 ): Promise<{ content_md: string; content_html: string; subject_lines: string[] }> {
+  const client = getAnthropicClient()
+  if (!client) throw new Error('ANTHROPIC_CLIENT_NOT_INITIALIZED')
+
   const response = await client.messages.create({
     model: getModel(plan),
     max_tokens: 3000,
@@ -165,6 +182,9 @@ export async function generateLinkedinPosts(
   brandVoice: string | null,
   plan: string
 ): Promise<Array<{ type: string; content: string }>> {
+  const client = getAnthropicClient()
+  if (!client) throw new Error('ANTHROPIC_CLIENT_NOT_INITIALIZED')
+
   const response = await client.messages.create({
     model: getModel(plan),
     max_tokens: 1500,
@@ -199,6 +219,9 @@ Return a JSON array: [{"type": "insight", "content": "..."}, {"type": "story", "
 export async function generateBrandVoice(
   samples: string[]
 ): Promise<string> {
+  const client = getAnthropicClient()
+  if (!client) throw new Error('ANTHROPIC_CLIENT_NOT_INITIALIZED')
+
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6', // Always use Sonnet for brand voice extraction
     max_tokens: 1500,
@@ -233,6 +256,9 @@ export async function generateDashboard(
   template: string,
   plan: string
 ): Promise<object> {
+  const client = getAnthropicClient()
+  if (!client) throw new Error('ANTHROPIC_CLIENT_NOT_INITIALIZED')
+
   const response = await client.messages.create({
     model: getModel(plan),
     max_tokens: 2000,
@@ -268,6 +294,9 @@ Return a JSON object with dashboard components including:
 }
 
 export async function generateClaudeResponse(systemPrompt: string, userPrompt: string): Promise<string> {
+  const client = getAnthropicClient()
+  if (!client) throw new Error('ANTHROPIC_CLIENT_NOT_INITIALIZED')
+
   const response = await client.messages.create({
     model: 'claude-haiku-4-5', // Haiku is great for fast parsing / relevance scoring
     max_tokens: 500,

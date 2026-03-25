@@ -3,91 +3,73 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { getPlanLimits, isLocked } from '@/lib/plans'
 import type { Plan } from '@/lib/plans'
+import { redirect } from 'next/navigation'
+import { getUser, getWorkspaceWithSub } from '@/lib/data/queries'
 import NewsletterClient from './NewsletterClient'
 
 export default async function NewslettersPage() {
-  const supabase = createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  // Step 1: auth + workspace + subscription — 2 round-trips total via JOIN.
+  // Both cached: free on initial full-page render (layout already resolved them).
+  const user = await getUser()
+  if (!user) redirect('/login')
 
-  const { data: workspaceRows } = await supabase
-    .from('workspaces')
-    .select('id')
-    .eq('user_id', user!.id)
-    .order('created_at', { ascending: true })
-    .limit(1)
-  const workspace = workspaceRows?.[0] ?? null
+  const { workspace, subscription } = await getWorkspaceWithSub(user.id)
 
-  // Load subscription via admin
-  const { data: subscription } = workspace
-    ? await supabaseAdmin
-        .from('subscriptions')
-        .select('plan, trial_ends_at')
-        .eq('workspace_id', workspace.id)
-        .single()
-    : { data: null }
-
-  const plan = (subscription?.plan ?? 'trial') as Plan
+  const plan = ((subscription?.plan ?? 'trial') as Plan)
   const locked = isLocked(plan, 'newsletters')
   const limits = getPlanLimits(plan)
 
-  // Load newsletters with their linkedin_posts and report info
-  const { data: newsletters } = workspace
-    ? await supabaseAdmin
-        .from('newsletters')
-        .select(`
-          id,
-          content_md,
-          subject_lines,
-          angle,
-          trend_report_id,
-          trend_reports ( id, title, niches ( name ) )
-        `)
-        .eq('workspace_id', workspace.id)
-        .order('id', { ascending: false })
-    : { data: [] }
+  // Step 2: all page data in parallel
+  const supabase = createSupabaseServerClient()
+  const currentMonth = new Date().toISOString().slice(0, 7)
 
-  // Load linkedin_posts keyed by newsletter_id
-  const { data: linkedinPosts } = workspace
-    ? await supabaseAdmin
-        .from('linkedin_posts')
-        .select('id, newsletter_id, variants')
-        .eq('workspace_id', workspace.id)
-    : { data: [] }
+  const [newslettersResult, linkedinResult, reportsResult, usageResult] = workspace
+    ? await Promise.all([
+        supabaseAdmin
+          .from('newsletters')
+          .select(`
+            id,
+            content_md,
+            subject_lines,
+            angle,
+            trend_report_id,
+            trend_reports ( id, title, niches ( name ) )
+          `)
+          .eq('workspace_id', workspace.id)
+          .order('id', { ascending: false }),
+        supabaseAdmin
+          .from('linkedin_posts')
+          .select('id, newsletter_id, variants')
+          .eq('workspace_id', workspace.id),
+        supabase
+          .from('trend_reports')
+          .select('id, title, niches ( name )')
+          .eq('workspace_id', workspace.id)
+          .order('id', { ascending: false }),
+        supabaseAdmin
+          .from('usage_logs')
+          .select('count')
+          .eq('workspace_id', workspace.id)
+          .eq('action_type', 'newsletter')
+          .eq('month', currentMonth)
+          .maybeSingle(),
+      ])
+    : [{ data: [] }, { data: [] }, { data: [] }, { data: null }]
 
   const linkedinByNewsletter: Record<string, any> = {}
-  linkedinPosts?.forEach((lp) => {
+  linkedinResult.data?.forEach(lp => {
     if (lp.newsletter_id) linkedinByNewsletter[lp.newsletter_id] = lp
   })
 
-  // Load trend reports for the generate modal dropdown
-  const { data: reports } = workspace
-    ? await supabase
-        .from('trend_reports')
-        .select('id, title, niches ( name )')
-        .eq('workspace_id', workspace.id)
-        .order('id', { ascending: false })
-    : { data: [] }
-
-  // Current month usage
-  const currentMonth = new Date().toISOString().slice(0, 7)
-  const { data: usage } = workspace
-    ? await supabaseAdmin
-        .from('usage_logs')
-        .select('count')
-        .eq('workspace_id', workspace.id)
-        .eq('action_type', 'newsletter')
-        .eq('month', currentMonth)
-        .maybeSingle()
-    : { data: null }
-  const usedThisMonth = usage?.count ?? 0
+  const usedThisMonth = usageResult.data?.count ?? 0
 
   return (
     <>
       <Topbar title="Newsletters" />
       <NewsletterClient
-        newsletters={newsletters ?? []}
+        newsletters={(newslettersResult.data ?? []) as any[]}
         linkedinByNewsletter={linkedinByNewsletter}
-        reports={reports ?? []}
+        reports={(reportsResult.data ?? []) as any[]}
         plan={plan}
         locked={locked}
         limitPerMonth={limits.newsletters as number}

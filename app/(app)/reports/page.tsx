@@ -3,79 +3,56 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { getPlanLimits } from '@/lib/plans'
 import type { Plan } from '@/lib/plans'
+import { redirect } from 'next/navigation'
+import { getUser, getAllWorkspaces, getSubscription } from '@/lib/data/queries'
 import ReportsClient from './ReportsClient'
 
 export default async function ReportsPage() {
+  // Step 1: auth (cached)
+  const user = await getUser()
+  if (!user) redirect('/login')
+
+  // Step 2: all workspaces (cached)
+  const workspaces = await getAllWorkspaces(user.id)
+  const primaryWorkspace = workspaces[0] ?? null
+  const workspaceIds = workspaces.map(w => w.id)
+
+  // Step 3: all remaining queries in parallel
   const supabase = createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  // Load all workspaces (agency can have multiple)
-  const { data: workspaces } = await supabase
-    .from('workspaces')
-    .select('id, name')
-    .eq('user_id', user!.id)
-    .order('created_at')
-
-  const primaryWorkspace = workspaces?.[0]
-
-  // Load subscription
-  const { data: subscription } = primaryWorkspace
-    ? await supabaseAdmin
-        .from('subscriptions')
-        .select('plan')
-        .eq('workspace_id', primaryWorkspace.id)
-        .single()
-    : { data: null }
-
-  const plan = (subscription?.plan ?? 'trial') as Plan
-  const limits = getPlanLimits(plan)
-
-  // Load reports for primary workspace with niche info
-  const { data: reports } = primaryWorkspace
-    ? await supabaseAdmin
-        .from('trend_reports')
-        .select(`
-          id,
-          title,
-          created_at,
-          source_health,
-          niches ( id, name, icon )
-        `)
-        .eq('workspace_id', primaryWorkspace.id)
-        .order('created_at', { ascending: false })
-    : { data: [] }
-
-  // Load niches for ALL workspaces (agency has multiple)
-  const workspaceIds = (workspaces ?? []).map(w => w.id)
-  const { data: niches } = workspaceIds.length > 0
-    ? await supabase
-        .from('niches')
-        .select('id, name, icon, workspace_id')
-        .in('workspace_id', workspaceIds)
-        .order('name')
-    : { data: [] }
-
-  // Usage this month
   const currentMonth = new Date().toISOString().slice(0, 7)
-  const { data: usage } = primaryWorkspace
-    ? await supabaseAdmin
-        .from('usage_logs')
-        .select('count')
-        .eq('workspace_id', primaryWorkspace.id)
-        .eq('action_type', 'trend_report')
-        .eq('month', currentMonth)
-        .maybeSingle()
-    : { data: null }
 
-  const usedThisMonth = usage?.count ?? 0
+  const [subscription, reportsResult, nichesResult, usageResult, contentCountResult] =
+    primaryWorkspace
+      ? await Promise.all([
+          getSubscription(primaryWorkspace.id),
+          supabaseAdmin
+            .from('trend_reports')
+            .select('id, title, created_at, source_health, niches ( id, name, icon )')
+            .eq('workspace_id', primaryWorkspace.id)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('niches')
+            .select('id, name, icon, workspace_id')
+            .in('workspace_id', workspaceIds)
+            .order('name'),
+          supabaseAdmin
+            .from('usage_logs')
+            .select('count')
+            .eq('workspace_id', primaryWorkspace.id)
+            .eq('action_type', 'trend_report')
+            .eq('month', currentMonth)
+            .maybeSingle(),
+          supabaseAdmin
+            .from('newsletters')
+            .select('id', { count: 'exact', head: true })
+            .eq('workspace_id', primaryWorkspace.id),
+        ])
+      : [null, { data: [] }, { data: [] }, { data: null }, { count: 0 }]
 
-  // Count content generated from reports (newsletters + briefs + dashboards)
-  const { count: contentCount } = primaryWorkspace
-    ? await supabaseAdmin
-        .from('newsletters')
-        .select('id', { count: 'exact', head: true })
-        .eq('workspace_id', primaryWorkspace.id)
-    : { count: 0 }
+  const plan = ((subscription?.plan ?? 'trial') as Plan)
+  const limits = getPlanLimits(plan)
+  const usedThisMonth = usageResult.data?.count ?? 0
+  const contentCount = contentCountResult.count ?? 0
 
   return (
     <>
@@ -83,12 +60,12 @@ export default async function ReportsPage() {
       <ReportsClient
         plan={plan}
         limits={limits}
-        workspaces={workspaces ?? []}
+        workspaces={workspaces}
         primaryWorkspaceId={primaryWorkspace?.id ?? null}
-        reports={(reports ?? []) as any[]}
-        niches={niches ?? []}
+        reports={(reportsResult.data ?? []) as any[]}
+        niches={(nichesResult.data ?? []) as any[]}
         usedThisMonth={usedThisMonth}
-        contentGenerated={contentCount ?? 0}
+        contentGenerated={contentCount}
       />
     </>
   )

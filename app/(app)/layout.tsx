@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { getUser, getWorkspace, getSubscription } from '@/lib/data/queries'
+import { getUser, getWorkspaceWithSub } from '@/lib/data/queries'
 import Shell from '@/components/layout/Shell'
 
 export default async function AppLayout({
@@ -10,11 +10,10 @@ export default async function AppLayout({
   const user = await getUser()
   if (!user) redirect('/login')
 
-  // workspace + subscription: subscription depends on workspace.id so these
-  // must be sequential, but React.cache() means child pages pay nothing for
-  // these same calls.
-  const workspace = await getWorkspace(user.id)
-  const subscription = workspace ? await getSubscription(workspace.id) : null
+  // Single DB round-trip: workspace + subscription via JOIN.
+  // React.cache() means child pages that call getWorkspaceWithSub() get this
+  // result for free on the initial full-page render.
+  const { workspace, subscription } = await getWorkspaceWithSub(user.id)
 
   const planName = subscription?.plan?.toUpperCase() ?? 'TRIAL'
   const displayName = user.email?.split('@')[0] ?? 'User'

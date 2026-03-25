@@ -1,19 +1,18 @@
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { getUser, getWorkspace, getSubscription } from '@/lib/data/queries'
+import { getUser, getWorkspaceWithSub } from '@/lib/data/queries'
 import { getPlanLimits } from '@/lib/plans'
 import Topbar from '@/components/layout/Topbar'
 import UsageBar from '@/components/ui/UsageBar'
 
 export default async function OverviewPage() {
-  // These three calls are already resolved by the layout — React.cache()
-  // returns the memoised values with zero additional network round-trips.
+  // Both calls are resolved by the layout on the initial full-page render —
+  // React.cache() returns memoised values at zero additional DB cost.
   const user = await getUser()
   if (!user) redirect('/login')
 
-  const workspace = await getWorkspace(user.id)
-  const subscription = workspace ? await getSubscription(workspace.id) : null
+  const { workspace, subscription } = await getWorkspaceWithSub(user.id)
 
   const plan = subscription?.plan ?? 'trial'
   const trialEndsAt = subscription?.trial_ends_at ?? null

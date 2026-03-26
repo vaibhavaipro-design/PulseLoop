@@ -15,6 +15,8 @@ export default async function ReportDetailPage({ params }: { params: { id: strin
     .from('workspaces')
     .select('id')
     .eq('user_id', user.id)
+    .order('created_at')
+    .limit(1)
     .single()
 
   if (!workspace) return notFound()

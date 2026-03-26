@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
   // ── 4. Workspace + subscription ──────────────────────────────
   const { data: workspace } = await supabase
-    .from('workspaces').select('id').eq('user_id', user.id).single()
+    .from('workspaces').select('id').eq('user_id', user.id).order('created_at').limit(1).single()
   if (!workspace)
     return NextResponse.json({ error: 'Workspace not found' }, { status: 404 })
 

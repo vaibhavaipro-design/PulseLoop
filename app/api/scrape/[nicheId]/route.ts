@@ -35,7 +35,7 @@ export async function POST(
 
   // ── 4. Load workspace via user client ────────────────────────
   const { data: workspace } = await supabase
-    .from('workspaces').select('id').eq('user_id', user.id).single()
+    .from('workspaces').select('id').eq('user_id', user.id).order('created_at').limit(1).single()
   if (!workspace)
     return NextResponse.json({ error: 'No workspace' }, { status: 404 })
 

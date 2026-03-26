@@ -17,6 +17,8 @@ export default async function SettingsPage() {
     .from('workspaces')
     .select('id')
     .eq('user_id', user.id)
+    .order('created_at')
+    .limit(1)
     .single()
 
   // Get brand voice from brand_voice_profiles (the table all generation routes read)

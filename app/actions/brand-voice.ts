@@ -76,7 +76,7 @@ export async function activateBrandVoice(profile: string) {
   if (!user) throw new Error('Unauthorized')
 
   const { data: workspace } = await supabase
-    .from('workspaces').select('id').eq('user_id', user.id).single()
+    .from('workspaces').select('id').eq('user_id', user.id).order('created_at').limit(1).single()
   if (!workspace) throw new Error('Workspace not found')
 
   await saveBrandVoiceContent(workspace.id, profile, 'wizard')
@@ -93,7 +93,7 @@ export async function analyzeBrandVoice(sample: string) {
   if (!user) throw new Error('Unauthorized')
 
   const { data: workspace } = await supabase
-    .from('workspaces').select('id').eq('user_id', user.id).single()
+    .from('workspaces').select('id').eq('user_id', user.id).order('created_at').limit(1).single()
   if (!workspace) throw new Error('Workspace not found')
 
   const profile = await buildVoiceProfile([sample], NEUTRAL_CALIBRATION)
@@ -110,7 +110,7 @@ export async function saveManualBrandVoice(voicePrompt: string) {
   if (!user) throw new Error('Unauthorized')
 
   const { data: workspace } = await supabase
-    .from('workspaces').select('id').eq('user_id', user.id).single()
+    .from('workspaces').select('id').eq('user_id', user.id).order('created_at').limit(1).single()
   if (!workspace) throw new Error('Workspace not found')
 
   await saveBrandVoiceContent(workspace.id, voicePrompt, 'manual')
@@ -123,7 +123,7 @@ export async function deleteBrandVoice() {
   if (!user) throw new Error('Unauthorized')
 
   const { data: workspace } = await supabase
-    .from('workspaces').select('id').eq('user_id', user.id).single()
+    .from('workspaces').select('id').eq('user_id', user.id).order('created_at').limit(1).single()
   if (!workspace) throw new Error('Workspace not found')
 
   const { error } = await supabase

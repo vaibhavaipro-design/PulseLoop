@@ -8,7 +8,7 @@ export default async function UpgradePage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   const { data: workspace } = await supabase
-    .from('workspaces').select('id').eq('user_id', user!.id).single()
+    .from('workspaces').select('id').eq('user_id', user!.id).order('created_at').limit(1).single()
 
   const { data: subscription } = workspace
     ? await supabaseAdmin

@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import ReportActions from './ReportActions'
 import PdfDownloadTrigger from './PdfDownloadTrigger'
 
@@ -111,7 +112,7 @@ export default async function ReportDetailPage({ params, searchParams }: { param
             </div>
 
             <article id="report-content" className="prose prose-slate prose-indigo max-w-none bg-white border border-slate-200 rounded-2xl p-6 md:p-10 shadow-sm">
-              <ReactMarkdown>{report.content_md || '*No content available.*'}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{report.content_md || '*No content available.*'}</ReactMarkdown>
             </article>
 
           </div>

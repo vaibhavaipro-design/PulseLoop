@@ -21,6 +21,30 @@ export default function PdfDownloadTrigger({ title, date }: Props) {
           return
         }
 
+        // Wait for React hydration + ReactMarkdown to fully render in DOM
+        await new Promise((resolve) => setTimeout(resolve, 800))
+
+        // Inject page-break protection so html2pdf doesn't slice mid-element
+        const style = document.createElement('style')
+        style.id = 'pdf-pagebreak-style'
+        style.textContent = `
+          #report-content table,
+          #report-content thead,
+          #report-content tbody,
+          #report-content tr,
+          #report-content blockquote,
+          #report-content li,
+          #report-content h1,
+          #report-content h2,
+          #report-content h3,
+          #report-content h4,
+          #report-content section {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+        `
+        document.head.appendChild(style)
+
         const safeTitle = title.replace(/[^a-z0-9]/gi, '-').toLowerCase().slice(0, 60)
         const safeDate = date.replace(/[^a-z0-9]/gi, '-').toLowerCase()
         const filename = `${safeTitle}-${safeDate}.pdf`
@@ -32,10 +56,13 @@ export default function PdfDownloadTrigger({ title, date }: Props) {
             image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { scale: 2, useCORS: true, logging: false },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['css', 'legacy'] },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
           })
           .from(element)
           .save()
+
+        // Clean up injected style
+        document.getElementById('pdf-pagebreak-style')?.remove()
 
         setStatus('done')
       } catch (err) {

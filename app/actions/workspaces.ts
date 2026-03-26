@@ -3,12 +3,46 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { PLAN_LIMITS } from '@/lib/plans'
 
 export async function createWorkspace(name: string) {
   const supabase = createSupabaseServerClient()
-  
+
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
+
+  // Get the user's primary (oldest) workspace to check their plan
+  const { data: currentWorkspace } = await supabase
+    .from('workspaces')
+    .select('id')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .single()
+
+  if (!currentWorkspace) throw new Error('Primary workspace not found')
+
+  // Check plan: only agency users can create additional workspaces
+  const { data: sub } = await supabaseAdmin
+    .from('subscriptions')
+    .select('plan')
+    .eq('workspace_id', currentWorkspace.id)
+    .single()
+
+  if (sub?.plan !== 'agency') {
+    return { error: 'Agency plan required to create additional workspaces' }
+  }
+
+  // Check workspace count against plan limit
+  const { count } = await supabase
+    .from('workspaces')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+
+  const maxWorkspaces = PLAN_LIMITS['agency'].workspaces // 5
+  if ((count ?? 0) >= maxWorkspaces) {
+    return { error: `Agency plan allows a maximum of ${maxWorkspaces} workspaces` }
+  }
 
   // Create the workspace
   const { data: newWorkspace, error } = await supabase

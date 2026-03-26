@@ -83,7 +83,7 @@ export async function createNiche(formData: FormData) {
   }
 
   // Insert niche
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('niches')
     .insert({
       workspace_id: workspace.id,
@@ -98,11 +98,22 @@ export async function createNiche(formData: FormData) {
       signal_memory: signalMemory,
       custom_signal_types: customSignalTypes
     })
+    .select('id')
+    .single()
 
   if (error) {
     console.error('Create niche error:', error)
     if (error.code === '23505') throw new Error('A niche with this slug already exists')
     throw new Error('Failed to create niche')
+  }
+
+  // Fire-and-forget: trigger initial scrape for the new niche
+  const newNicheId = data?.id
+  if (newNicheId) {
+    fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? ''}/api/scrape/${newNicheId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    }).catch(() => { /* ignore scrape errors */ })
   }
 
   revalidatePath('/niches')
@@ -115,11 +126,22 @@ export async function toggleNicheStatus(nicheId: string, isActive: boolean) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
-  // Ownership verified by RLS, but let's be safe
+  // Get workspace to verify ownership
+  const { data: workspace } = await supabase
+    .from('workspaces')
+    .select('id')
+    .eq('user_id', user.id)
+    .order('created_at')
+    .limit(1)
+    .single()
+
+  if (!workspace) throw new Error('Workspace not found')
+
   const { error } = await supabase
     .from('niches')
     .update({ is_active: isActive })
     .eq('id', nicheId)
+    .eq('workspace_id', workspace.id)
 
   if (error) throw new Error('Failed to update niche status')
 
@@ -132,10 +154,22 @@ export async function deleteNiche(nicheId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Unauthorized')
 
+  // Get workspace to verify ownership
+  const { data: workspace } = await supabase
+    .from('workspaces')
+    .select('id')
+    .eq('user_id', user.id)
+    .order('created_at')
+    .limit(1)
+    .single()
+
+  if (!workspace) throw new Error('Workspace not found')
+
   const { error } = await supabase
     .from('niches')
     .delete()
     .eq('id', nicheId)
+    .eq('workspace_id', workspace.id)
 
   if (error) throw new Error('Failed to delete niche')
 

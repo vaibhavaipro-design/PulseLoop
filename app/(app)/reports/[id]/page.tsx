@@ -40,18 +40,25 @@ export default async function ReportDetailPage({ params, searchParams }: { param
 
   return (
     <>
+      <style>{`
+        @media print {
+          aside, header { display: none !important; }
+          html, body, main { overflow: visible !important; height: auto !important; }
+          .print-scroll { overflow: visible !important; height: auto !important; }
+        }
+      `}</style>
       {searchParams?.print === 'true' && <PrintTrigger />}
-      <Topbar
-        title={report.title ?? 'Trend Report'}
-      />
-      
+      <div className="print:hidden">
+        <Topbar title={report.title ?? 'Trend Report'} />
+      </div>
+
       <div className="flex-1 flex overflow-hidden">
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto p-5 md:p-8 bg-slate-50">
+        <div className="flex-1 overflow-y-auto print-scroll p-5 md:p-8 bg-slate-50 print:bg-white print:p-8">
           <div className="max-w-3xl mx-auto">
 
             {/* Breadcrumb */}
-            <div className="mb-4">
+            <div className="mb-4 print:hidden">
               <Link href="/reports" className="inline-flex items-center gap-1 text-[12px] text-slate-500 hover:text-slate-700 transition-colors">
                 <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
                 Back to Reports
@@ -104,7 +111,7 @@ export default async function ReportDetailPage({ params, searchParams }: { param
         </div>
 
         {/* Right Sidebar - Actions */}
-        <div className="w-[300px] border-l border-slate-200 bg-white flex flex-col shadow-[-4px_0_24px_-12px_rgba(0,0,0,0.05)] z-10 hidden lg:flex relative">
+        <div className="w-[300px] border-l border-slate-200 bg-white flex flex-col shadow-[-4px_0_24px_-12px_rgba(0,0,0,0.05)] z-10 hidden lg:flex relative print:hidden">
           <div className="p-5 border-b border-slate-100 flex items-center">
             <h3 className="font-bold text-slate-800">Generate Assets</h3>
           </div>

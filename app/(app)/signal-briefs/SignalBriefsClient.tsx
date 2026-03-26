@@ -123,7 +123,7 @@ async function downloadBriefPdf(brief: SignalBrief) {
   const safeDate = date.replace(/[^a-z0-9]/gi, '-').toLowerCase()
 
   const wrap = document.createElement('div')
-  wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:680px;background:white;padding:40px;font-family:system-ui,-apple-system,sans-serif;font-size:13px;line-height:1.7;color:#1e293b'
+  wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:680px;background:#ffffff;padding:40px;font-family:system-ui,-apple-system,sans-serif;font-size:13px;line-height:1.7;color:#1e293b'
   wrap.innerHTML = `
     <div style="border-bottom:2px solid #e2e8f0;padding-bottom:18px;margin-bottom:22px">
       <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#94a3b8;margin-bottom:6px">Intelligence Brief · ${esc(niche)}</div>
@@ -142,12 +142,55 @@ async function downloadBriefPdf(brief: SignalBrief) {
       margin: [12, 14, 12, 14],
       filename: `brief-${safeTitle}-${safeDate}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
+      html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
     }).from(wrap).save()
   } finally {
     document.body.removeChild(wrap)
+  }
+}
+
+async function downloadDetailPdf(brief: SignalBrief) {
+  const element = document.getElementById('brief-doc-container')
+  if (!element) { return downloadBriefPdf(brief) }
+
+  const html2pdf = (await import('html2pdf.js')).default as any
+  const title = extractHeadline(brief.content_md, brief.trend_reports?.title ?? 'Signal Brief')
+  const date = new Date(brief.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  const safeTitle = title.replace(/[^a-z0-9]/gi, '-').toLowerCase().slice(0, 60)
+  const safeDate = date.replace(/[^a-z0-9]/gi, '-').toLowerCase()
+
+  // Remove overflow-hidden so full content is captured
+  const prevOverflow = element.style.overflow
+  element.style.overflow = 'visible'
+
+  const style = document.createElement('style')
+  style.id = 'pdf-brief-style'
+  style.textContent = `
+    #brief-doc-container table, #brief-doc-container thead,
+    #brief-doc-container tbody, #brief-doc-container tr,
+    #brief-doc-container blockquote, #brief-doc-container li,
+    #brief-doc-container h1, #brief-doc-container h2, #brief-doc-container h3 {
+      page-break-inside: avoid; break-inside: avoid;
+    }
+  `
+  document.head.appendChild(style)
+
+  await new Promise(r => setTimeout(r, 300))
+
+  try {
+    await html2pdf().set({
+      margin: [12, 14, 12, 14],
+      filename: `brief-${safeTitle}-${safeDate}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+    }).from(element).save()
+  } finally {
+    element.style.overflow = prevOverflow
+    document.getElementById('pdf-brief-style')?.remove()
   }
 }
 
@@ -395,7 +438,7 @@ function BriefDetail({
       )}
 
       {/* 1-pager document */}
-      <div className="bg-white border border-slate-200 rounded-[14px] overflow-hidden mb-4">
+      <div id="brief-doc-container" className="bg-white border border-slate-200 rounded-[14px] overflow-hidden mb-4">
 
         {/* Document header */}
         <div className="px-6 pt-5 pb-4 border-b border-slate-100">
@@ -466,7 +509,7 @@ function BriefDetail({
             </button>
           )}
           <button
-            onClick={() => downloadBriefPdf(brief)}
+            onClick={() => downloadDetailPdf(brief)}
             className="h-[30px] px-3 rounded-lg border border-slate-200 text-[12px] font-medium text-slate-600 hover:bg-slate-50 inline-flex items-center gap-1.5"
           >
             <svg className="w-3 h-3 fill-none stroke-current" strokeWidth={1.5} strokeLinecap="round" viewBox="0 0 24 24">

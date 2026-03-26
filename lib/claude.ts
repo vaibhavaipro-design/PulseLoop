@@ -167,7 +167,8 @@ Return a JSON object with:
 
   const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
   try {
-    return JSON.parse(text)
+    const cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim()
+    return JSON.parse(cleaned)
   } catch {
     return {
       content_md: text,
@@ -210,7 +211,8 @@ Return a JSON array: [{"type": "insight", "content": "..."}, {"type": "story", "
 
   const text = response.content[0].type === 'text' ? response.content[0].text : '[]'
   try {
-    return JSON.parse(text)
+    const cleaned = text.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim()
+    return JSON.parse(cleaned)
   } catch {
     return [{ type: 'insight', content: text }]
   }

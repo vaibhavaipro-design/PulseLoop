@@ -4,8 +4,9 @@ import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import ReportActions from './ReportActions'
+import PrintTrigger from './PrintTrigger'
 
-export default async function ReportDetailPage({ params }: { params: { id: string } }) {
+export default async function ReportDetailPage({ params, searchParams }: { params: { id: string }; searchParams?: { print?: string } }) {
   const supabase = createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -39,8 +40,9 @@ export default async function ReportDetailPage({ params }: { params: { id: strin
 
   return (
     <>
-      <Topbar 
-        title={report.title ?? 'Trend Report'} 
+      {searchParams?.print === 'true' && <PrintTrigger />}
+      <Topbar
+        title={report.title ?? 'Trend Report'}
       />
       
       <div className="flex-1 flex overflow-hidden">

@@ -28,8 +28,11 @@ export const SignalBriefSchema = z.object({
 })
 
 export const NewsletterSchema = z.object({
-  reportId: z.string().uuid(),
+  reportId: z.string().uuid().optional(),
+  briefId: z.string().uuid().optional(),
   angle: z.string().min(3).max(200).optional(),
+}).refine(data => data.reportId || data.briefId, {
+  message: 'Either reportId or briefId is required',
 })
 
 export const LinkedinPostsSchema = z.object({

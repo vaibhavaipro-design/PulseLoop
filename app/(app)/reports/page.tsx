@@ -27,8 +27,8 @@ export default async function ReportsPage() {
           getSubscription(primaryWorkspace.id),
           supabaseAdmin
             .from('trend_reports')
-            .select('id, title, created_at, source_health, niches ( id, name, icon )')
-            .eq('workspace_id', primaryWorkspace.id)
+            .select('id, title, created_at, source_health, workspace_id, niches ( id, name, icon )')
+            .in('workspace_id', workspaceIds)
             .order('created_at', { ascending: false }),
           supabase
             .from('niches')

@@ -115,8 +115,11 @@ function CopyBtn({ text, isAg, small }: { text: string; isAg: boolean; small?: b
 }
 
 // ── Post set card ──────────────────────────────────────────────────
+const PREVIEW_CHARS = 180
+
 function PostSetCard({ post, plan }: { post: LinkedInPost; plan: Plan }) {
   const isAg = plan === 'agency'
+  const [expanded, setExpanded] = useState(false)
   const newsletter = post.newsletters
   const report = newsletter?.trend_reports
   const niche = report?.niches?.name ?? 'General'
@@ -156,51 +159,80 @@ function PostSetCard({ post, plan }: { post: LinkedInPost; plan: Plan }) {
         </div>
       </div>
 
-      {/* 3-variant grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', borderTop: `1px solid ${C.br}` }}>
-        {variants.map((v, i) => {
-          const cfg = variantConfig(v.type, isAg)
-          const isLast = i === variants.length - 1
-          return (
-            <div key={i} style={{
-              padding: '12px 14px',
-              borderRight: isLast ? 'none' : `1px solid ${C.br}`,
-            }}>
-              {/* type row */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.4px', color: cfg.color }}>
-                  {cfg.label}
-                </span>
-                <CopyBtn text={v.content} isAg={isAg} />
-              </div>
-              {/* post text */}
-              <div style={{ fontSize: 12, color: C.tp, lineHeight: 1.7, marginBottom: 10 }}>
-                {v.content.split('\n').map((line, li) =>
-                  li === 0
-                    ? <span key={li} style={{ fontWeight: 700, display: 'block', marginBottom: 4 }}>{line}</span>
-                    : line === ''
-                      ? <br key={li} />
-                      : <span key={li}>{line}<br /></span>
-                )}
-              </div>
-              {/* source cite */}
-              <div style={{ fontSize: 10, color: C.tt, marginTop: 4 }}>
-                Source: <span style={{ color: C.a, fontWeight: 600 }}>{source}</span>
-                {isAg && ' · private data woven in ✦'}
-              </div>
+      {/* Preview / expand */}
+      {!expanded ? (
+        <div style={{ padding: '10px 14px', borderTop: `1px solid ${C.br}` }}>
+          {variants[0] && (
+            <div style={{ fontSize: 12, color: C.tp, lineHeight: 1.6, marginBottom: 6 }}>
+              <span style={{ fontWeight: 700, color: isAg ? '#9A6600' : C.a, textTransform: 'uppercase', fontSize: 10, letterSpacing: '.4px', marginRight: 6 }}>
+                {variantConfig(variants[0].type, isAg).label}
+              </span>
+              {variants[0].content.slice(0, PREVIEW_CHARS)}{variants[0].content.length > PREVIEW_CHARS ? '…' : ''}
             </div>
-          )
-        })}
-        {/* Fill empty columns if < 3 variants */}
-        {variants.length < 3 && Array.from({ length: 3 - variants.length }).map((_, i) => (
-          <div key={`empty-${i}`} style={{ padding: '12px 14px', borderRight: i < (2 - variants.length) ? `1px solid ${C.br}` : 'none', opacity: 0.4 }}>
-            <div style={{ fontSize: 10, color: C.tt, textAlign: 'center', paddingTop: 20 }}>—</div>
+          )}
+          <button
+            onClick={() => setExpanded(true)}
+            style={{ fontSize: 11, fontWeight: 600, color: isAg ? '#9A6600' : C.a, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            View all 3 variants →
+          </button>
+        </div>
+      ) : (
+        <div>
+          {/* 3-variant grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', borderTop: `1px solid ${C.br}` }}>
+            {variants.map((v, i) => {
+              const cfg = variantConfig(v.type, isAg)
+              const isLast = i === variants.length - 1
+              return (
+                <div key={i} style={{
+                  padding: '12px 14px',
+                  borderRight: isLast ? 'none' : `1px solid ${C.br}`,
+                }}>
+                  {/* type row */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.4px', color: cfg.color }}>
+                      {cfg.label}
+                    </span>
+                    <CopyBtn text={v.content} isAg={isAg} />
+                  </div>
+                  {/* post text */}
+                  <div style={{ fontSize: 12, color: C.tp, lineHeight: 1.7, marginBottom: 10 }}>
+                    {v.content.split('\n').map((line, li) =>
+                      li === 0
+                        ? <span key={li} style={{ fontWeight: 700, display: 'block', marginBottom: 4 }}>{line}</span>
+                        : line === ''
+                          ? <br key={li} />
+                          : <span key={li}>{line}<br /></span>
+                    )}
+                  </div>
+                  {/* source cite */}
+                  <div style={{ fontSize: 10, color: C.tt, marginTop: 4 }}>
+                    Source: <span style={{ color: C.a, fontWeight: 600 }}>{source}</span>
+                    {isAg && ' · private data woven in ✦'}
+                  </div>
+                </div>
+              )
+            })}
+            {variants.length < 3 && Array.from({ length: 3 - variants.length }).map((_, i) => (
+              <div key={`empty-${i}`} style={{ padding: '12px 14px', borderRight: i < (2 - variants.length) ? `1px solid ${C.br}` : 'none', opacity: 0.4 }}>
+                <div style={{ fontSize: 10, color: C.tt, textAlign: 'center', paddingTop: 20 }}>—</div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+          <div style={{ padding: '8px 14px', borderTop: `1px solid ${C.br}`, background: C.bm }}>
+            <button
+              onClick={() => setExpanded(false)}
+              style={{ fontSize: 11, fontWeight: 600, color: C.ts, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
+              ↑ Collapse
+            </button>
+          </div>
+        </div>
+      )}
 
-      {/* Footer */}
-      <div style={{
+      {/* Footer — only when expanded */}
+      {expanded && <div style={{
         display: 'flex', alignItems: 'center', gap: 5,
         padding: '8px 12px', borderTop: `1px solid ${C.br}`, background: C.bm,
       }}>
@@ -224,7 +256,7 @@ function PostSetCard({ post, plan }: { post: LinkedInPost; plan: Plan }) {
             Regenerate
           </button>
         </div>
-      </div>
+      </div>}
     </div>
   )
 }
@@ -427,25 +459,7 @@ export default function LinkedInClient({
           </a>
         </div>
       )}
-      {isAg && (
-        <div style={{
-          borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10,
-          marginBottom: 14, background: C.ag, border: `1px solid #3D3D7E`,
-        }}>
-          <div style={{ width: 34, height: 34, borderRadius: 9, background: 'rgba(245,166,35,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>🏢</div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>Agency — white-label posts, custom signals, private data reflected</div>
-            <div style={{ fontSize: 11, color: 'rgba(255,255,255,.55)', marginTop: 1 }}>
-              Posts are attributed to your client's brand voice per workspace. Custom signal types and uploaded private data are woven into post content. Up to 60 sets/month across 5 workspaces.
-            </div>
-            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' as const, marginTop: 5 }}>
-              {['White-label per workspace', 'Custom signals in posts', 'Private data reflected', 'Up to 60 sets/mo total'].map(tag => (
-                <span key={tag} style={{ fontSize: 10, fontWeight: 600, padding: '2px 6px', borderRadius: 9999, background: 'rgba(245,166,35,.15)', color: '#9A6600' }}>{tag}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+{/* Agency banner intentionally omitted — agency users already know their plan features */}
 
       {/* ── Stats grid ────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 8, marginBottom: 14 }}>

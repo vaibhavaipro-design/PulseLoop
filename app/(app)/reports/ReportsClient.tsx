@@ -16,6 +16,7 @@ interface Report {
   id: string
   title: string | null
   created_at: string
+  workspace_id: string
   source_health: { total_signals?: number; platforms?: Record<string, number> } | null
   niches: { id: string; name: string; icon: string | null } | null
 }
@@ -113,6 +114,9 @@ export default function ReportsClient({
   // Filtered + sorted reports
   const filteredReports = useMemo(() => {
     let filtered = reports
+    if (activeWorkspaceId) {
+      filtered = filtered.filter(r => r.workspace_id === activeWorkspaceId)
+    }
     if (activeNicheFilter !== 'all') {
       filtered = filtered.filter(r => r.niches?.id === activeNicheFilter)
     }
@@ -515,6 +519,7 @@ export default function ReportsClient({
                 return (
                   <div
                     key={report.id}
+                    onClick={() => router.push(`/reports/${report.id}`)}
                     className={`bg-white border border-slate-200 rounded-xl px-3.5 py-3 flex items-center gap-3 hover:shadow-md hover:shadow-indigo-100/50 transition-all cursor-pointer group ${
                       isFeatured
                         ? isAgency
@@ -556,7 +561,7 @@ export default function ReportsClient({
                       <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${strength === 'hi' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
                         {strength === 'hi' ? 'High signal' : 'Medium signal'}
                       </span>
-                      <div className="flex gap-0.5">
+                      <div className="flex items-center gap-0.5">
                         <Link
                           href={`/reports/${report.id}`}
                           onClick={e => e.stopPropagation()}
@@ -564,12 +569,13 @@ export default function ReportsClient({
                         >
                           View →
                         </Link>
-                        <button
+                        <Link
+                          href={`/reports/${report.id}?print=true`}
                           onClick={e => e.stopPropagation()}
                           className={`h-6 px-2 rounded-md text-[11px] font-medium transition-colors ${isAgency ? 'text-amber-700 hover:bg-amber-50' : 'text-indigo-600 hover:bg-indigo-50'}`}
                         >
                           PDF
-                        </button>
+                        </Link>
                       </div>
                     </div>
                   </div>

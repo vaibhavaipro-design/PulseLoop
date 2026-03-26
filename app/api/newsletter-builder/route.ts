@@ -5,7 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { userRatelimit, ipRatelimit } from '@/lib/ratelimit'
 import { getPlanLimits, isLocked } from '@/lib/plans'
 import { NewsletterSchema } from '@/lib/validation'
-import { generateNewsletter, generateLinkedinPosts } from '@/lib/claude'
+import { generateNewsletter } from '@/lib/claude'
 import type { Plan } from '@/lib/plans'
 
 const ACTION_TYPE = 'newsletter'
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Rate limit exceeded.' }, { status: 429 })
 
   // ── 3. Validate ──────────────────────────────────────────────
-  let body: { reportId: string; angle?: string }
+  let body: { reportId?: string; briefId?: string; angle?: string }
   try {
     body = NewsletterSchema.parse(await request.json())
   } catch {
@@ -60,44 +60,46 @@ export async function POST(request: NextRequest) {
   if ((usage?.count ?? 0) >= limits.newsletters)
     return NextResponse.json({ error: 'Monthly newsletter limit reached.' }, { status: 403 })
 
-  // ── 7. Load report (ownership check) ─────────────────────────
-  const { data: report } = await supabase
-    .from('trend_reports').select('id, content_md')
-    .eq('id', body.reportId).eq('workspace_id', workspace.id).single()
-  if (!report)
-    return NextResponse.json({ error: 'Report not found' }, { status: 404 })
+  // ── 7. Load source content (report or signal brief, ownership check) ──────
+  let sourceContent: string
+  let trendReportId: string | null = null
+
+  if (body.reportId) {
+    const { data: report } = await supabase
+      .from('trend_reports').select('id, content_md')
+      .eq('id', body.reportId).eq('workspace_id', workspace.id).single()
+    if (!report)
+      return NextResponse.json({ error: 'Report not found' }, { status: 404 })
+    sourceContent = report.content_md!
+    trendReportId = report.id
+  } else {
+    const { data: brief } = await supabaseAdmin
+      .from('signal_briefs').select('id, content_md')
+      .eq('id', body.briefId!).eq('workspace_id', workspace.id).single()
+    if (!brief)
+      return NextResponse.json({ error: 'Signal brief not found' }, { status: 404 })
+    sourceContent = brief.content_md!
+  }
 
   // ── 8. Brand voice ───────────────────────────────────────────
   const { data: brandVoice } = await supabase
     .from('brand_voice_profiles').select('content').eq('workspace_id', workspace.id).maybeSingle()
 
-  // ── 9. Generate newsletter + LinkedIn posts ──────────────────
+  // ── 9. Generate newsletter ───────────────────────────────────
   try {
     const angle = body.angle ?? 'Market Intelligence Weekly'
-    const newsletter = await generateNewsletter(report.content_md!, angle, brandVoice?.content ?? null, subscription.plan)
+    const newsletter = await generateNewsletter(sourceContent, angle, brandVoice?.content ?? null, subscription.plan)
 
     // Save newsletter
     const { data: savedNL } = await supabaseAdmin
       .from('newsletters')
       .insert({
         workspace_id: workspace.id,
-        trend_report_id: report.id,
+        trend_report_id: trendReportId,
         content_md: newsletter.content_md,
         content_html: newsletter.content_html,
         subject_lines: newsletter.subject_lines,
         angle,
-      })
-      .select('id').single()
-
-    // Generate LinkedIn posts from newsletter
-    const linkedinVariants = await generateLinkedinPosts(newsletter.content_md, brandVoice?.content ?? null, subscription.plan)
-
-    const { data: savedLI } = await supabaseAdmin
-      .from('linkedin_posts')
-      .insert({
-        workspace_id: workspace.id,
-        newsletter_id: savedNL?.id,
-        variants: linkedinVariants,
       })
       .select('id').single()
 
@@ -108,7 +110,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       newsletter: { id: savedNL?.id, ...newsletter },
-      linkedinPosts: { id: savedLI?.id, variants: linkedinVariants },
     })
   } catch (error: any) {
     if (error.message === 'CAPACITY_EXCEEDED')

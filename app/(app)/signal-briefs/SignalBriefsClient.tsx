@@ -168,7 +168,7 @@ function BriefCard({
   }
 
   const handleCopyShare = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/share/brief/${brief.share_id}`)
+    navigator.clipboard.writeText(`${window.location.origin}/share/${brief.share_id}`)
     setCopiedShare(true)
     setTimeout(() => setCopiedShare(false), 2000)
   }
@@ -238,7 +238,19 @@ function BriefCard({
           >
             {shareActive ? 'Shared ✓' : 'Share'}
           </button>
-          <button className={`h-[26px] px-2 rounded-md text-[11px] font-medium ${isAgency ? 'text-amber-700 hover:bg-amber-50' : 'text-indigo-600 hover:bg-indigo-50'}`}>
+          <button
+            onClick={e => {
+              e.stopPropagation()
+              const win = window.open('', '_blank')
+              if (win) {
+                const title = extractHeadline(brief.content_md, 'Signal Brief')
+                win.document.write(`<html><head><title>${title}</title><style>body{font-family:sans-serif;max-width:700px;margin:40px auto;padding:0 20px;line-height:1.7}@media print{body{margin:0}}</style></head><body><pre style="white-space:pre-wrap;font-family:sans-serif;font-size:14px">${(brief.content_md ?? '').replace(/</g, '&lt;')}</pre></body></html>`)
+                win.document.close()
+                win.print()
+              }
+            }}
+            className={`h-[26px] px-2 rounded-md text-[11px] font-medium ${isAgency ? 'text-amber-700 hover:bg-amber-50' : 'text-indigo-600 hover:bg-indigo-50'}`}
+          >
             PDF
           </button>
         </div>
@@ -250,7 +262,7 @@ function BriefCard({
           <div className="flex rounded-md overflow-hidden border border-slate-200">
             <input
               readOnly
-              value={`${typeof window !== 'undefined' ? window.location.origin : ''}/share/brief/${brief.share_id}`}
+              value={`${typeof window !== 'undefined' ? window.location.origin : ''}/share/${brief.share_id}`}
               className="flex-1 px-2.5 py-1.5 bg-slate-50 text-[11px] text-slate-500 outline-none"
             />
             <button
@@ -299,7 +311,7 @@ function BriefDetail({
   }
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/share/brief/${brief.share_id}`)
+    navigator.clipboard.writeText(`${window.location.origin}/share/${brief.share_id}`)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -396,23 +408,39 @@ function BriefDetail({
             <svg className="w-3 h-3 fill-none stroke-white" strokeWidth={1.5} strokeLinecap="round" viewBox="0 0 24 24">
               <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
             </svg>
-            {shareActive ? 'Link active' : 'Share link'}
+            {shareActive ? 'Deactivate Link' : 'Share link'}
           </button>
           {shareActive && (
             <button onClick={handleCopy} className="h-[30px] px-3 rounded-lg border border-slate-200 text-[12px] font-semibold text-slate-600 hover:bg-slate-50">
               {copied ? 'Copied!' : 'Copy URL'}
             </button>
           )}
-          <button className="h-[30px] px-3 rounded-lg border border-slate-200 text-[12px] font-medium text-slate-600 hover:bg-slate-50 inline-flex items-center gap-1.5">
+          <button
+            onClick={() => {
+              const win = window.open('', '_blank')
+              if (win) {
+                const title = extractHeadline(brief.content_md, 'Signal Brief')
+                win.document.write(`<html><head><title>${title}</title><style>body{font-family:sans-serif;max-width:700px;margin:40px auto;padding:0 20px;line-height:1.7}h1,h2,h3{margin-top:1.5em}@media print{body{margin:0}}</style></head><body><pre style="white-space:pre-wrap;font-family:sans-serif;font-size:14px">${(brief.content_md ?? '').replace(/</g, '&lt;')}</pre></body></html>`)
+                win.document.close()
+                win.print()
+              }
+            }}
+            className="h-[30px] px-3 rounded-lg border border-slate-200 text-[12px] font-medium text-slate-600 hover:bg-slate-50 inline-flex items-center gap-1.5"
+          >
             <svg className="w-3 h-3 fill-none stroke-current" strokeWidth={1.5} strokeLinecap="round" viewBox="0 0 24 24">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
             </svg>
             PDF
           </button>
           {isAgency && (
-            <button className="h-[30px] px-3 rounded-lg border border-slate-200 text-[12px] font-medium text-slate-600 hover:bg-slate-50">
-              🎨 White-label PDF
-            </button>
+            <div className="relative group">
+              <button className="h-[30px] px-3 rounded-lg border border-slate-200 text-[12px] font-medium text-slate-400 cursor-not-allowed opacity-60">
+                🎨 White-label PDF
+              </button>
+              <div className="absolute bottom-[calc(100%+4px)] right-0 hidden group-hover:block bg-slate-800 text-white text-[10px] font-medium px-2 py-1 rounded-md whitespace-nowrap z-50">
+                Coming soon
+              </div>
+            </div>
           )}
         </div>
       </div>

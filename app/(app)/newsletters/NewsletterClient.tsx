@@ -2,12 +2,14 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import ReactMarkdown from 'react-markdown'
 import type { Plan } from '@/lib/plans'
 
 interface Props {
   newsletters: any[]
   linkedinByNewsletter: Record<string, any>
   reports: any[]
+  signalBriefs: any[]
   plan: Plan
   locked: boolean
   limitPerMonth: number
@@ -106,7 +108,17 @@ const EXPORT_GROUPS = [
   },
 ]
 
-function ExportDropdown() {
+function downloadBlob(content: string, filename: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function ExportDropdown({ newsletter }: { newsletter?: any }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -117,6 +129,26 @@ function ExportDropdown() {
     document.addEventListener('click', handle)
     return () => document.removeEventListener('click', handle)
   }, [])
+
+  const subject = (Array.isArray(newsletter?.subject_lines) ? newsletter.subject_lines[0] : null) ?? 'newsletter'
+  const safeFilename = subject.replace(/[^a-z0-9]/gi, '-').toLowerCase().slice(0, 50)
+
+  function handleExport(label: string) {
+    setOpen(false)
+    if (!newsletter) return
+    if (label === 'Plain text / Markdown') {
+      downloadBlob(newsletter.content_md ?? '', `${safeFilename}.md`, 'text/markdown')
+    } else if (label === 'HTML') {
+      downloadBlob(newsletter.content_html ?? `<div>${newsletter.content_md ?? ''}</div>`, `${safeFilename}.html`, 'text/html')
+    } else if (label === 'PDF') {
+      const win = window.open('', '_blank')
+      if (win) {
+        win.document.write(`<html><head><title>${subject}</title><style>body{font-family:sans-serif;max-width:700px;margin:40px auto;padding:0 20px;line-height:1.6}@media print{body{margin:0}}</style></head><body><pre style="white-space:pre-wrap;font-family:sans-serif">${(newsletter.content_md ?? '').replace(/</g, '&lt;')}</pre></body></html>`)
+        win.document.close()
+        win.print()
+      }
+    }
+  }
 
   return (
     <div className="relative" ref={ref}>
@@ -138,22 +170,28 @@ function ExportDropdown() {
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3.5 pt-2.5 pb-1.5">
                 {group.section}
               </div>
-              {group.items.map((item) => (
-                <div
-                  key={item.label}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-2.5 px-3.5 py-2 cursor-pointer hover:bg-slate-50 transition-colors"
-                >
-                  <div className="w-7 h-7 rounded-[7px] flex items-center justify-center text-sm flex-shrink-0" style={{ background: item.bg }}>
-                    {item.emoji}
+              {group.items.map((item) => {
+                const isEmailPlatform = group.section === 'Email platforms'
+                return (
+                  <div
+                    key={item.label}
+                    onClick={() => isEmailPlatform ? setOpen(false) : handleExport(item.label)}
+                    className={`flex items-center gap-2.5 px-3.5 py-2 transition-colors ${isEmailPlatform ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-50'}`}
+                  >
+                    <div className="w-7 h-7 rounded-[7px] flex items-center justify-center text-sm flex-shrink-0" style={{ background: item.bg }}>
+                      {item.emoji}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-xs font-semibold text-slate-800 flex items-center gap-1.5">
+                        {item.label}
+                        {isEmailPlatform && <span className="text-[9px] font-bold px-1.5 py-px rounded-full bg-slate-100 text-slate-400">Coming soon</span>}
+                      </div>
+                      <div className="text-[10px] text-slate-400 mt-px">{item.sub}</div>
+                    </div>
+                    {!isEmailPlatform && <span className="text-xs text-slate-400">↓</span>}
                   </div>
-                  <div className="flex-1">
-                    <div className="text-xs font-semibold text-slate-800">{item.label}</div>
-                    <div className="text-[10px] text-slate-400 mt-px">{item.sub}</div>
-                  </div>
-                  <span className="text-xs text-slate-400">→</span>
-                </div>
-              ))}
+                )
+              })}
               {gi < EXPORT_GROUPS.length - 1 && <div className="h-px bg-slate-100 my-1" />}
             </div>
           ))}
@@ -167,16 +205,20 @@ function ExportDropdown() {
 
 function GenerateModal({
   reports,
+  signalBriefs,
   plan,
   onClose,
   onGenerated,
 }: {
   reports: any[]
+  signalBriefs: any[]
   plan: Plan
   onClose: () => void
   onGenerated: () => void
 }) {
+  const [source, setSource] = useState<'report' | 'brief'>('report')
   const [reportId, setReportId] = useState(reports[0]?.id ?? '')
+  const [briefId, setBriefId] = useState(signalBriefs[0]?.id ?? '')
   const [angle, setAngle] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -186,15 +228,23 @@ function GenerateModal({
     ? 'bg-slate-900 hover:bg-slate-800'
     : 'bg-indigo-600 hover:bg-indigo-700'
 
+  const activeTabClass = isAgency ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-600'
+  const inactiveTabClass = 'bg-white text-slate-500'
+
+  const canGenerate = source === 'report' ? !!reportId && reports.length > 0 : !!briefId && signalBriefs.length > 0
+
   const handleGenerate = async () => {
-    if (!reportId) return
+    if (!canGenerate) return
     setLoading(true)
     setError(null)
     try {
+      const body = source === 'report'
+        ? { reportId, angle: angle.trim() || undefined }
+        : { briefId, angle: angle.trim() || undefined }
       const res = await fetch('/api/newsletter-builder', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reportId, angle: angle.trim() || undefined }),
+        body: JSON.stringify(body),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Generation failed')
@@ -205,6 +255,11 @@ function GenerateModal({
     } finally {
       setLoading(false)
     }
+  }
+
+  function getBriefTitle(brief: any) {
+    const match = brief.content_md?.match(/^#\s+(.+)$/m)
+    return match ? match[1] : `Signal Brief`
   }
 
   return (
@@ -227,32 +282,56 @@ function GenerateModal({
               Generate from
             </label>
             <div className="flex border border-slate-200 rounded-lg overflow-hidden">
-              <button className={`flex-1 h-7 px-3 text-[11px] font-semibold border-none cursor-pointer inline-flex items-center justify-center gap-1.5 ${isAgency ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-600'}`}>
+              <button
+                onClick={() => setSource('report')}
+                className={`flex-1 h-7 px-3 text-[11px] font-semibold border-none cursor-pointer inline-flex items-center justify-center gap-1.5 ${source === 'report' ? activeTabClass : inactiveTabClass}`}
+              >
                 📊 Trend Report
               </button>
-              <button className="flex-1 h-7 px-3 text-[11px] font-semibold border-none cursor-pointer bg-white text-slate-500 border-l border-slate-200 inline-flex items-center justify-center gap-1.5">
+              <button
+                onClick={() => setSource('brief')}
+                className={`flex-1 h-7 px-3 text-[11px] font-semibold border-none cursor-pointer border-l border-slate-200 inline-flex items-center justify-center gap-1.5 ${source === 'brief' ? activeTabClass : inactiveTabClass}`}
+              >
                 📋 Signal Brief
               </button>
             </div>
           </div>
 
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
-              Source Report
-            </label>
-            <select
-              value={reportId}
-              onChange={(e) => setReportId(e.target.value)}
-              className="w-full h-[30px] px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
-            >
-              {reports.length === 0 && <option value="">No reports available</option>}
-              {reports.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.title ?? 'Trend Report'} — {(r.niches as any)?.name ?? ''}
-                </option>
-              ))}
-            </select>
-          </div>
+          {source === 'report' ? (
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+                Source Report
+              </label>
+              <select
+                value={reportId}
+                onChange={(e) => setReportId(e.target.value)}
+                className="w-full h-[30px] px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+              >
+                {reports.length === 0 && <option value="">No reports available</option>}
+                {reports.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.title ?? 'Trend Report'} — {(r.niches as any)?.name ?? ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+                Source Signal Brief
+              </label>
+              <select
+                value={briefId}
+                onChange={(e) => setBriefId(e.target.value)}
+                className="w-full h-[30px] px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+              >
+                {signalBriefs.length === 0 && <option value="">No signal briefs available</option>}
+                {signalBriefs.map((b) => (
+                  <option key={b.id} value={b.id}>{getBriefTitle(b)}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
@@ -277,7 +356,7 @@ function GenerateModal({
           </button>
           <button
             onClick={handleGenerate}
-            disabled={loading || !reportId || reports.length === 0}
+            disabled={loading || !canGenerate}
             className={`flex-1 h-[30px] rounded-lg text-white text-xs font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${btnClass}`}
           >
             {loading ? <><IconSpin />Generating…</> : 'Generate →'}
@@ -308,7 +387,10 @@ function NewsletterCard({
   const icon = (newsletter.trend_reports?.niches as any)?.icon ?? '📧'
   const subjectLines: string[] = Array.isArray(newsletter.subject_lines) ? newsletter.subject_lines : []
   const mainSubject = subjectLines[0] ?? (newsletter.trend_reports?.title ?? 'Newsletter')
-  const preview = newsletter.content_md?.slice(0, 160) ?? ''
+  // Strip JSON code fences from preview if content was stored before fix
+  const rawContent = newsletter.content_md ?? ''
+  const cleanContent = rawContent.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim()
+  const preview = cleanContent.replace(/^#+\s+/gm, '').replace(/\*\*/g, '').replace(/\*/g, '').slice(0, 160)
   const sections = ['Opening story', '3 signals', 'EU spotlight', 'What to watch', 'CTA']
 
   const leftBorder = isFirst ? (isAgency ? 'border-l-[3px] border-l-amber-400' : 'border-l-[3px] border-l-indigo-500') : ''
@@ -437,17 +519,26 @@ function NewsletterDetail({
           <span>{reportTitle} · {niche}</span>
         </div>
         <div className="ml-auto flex items-center gap-1.5">
-          <button
-            onClick={() => navigator.clipboard.writeText(window.location.href)}
-            className="h-[30px] px-2.5 rounded-lg bg-white text-slate-700 text-xs font-medium border border-slate-200 cursor-pointer inline-flex items-center gap-1.5 hover:bg-slate-50"
-          >
-            <IconShare />Share
-          </button>
-          <ExportDropdown />
-          {isAgency && (
-            <button className="h-[30px] px-3 rounded-lg text-white text-xs font-semibold border-none cursor-pointer inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800">
-              🎨 White-label PDF
+          <div className="relative group">
+            <button
+              className="h-[30px] px-2.5 rounded-lg bg-white text-slate-700 text-xs font-medium border border-slate-200 cursor-not-allowed opacity-60 inline-flex items-center gap-1.5"
+            >
+              <IconShare />Share
             </button>
+            <div className="absolute top-[calc(100%+4px)] right-0 hidden group-hover:block bg-slate-800 text-white text-[10px] font-medium px-2 py-1 rounded-md whitespace-nowrap z-50">
+              Coming soon
+            </div>
+          </div>
+          <ExportDropdown newsletter={newsletter} />
+          {isAgency && (
+            <div className="relative group">
+              <button className="h-[30px] px-3 rounded-lg text-white text-xs font-semibold border-none cursor-not-allowed opacity-60 inline-flex items-center gap-1.5 bg-slate-900">
+                🎨 White-label PDF
+              </button>
+              <div className="absolute top-[calc(100%+4px)] right-0 hidden group-hover:block bg-slate-800 text-white text-[10px] font-medium px-2 py-1 rounded-md whitespace-nowrap z-50">
+                Coming soon
+              </div>
+            </div>
           )}
         </div>
       </div>
@@ -480,29 +571,21 @@ function NewsletterDetail({
         {/* Email meta */}
         <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50">
           {[
-            { label: 'From', val: isAgency ? 'Acme Corp Intelligence · acmecorp@intelligence.co' : 'PulseLoop · hello@pulseloop.io' },
             { label: 'To', val: `Your subscriber list · ${niche}` },
             { label: 'Subject', val: mainSubject, bold: true },
-            { label: 'Preview', val: (newsletter.content_md?.slice(0, 120) ?? '') + '…', muted: true },
-          ].map(({ label, val, bold, muted }) => (
+          ].map(({ label, val, bold }) => (
             <div key={label} className="flex items-baseline gap-2 mb-1 last:mb-0">
               <span className="text-[10px] font-bold text-slate-400 w-[52px] flex-shrink-0 uppercase tracking-wider">{label}</span>
-              <span className={`${bold ? 'text-[13px] font-bold text-slate-800' : muted ? 'text-xs text-slate-400 font-medium' : 'text-xs text-slate-700 font-medium'}`}>{val}</span>
+              <span className={`${bold ? 'text-[13px] font-bold text-slate-800' : 'text-xs text-slate-700 font-medium'}`}>{val}</span>
             </div>
           ))}
         </div>
 
         {/* Hero */}
         <div className="px-6 pt-5 pb-4 border-b border-slate-100">
-          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1.5">
-            {isAgency ? 'Acme Corp Intelligence Brief' : 'PulseLoop Signal Newsletter'} · Issue #1
-          </div>
           <div className="text-lg font-extrabold text-slate-800 leading-snug mb-2 tracking-tight">
             {mainSubject}
           </div>
-          <p className="text-sm text-slate-500 leading-relaxed mb-2.5">
-            {newsletter.content_md?.slice(0, 200)}…
-          </p>
           <div className="flex gap-1.5 flex-wrap">
             <span className="text-[10px] font-semibold px-2 py-px rounded-full bg-indigo-50 text-indigo-600">
               {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -515,11 +598,11 @@ function NewsletterDetail({
           </div>
         </div>
 
-        {/* Full markdown content */}
+        {/* Full newsletter content — rendered markdown */}
         {newsletter.content_md && (
           <div className="px-6 py-4 border-b border-slate-100">
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 flex-1 flex items-center gap-2 after:flex-1 after:h-px after:bg-slate-100">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 flex-1">
                 Newsletter content
               </span>
               <button
@@ -529,9 +612,9 @@ function NewsletterDetail({
                 {copiedMd ? 'Copied!' : 'Copy Markdown'}
               </button>
             </div>
-            <pre className="whitespace-pre-wrap text-xs font-mono text-slate-600 leading-relaxed max-h-[400px] overflow-y-auto bg-slate-50 rounded-xl p-4">
-              {newsletter.content_md}
-            </pre>
+            <article className="prose prose-slate prose-sm max-w-none max-h-[500px] overflow-y-auto bg-slate-50 rounded-xl p-4">
+              <ReactMarkdown>{newsletter.content_md}</ReactMarkdown>
+            </article>
           </div>
         )}
 
@@ -556,50 +639,29 @@ function NewsletterDetail({
               <div className="text-xs font-bold text-slate-800 mb-0.5">Forward this to a client still thinking about AI as optional</div>
               <div className="text-[11px] text-slate-500">The content above makes it a compliance question. Send them the summary — it opens the conversation without you needing to push.</div>
             </div>
-            <button
-              onClick={() => { navigator.clipboard.writeText(window.location.href); setCopiedLink(true); setTimeout(() => setCopiedLink(false), 2000) }}
-              className={`h-7 px-3 rounded-lg text-white text-[11px] font-semibold border-none cursor-pointer flex-shrink-0 ${btnClass}`}
-            >
-              {copiedLink ? 'Copied!' : 'Copy share link'}
-            </button>
+            <div className="relative group flex-shrink-0">
+              <button
+                className="h-7 px-3 rounded-lg text-white text-[11px] font-semibold border-none cursor-not-allowed opacity-60 flex-shrink-0 bg-slate-400"
+              >
+                Copy share link
+              </button>
+              <div className="absolute bottom-[calc(100%+4px)] right-0 hidden group-hover:block bg-slate-800 text-white text-[10px] font-medium px-2 py-1 rounded-md whitespace-nowrap z-50">
+                Shareable preview link — coming soon
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Footer */}
         <div className="px-6 py-3 bg-slate-50 flex items-center gap-2">
           <span className="text-[11px] text-slate-400 flex-1">
-            <strong className="text-slate-500">{isAgency ? 'Acme Corp Intelligence Brief' : 'PulseLoop Signal Newsletter'}</strong>
+            <strong className="text-slate-500">Intelligence Brief</strong>
             {' '}· 18 EU-focused sources · 90-day RAG ·{' '}
             {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
           </span>
           <span className="text-[10px] text-slate-400">Unsubscribe · Manage preferences</span>
         </div>
       </div>
-
-      {/* LinkedIn posts */}
-      {variants.length > 0 && (
-        <div className="bg-white border border-slate-200 rounded-[14px] overflow-hidden">
-          <div className="px-5 py-3 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-800">LinkedIn Posts</span>
-            <span className="text-[10px] font-semibold px-1.5 py-px rounded-full bg-indigo-50 text-indigo-600">
-              {variants.length} variant{variants.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-          <div className="p-4 flex flex-col gap-3">
-            {variants.map((v: any, i: number) => (
-              <div key={i} className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-px rounded-full bg-indigo-50 text-indigo-600">
-                    {v.type}
-                  </span>
-                  <CopyBtn text={v.content} />
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">{v.content}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
@@ -669,6 +731,7 @@ export default function NewsletterClient({
   newsletters,
   linkedinByNewsletter,
   reports,
+  signalBriefs,
   plan,
   locked,
   limitPerMonth,
@@ -681,14 +744,19 @@ export default function NewsletterClient({
   const [showModal, setShowModal] = useState(false)
   const [detail, setDetail] = useState<any | null>(null)
   const [activeNicheFilter, setActiveNicheFilter] = useState('all')
-  const [activeWsIndex, setActiveWsIndex] = useState(0)
+  const [activeWsId, setActiveWsId] = useState(workspaceId)
 
   const handleGenerated = useCallback(() => {
     router.refresh()
   }, [router])
 
+  // Filter by active workspace first, then by niche
+  const workspaceFiltered = activeWsId
+    ? newsletters.filter(nl => nl.workspace_id === activeWsId)
+    : newsletters
+
   const niches = Array.from(
-    new Map(newsletters.map((nl) => {
+    new Map(workspaceFiltered.map((nl) => {
       const name = (nl.trend_reports?.niches as any)?.name ?? 'General'
       const icon = (nl.trend_reports?.niches as any)?.icon ?? '📊'
       return [name, { name, icon }]
@@ -696,8 +764,12 @@ export default function NewsletterClient({
   )
 
   const filtered = activeNicheFilter === 'all'
-    ? newsletters
-    : newsletters.filter((nl) => ((nl.trend_reports?.niches as any)?.name ?? 'General') === activeNicheFilter)
+    ? workspaceFiltered
+    : workspaceFiltered.filter((nl) => ((nl.trend_reports?.niches as any)?.name ?? 'General') === activeNicheFilter)
+
+  // Reports and signal briefs for the active workspace
+  const wsReports = activeWsId ? reports.filter(r => r.workspace_id === activeWsId) : reports
+  const wsBriefs = activeWsId ? signalBriefs.filter(b => b.workspace_id === activeWsId) : signalBriefs
 
   const primaryBtn = isAgency
     ? 'bg-slate-900 hover:bg-slate-800'
@@ -773,11 +845,11 @@ export default function NewsletterClient({
           <div className="mb-3">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Workspace</div>
             <div className="flex gap-1.5 flex-wrap">
-              {workspaces.map((ws, i) => (
+              {workspaces.map((ws) => (
                 <button
                   key={ws.id}
-                  onClick={() => setActiveWsIndex(i)}
-                  className={`h-7 px-3 rounded-lg text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 ${i === activeWsIndex ? 'bg-slate-900 text-white border-none' : 'bg-white text-slate-500 border border-slate-200'}`}
+                  onClick={() => { setActiveWsId(ws.id); setActiveNicheFilter('all') }}
+                  className={`h-7 px-3 rounded-lg text-xs font-semibold cursor-pointer inline-flex items-center gap-1.5 ${ws.id === activeWsId ? 'bg-slate-900 text-white border-none' : 'bg-white text-slate-500 border border-slate-200'}`}
                 >
                   {ws.name}
                 </button>
@@ -819,23 +891,9 @@ export default function NewsletterClient({
           </div>
           <div className="flex gap-2 mt-2.5 pt-2.5 border-t border-slate-100 flex-wrap items-center">
             <span className="text-[11px] text-slate-400 font-medium flex-shrink-0">Generate from:</span>
-            <div className="flex border border-slate-200 rounded-lg overflow-hidden">
-              <button className={`h-7 px-2.5 text-[11px] font-semibold border-none cursor-pointer inline-flex items-center gap-1 ${isAgency ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-600'}`}>
-                📊 Trend Report
-              </button>
-              <button className="h-7 px-2.5 text-[11px] font-semibold border-none cursor-pointer bg-white text-slate-500 border-l border-slate-200 inline-flex items-center gap-1">
-                📋 Signal Brief
-              </button>
-            </div>
-            <select className="h-7 px-2 rounded-lg border border-slate-200 text-[11px] text-slate-500 bg-white cursor-pointer outline-none flex-1 min-w-[150px]">
-              {reports.length === 0
-                ? <option>No reports available</option>
-                : reports.map((r) => <option key={r.id} value={r.id}>{r.title ?? 'Trend Report'} — {(r.niches as any)?.name ?? ''}</option>)
-              }
-            </select>
             <button
               onClick={() => setShowModal(true)}
-              disabled={usedThisMonth >= limitPerMonth || reports.length === 0}
+              disabled={usedThisMonth >= limitPerMonth}
               className={`h-7 px-3 rounded-lg text-white text-xs font-semibold border-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${primaryBtn}`}
             >
               Generate →
@@ -907,7 +965,8 @@ export default function NewsletterClient({
 
       {showModal && (
         <GenerateModal
-          reports={reports}
+          reports={wsReports}
+          signalBriefs={wsBriefs}
           plan={plan}
           onClose={() => setShowModal(false)}
           onGenerated={handleGenerated}

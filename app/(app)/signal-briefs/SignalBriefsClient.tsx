@@ -350,12 +350,6 @@ function BriefCard({
           >
             View →
           </button>
-          <button
-            onClick={e => { e.stopPropagation(); downloadBriefPdf(brief) }}
-            className={`h-[26px] px-2 rounded-md text-[11px] font-medium ${isAgency ? 'text-amber-700 hover:bg-amber-50' : 'text-indigo-600 hover:bg-indigo-50'}`}
-          >
-            PDF
-          </button>
         </div>
       </div>
 
@@ -447,6 +441,52 @@ function BriefDetail({
         </div>
       )}
 
+      {/* Send row */}
+      <div className="bg-white border border-slate-200 rounded-[13px] p-4 flex items-center gap-3 mb-4">
+        <div className="flex-1">
+          <div className="text-[13px] font-semibold text-slate-800">Send this brief</div>
+          <div className="text-[11px] text-slate-400 mt-0.5">
+            Share as a link, export as PDF{isAgency ? ' or send white-label to client' : ''}
+          </div>
+        </div>
+        <div className="flex gap-2 flex-shrink-0">
+          <button
+            onClick={handleToggleShare}
+            disabled={sharing}
+            className={`h-[30px] px-3 rounded-lg text-[12px] font-semibold text-white inline-flex items-center gap-1.5 ${isAgency ? 'bg-slate-900' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+          >
+            <svg className="w-3 h-3 fill-none stroke-white" strokeWidth={1.5} strokeLinecap="round" viewBox="0 0 24 24">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
+            {shareActive ? 'Deactivate Link' : 'Share link'}
+          </button>
+          {shareActive && (
+            <button onClick={handleCopy} className="h-[30px] px-3 rounded-lg border border-slate-200 text-[12px] font-semibold text-slate-600 hover:bg-slate-50">
+              {copied ? 'Copied!' : 'Copy URL'}
+            </button>
+          )}
+          <button
+            onClick={() => downloadDetailPdf(brief)}
+            className="h-[30px] px-3 rounded-lg border border-slate-200 text-[12px] font-medium text-slate-600 hover:bg-slate-50 inline-flex items-center gap-1.5"
+          >
+            <svg className="w-3 h-3 fill-none stroke-current" strokeWidth={1.5} strokeLinecap="round" viewBox="0 0 24 24">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            PDF
+          </button>
+          {isAgency && (
+            <div className="relative group">
+              <button className="h-[30px] px-3 rounded-lg border border-slate-200 text-[12px] font-medium text-slate-400 cursor-not-allowed opacity-60">
+                🎨 White-label PDF
+              </button>
+              <div className="absolute bottom-[calc(100%+4px)] right-0 hidden group-hover:block bg-slate-800 text-white text-[10px] font-medium px-2 py-1 rounded-md whitespace-nowrap z-50">
+                Coming soon
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* 1-pager document */}
       <div id="brief-doc-container" className="bg-white border border-slate-200 rounded-[14px] overflow-hidden mb-4">
 
@@ -491,52 +531,6 @@ function BriefDetail({
             {totalSignals > 0 ? ` · ${totalSignals} signals analysed` : ''} · 18 EU-focused sources · 90-day RAG memory
           </p>
           <span className="text-[10px] text-slate-400 flex-shrink-0">{date}</span>
-        </div>
-      </div>
-
-      {/* Send row */}
-      <div className="bg-white border border-slate-200 rounded-[13px] p-4 flex items-center gap-3 mb-3">
-        <div className="flex-1">
-          <div className="text-[13px] font-semibold text-slate-800">Send this brief</div>
-          <div className="text-[11px] text-slate-400 mt-0.5">
-            Share as a link, export as PDF{isAgency ? ' or send white-label to client' : ''}
-          </div>
-        </div>
-        <div className="flex gap-2 flex-shrink-0">
-          <button
-            onClick={handleToggleShare}
-            disabled={sharing}
-            className={`h-[30px] px-3 rounded-lg text-[12px] font-semibold text-white inline-flex items-center gap-1.5 ${isAgency ? 'bg-slate-900' : 'bg-indigo-600 hover:bg-indigo-700'}`}
-          >
-            <svg className="w-3 h-3 fill-none stroke-white" strokeWidth={1.5} strokeLinecap="round" viewBox="0 0 24 24">
-              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
-            </svg>
-            {shareActive ? 'Deactivate Link' : 'Share link'}
-          </button>
-          {shareActive && (
-            <button onClick={handleCopy} className="h-[30px] px-3 rounded-lg border border-slate-200 text-[12px] font-semibold text-slate-600 hover:bg-slate-50">
-              {copied ? 'Copied!' : 'Copy URL'}
-            </button>
-          )}
-          <button
-            onClick={() => downloadDetailPdf(brief)}
-            className="h-[30px] px-3 rounded-lg border border-slate-200 text-[12px] font-medium text-slate-600 hover:bg-slate-50 inline-flex items-center gap-1.5"
-          >
-            <svg className="w-3 h-3 fill-none stroke-current" strokeWidth={1.5} strokeLinecap="round" viewBox="0 0 24 24">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            PDF
-          </button>
-          {isAgency && (
-            <div className="relative group">
-              <button className="h-[30px] px-3 rounded-lg border border-slate-200 text-[12px] font-medium text-slate-400 cursor-not-allowed opacity-60">
-                🎨 White-label PDF
-              </button>
-              <div className="absolute bottom-[calc(100%+4px)] right-0 hidden group-hover:block bg-slate-800 text-white text-[10px] font-medium px-2 py-1 rounded-md whitespace-nowrap z-50">
-                Coming soon
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

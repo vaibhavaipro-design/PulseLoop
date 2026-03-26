@@ -2,6 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { toggleBriefShare } from '@/app/actions/briefs'
 import type { Plan } from '@/lib/plans'
 
@@ -185,7 +187,7 @@ async function downloadDetailPdf(brief: SignalBrief) {
     breakTargets.push(h)
   })
 
-  await new Promise(r => setTimeout(r, 300))
+  await new Promise(r => setTimeout(r, 800))
 
   try {
     await html2pdf().set({
@@ -477,7 +479,7 @@ function BriefDetail({
         {/* Main content */}
         <div className="px-6 py-5">
           {brief.content_md
-            ? <SimpleMarkdown md={brief.content_md} />
+            ? <article className="prose prose-slate prose-sm max-w-none"><ReactMarkdown remarkPlugins={[remarkGfm]}>{brief.content_md}</ReactMarkdown></article>
             : <p className="text-[13px] text-slate-500 italic">Brief content not available.</p>
           }
         </div>

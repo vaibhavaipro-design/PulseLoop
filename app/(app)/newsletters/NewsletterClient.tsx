@@ -185,7 +185,7 @@ function ExportDropdown({ newsletter }: { newsletter?: any }) {
         breakTargets.push(h)
       })
 
-      await new Promise(r => setTimeout(r, 400))
+      await new Promise(r => setTimeout(r, 800))
 
       try {
         await html2pdf().set({

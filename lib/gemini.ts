@@ -9,7 +9,10 @@ function getEmbeddingModel() {
     return null
   }
   const genAI = new GoogleGenerativeAI(key)
-  return genAI.getGenerativeModel({ model: 'text-embedding-004' })
+  return genAI.getGenerativeModel(
+    { model: 'text-embedding-004' },
+    { apiVersion: 'v1' }
+  )
 }
 
 /**

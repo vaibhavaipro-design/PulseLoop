@@ -7,6 +7,14 @@
     {
       "path": "/api/cron/cleanup",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/digest",
+      "schedule": "0 8 * * 1"
+    },
+    {
+      "path": "/api/cron/trial-warnings",
+      "schedule": "0 9 * * *"
     }
   ]
 }

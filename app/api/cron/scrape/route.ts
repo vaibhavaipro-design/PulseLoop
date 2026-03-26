@@ -1,15 +1,14 @@
-import { NextResponse } from 'next/server'
+import 'server-only'
+import { NextRequest, NextResponse } from 'next/server'
 import Parser from 'rss-parser'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { embedText } from '@/lib/gemini'
 import { generateClaudeResponse } from '@/lib/claude'
 
 const parser = new Parser()
 
-// This route should be triggered via a tool like Vercel Cron or GitHub Actions
-// We secure it with a simple bearer token for this MVP
-export async function POST(req: Request) {
+// Vercel Cron sends GET requests — secured with CRON_SECRET bearer token
+export async function GET(req: NextRequest) {
   const authHeader = req.headers.get('authorization')
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -33,26 +32,28 @@ export async function POST(req: Request) {
     ]
 
     let totalSignalsAdded = 0
+    // Track which niches received at least one processed signal (for last_scraped_at update)
+    const scrapedNicheIds = new Set<string>()
 
     for (const feedUrl of feeds) {
       try {
         const feed = await parser.parseURL(feedUrl)
-        
+
         // Take top 5 recent articles per feed to avoid rate limits during cron
         const articles = feed.items.slice(0, 5)
 
         for (const article of articles) {
           const contentStr = `${article.title}\n${article.contentSnippet || article.content || ''}`
-          
+
           if (!contentStr || contentStr.length < 50) continue
 
           // Generate embedding for the article content
           const embedding = await embedText(contentStr)
 
           // 3. For each active niche, evaluate relevance using a vector similarity threshold
-          // In a full production app, you might use pgvector to find relevant niches, 
+          // In a full production app, you might use pgvector to find relevant niches,
           // or ask Claude "Is this highly relevant to [niche]?"
-          
+
           for (const niche of niches) {
             // Ask Claude to evaluate relevance and extract a summarized 'signal'
             const prompt = `You are a market intelligence analyst.
@@ -90,6 +91,7 @@ Only return valid JSON.`
 
                 if (!insertError) {
                   totalSignalsAdded++
+                  scrapedNicheIds.add(niche.id)
                 }
               }
             } catch (claudeErr) {
@@ -102,9 +104,18 @@ Only return valid JSON.`
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: `Scraping complete. Added ${totalSignalsAdded} valid signals.` 
+    // Update last_scraped_at for every niche that was processed this run
+    const now = new Date().toISOString()
+    for (const nicheId of scrapedNicheIds) {
+      await supabaseAdmin
+        .from('niches')
+        .update({ last_scraped_at: now })
+        .eq('id', nicheId)
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Scraping complete. Added ${totalSignalsAdded} valid signals.`
     })
 
   } catch (error: any) {

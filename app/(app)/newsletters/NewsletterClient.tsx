@@ -114,12 +114,18 @@ function normalizeNewsletterContent(raw: string | null | undefined): string {
   if (!raw) return ''
   const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim()
   if (cleaned.startsWith('{')) {
+    // Try full JSON parse first
     try {
       const parsed = JSON.parse(cleaned)
       if (parsed && typeof parsed === 'object' && typeof parsed.content_md === 'string') {
         return parsed.content_md
       }
     } catch {}
+    // Fallback: regex extraction handles truncated JSON (content_html causes truncation)
+    const match = cleaned.match(/"content_md"\s*:\s*"((?:[^"\\]|\\[\s\S])*)"/)
+    if (match) {
+      try { return JSON.parse('"' + match[1] + '"') } catch { return match[1] }
+    }
   }
   return raw
 }

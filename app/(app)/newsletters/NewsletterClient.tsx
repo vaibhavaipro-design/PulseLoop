@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import type { Plan } from '@/lib/plans'
 
 interface Props {
@@ -155,7 +156,7 @@ function ExportDropdown({ newsletter }: { newsletter?: any }) {
   const subject = (Array.isArray(newsletter?.subject_lines) ? newsletter.subject_lines[0] : null) ?? 'newsletter'
   const safeFilename = subject.replace(/[^a-z0-9]/gi, '-').toLowerCase().slice(0, 50)
 
-  function handleExport(label: string) {
+  async function handleExport(label: string) {
     setOpen(false)
     if (!newsletter) return
     const mdContent = normalizeNewsletterContent(newsletter.content_md)
@@ -164,11 +165,44 @@ function ExportDropdown({ newsletter }: { newsletter?: any }) {
     } else if (label === 'HTML') {
       downloadBlob(newsletter.content_html ?? `<div>${mdContent}</div>`, `${safeFilename}.html`, 'text/html')
     } else if (label === 'PDF') {
-      const win = window.open('', '_blank')
-      if (win) {
-        win.document.write(`<html><head><title>${subject}</title><style>body{font-family:sans-serif;max-width:700px;margin:40px auto;padding:0 20px;line-height:1.6}@media print{body{margin:0}}</style></head><body><pre style="white-space:pre-wrap;font-family:sans-serif">${mdContent.replace(/</g, '&lt;')}</pre></body></html>`)
-        win.document.close()
-        win.print()
+      const html2pdf = (await import('html2pdf.js')).default as any
+      const element = document.getElementById('newsletter-pdf-content')
+      if (!element) return
+
+      // Temporarily remove scroll constraint so full content is captured
+      const prevMaxH = element.style.maxHeight
+      const prevOverflow = element.style.overflow
+      element.style.maxHeight = 'none'
+      element.style.overflow = 'visible'
+
+      // Allow any lazy rendering to settle
+      await new Promise(r => setTimeout(r, 400))
+
+      const style = document.createElement('style')
+      style.id = 'pdf-nl-style'
+      style.textContent = `
+        #newsletter-pdf-content table, #newsletter-pdf-content thead,
+        #newsletter-pdf-content tbody, #newsletter-pdf-content tr,
+        #newsletter-pdf-content blockquote, #newsletter-pdf-content li,
+        #newsletter-pdf-content h1, #newsletter-pdf-content h2, #newsletter-pdf-content h3 {
+          page-break-inside: avoid; break-inside: avoid;
+        }
+      `
+      document.head.appendChild(style)
+
+      try {
+        await html2pdf().set({
+          margin: [12, 14, 12, 14],
+          filename: `${safeFilename}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+        }).from(element).save()
+      } finally {
+        element.style.maxHeight = prevMaxH
+        element.style.overflow = prevOverflow
+        document.getElementById('pdf-nl-style')?.remove()
       }
     }
   }
@@ -464,20 +498,6 @@ function NewsletterCard({
           >
             View →
           </button>
-          {isAgency && (
-            <button
-              onClick={(e) => e.stopPropagation()}
-              className="h-[26px] px-2 rounded-md text-[11px] font-medium border-none cursor-pointer inline-flex items-center gap-1 text-amber-700 hover:bg-amber-50"
-            >
-              🎨 White-label
-            </button>
-          )}
-          <button
-            onClick={(e) => e.stopPropagation()}
-            className={`h-[26px] px-2 rounded-md text-[11px] font-medium border-none cursor-pointer inline-flex items-center gap-1 ${btnColor}`}
-          >
-            Export
-          </button>
         </div>
       </div>
     </div>
@@ -635,8 +655,8 @@ function NewsletterDetail({
                   {copiedMd ? 'Copied!' : 'Copy Markdown'}
                 </button>
               </div>
-              <article className="prose prose-slate prose-sm max-w-none max-h-[500px] overflow-y-auto bg-slate-50 rounded-xl p-4">
-                <ReactMarkdown>{mdContent}</ReactMarkdown>
+              <article id="newsletter-pdf-content" className="prose prose-slate prose-sm max-w-none max-h-[500px] overflow-y-auto bg-slate-50 rounded-xl p-4">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{mdContent}</ReactMarkdown>
               </article>
             </div>
           )

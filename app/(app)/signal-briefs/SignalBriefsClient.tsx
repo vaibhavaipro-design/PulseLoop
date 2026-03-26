@@ -74,6 +74,83 @@ function boldify(text: string): string {
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
 }
 
+// ── PDF helpers ───────────────────────────────────────────────────────────────
+
+function esc(t: string) {
+  return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+function fmt(t: string) {
+  return esc(t)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+}
+function mdToHtml(md: string): string {
+  return md.split(/\n{2,}/).filter(Boolean).map(block => {
+    const t = block.trim()
+    if (t.startsWith('# ')) return `<h1 style="font-size:20px;font-weight:800;margin:14px 0 6px">${esc(t.slice(2))}</h1>`
+    if (t.startsWith('## ')) return `<h2 style="font-size:15px;font-weight:700;margin:12px 0 5px">${esc(t.slice(3))}</h2>`
+    if (t.startsWith('### ')) return `<h3 style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:10px 0 4px">${esc(t.slice(4))}</h3>`
+    if (t.match(/^>\s/m)) {
+      const lines = t.split('\n').map(l => l.replace(/^>\s?/, ''))
+      return `<blockquote style="border-left:3px solid #6366f1;padding:8px 14px;margin:8px 0;background:#f8f9ff;border-radius:0 8px 8px 0;page-break-inside:avoid;break-inside:avoid">${fmt(lines.join('<br/>'))}</blockquote>`
+    }
+    if (t.match(/^\|.+\|/m)) {
+      const rows = t.split('\n').filter(l => l.trim() && !l.match(/^\|[\s\-:|]+\|/))
+      const cells = (row: string) => row.split('|').filter((_, i, a) => i > 0 && i < a.length - 1)
+      const [header, ...body] = rows
+      if (!header) return `<p style="margin:6px 0">${fmt(t)}</p>`
+      return `<table style="width:100%;border-collapse:collapse;font-size:12px;margin:8px 0;page-break-inside:avoid;break-inside:avoid">
+        <thead><tr>${cells(header).map(c => `<th style="border:1px solid #e2e8f0;padding:5px 8px;background:#f8fafc;font-weight:700;text-align:left">${fmt(c.trim())}</th>`).join('')}</tr></thead>
+        <tbody>${body.map(r => `<tr style="page-break-inside:avoid;break-inside:avoid">${cells(r).map(c => `<td style="border:1px solid #e2e8f0;padding:5px 8px">${fmt(c.trim())}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table>`
+    }
+    if (t.match(/^(\d+\. |[-*•] )/m)) {
+      const items = t.split('\n').filter(l => l.trim())
+      const isOl = !!items[0]?.match(/^\d+\./)
+      const tag = isOl ? 'ol' : 'ul'
+      return `<${tag} style="padding-left:20px;margin:8px 0">${items.map(item => `<li style="page-break-inside:avoid;break-inside:avoid;margin:3px 0">${fmt(item.replace(/^(\d+\.|[-*•])\s+/, ''))}</li>`).join('')}</${tag}>`
+    }
+    return `<p style="margin:6px 0">${fmt(t)}</p>`
+  }).join('\n')
+}
+
+async function downloadBriefPdf(brief: SignalBrief) {
+  const html2pdf = (await import('html2pdf.js')).default as any
+  const niche = (brief.trend_reports?.niches as any)?.name ?? 'General'
+  const title = extractHeadline(brief.content_md, brief.trend_reports?.title ?? 'Signal Brief')
+  const date = new Date(brief.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  const safeTitle = title.replace(/[^a-z0-9]/gi, '-').toLowerCase().slice(0, 60)
+  const safeDate = date.replace(/[^a-z0-9]/gi, '-').toLowerCase()
+
+  const wrap = document.createElement('div')
+  wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:680px;background:white;padding:40px;font-family:system-ui,-apple-system,sans-serif;font-size:13px;line-height:1.7;color:#1e293b'
+  wrap.innerHTML = `
+    <div style="border-bottom:2px solid #e2e8f0;padding-bottom:18px;margin-bottom:22px">
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#94a3b8;margin-bottom:6px">Intelligence Brief · ${esc(niche)}</div>
+      <h1 style="font-size:21px;font-weight:800;color:#0f172a;margin:0 0 10px;line-height:1.25">${esc(title)}</h1>
+      <span style="font-size:10px;background:#eef2ff;color:#4f46e5;padding:2px 10px;border-radius:20px;font-weight:600">${esc(date)}</span>
+    </div>
+    <div>${mdToHtml(brief.content_md ?? '')}</div>
+    <div style="border-top:1px solid #e2e8f0;padding-top:10px;margin-top:22px;font-size:10px;color:#94a3b8">
+      PulseLoop Signal Brief · ${esc(niche)} · 18 EU-focused sources · 90-day RAG memory
+    </div>
+  `
+  document.body.appendChild(wrap)
+
+  try {
+    await html2pdf().set({
+      margin: [12, 14, 12, 14],
+      filename: `brief-${safeTitle}-${safeDate}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+    }).from(wrap).save()
+  } finally {
+    document.body.removeChild(wrap)
+  }
+}
+
 // Simple markdown renderer for detail view
 function SimpleMarkdown({ md }: { md: string }) {
   const blocks = md.split(/\n{2,}/).filter(Boolean)
@@ -213,42 +290,15 @@ function BriefCard({
       {/* Footer */}
       <div className="flex items-center gap-1 px-3 py-2 border-t border-slate-100 bg-slate-50">
         <span className="text-[10px] text-slate-400">{weekLabel}</span>
-        <div className="ml-auto flex gap-0.5 flex-wrap">
+        <div className="ml-auto flex gap-0.5">
           <button
             onClick={onView}
             className={`h-[26px] px-2 rounded-md text-[11px] font-medium ${isAgency ? 'text-amber-700 hover:bg-amber-50' : 'text-indigo-600 hover:bg-indigo-50'}`}
           >
             View →
           </button>
-          {isAgency && (
-            <button className="h-[26px] px-2 rounded-md text-[11px] font-medium text-amber-700 hover:bg-amber-50">
-              White-label
-            </button>
-          )}
-          <a href="/newsletters" className={`h-[26px] px-2 rounded-md text-[11px] font-medium inline-flex items-center ${isAgency ? 'text-amber-700 hover:bg-amber-50' : 'text-indigo-600 hover:bg-indigo-50'}`}>
-            Newsletter
-          </a>
-          <a href="/linkedin" className={`h-[26px] px-2 rounded-md text-[11px] font-medium inline-flex items-center ${isAgency ? 'text-amber-700 hover:bg-amber-50' : 'text-indigo-600 hover:bg-indigo-50'}`}>
-            LinkedIn
-          </a>
           <button
-            onClick={handleToggleShare}
-            disabled={sharing}
-            className={`h-[26px] px-2 rounded-md text-[11px] font-medium ${shareActive ? 'text-emerald-600 hover:bg-emerald-50' : (isAgency ? 'text-amber-700 hover:bg-amber-50' : 'text-indigo-600 hover:bg-indigo-50')}`}
-          >
-            {shareActive ? 'Shared ✓' : 'Share'}
-          </button>
-          <button
-            onClick={e => {
-              e.stopPropagation()
-              const win = window.open('', '_blank')
-              if (win) {
-                const title = extractHeadline(brief.content_md, 'Signal Brief')
-                win.document.write(`<html><head><title>${title}</title><style>body{font-family:sans-serif;max-width:700px;margin:40px auto;padding:0 20px;line-height:1.7}@media print{body{margin:0}}</style></head><body><pre style="white-space:pre-wrap;font-family:sans-serif;font-size:14px">${(brief.content_md ?? '').replace(/</g, '&lt;')}</pre></body></html>`)
-                win.document.close()
-                win.print()
-              }
-            }}
+            onClick={e => { e.stopPropagation(); downloadBriefPdf(brief) }}
             className={`h-[26px] px-2 rounded-md text-[11px] font-medium ${isAgency ? 'text-amber-700 hover:bg-amber-50' : 'text-indigo-600 hover:bg-indigo-50'}`}
           >
             PDF
@@ -416,15 +466,7 @@ function BriefDetail({
             </button>
           )}
           <button
-            onClick={() => {
-              const win = window.open('', '_blank')
-              if (win) {
-                const title = extractHeadline(brief.content_md, 'Signal Brief')
-                win.document.write(`<html><head><title>${title}</title><style>body{font-family:sans-serif;max-width:700px;margin:40px auto;padding:0 20px;line-height:1.7}h1,h2,h3{margin-top:1.5em}@media print{body{margin:0}}</style></head><body><pre style="white-space:pre-wrap;font-family:sans-serif;font-size:14px">${(brief.content_md ?? '').replace(/</g, '&lt;')}</pre></body></html>`)
-                win.document.close()
-                win.print()
-              }
-            }}
+            onClick={() => downloadBriefPdf(brief)}
             className="h-[30px] px-3 rounded-lg border border-slate-200 text-[12px] font-medium text-slate-600 hover:bg-slate-50 inline-flex items-center gap-1.5"
           >
             <svg className="w-3 h-3 fill-none stroke-current" strokeWidth={1.5} strokeLinecap="round" viewBox="0 0 24 24">

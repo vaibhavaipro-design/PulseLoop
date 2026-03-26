@@ -13,7 +13,15 @@ export async function ragQuery(
   threshold = 0.78,
   count = 10
 ) {
-  const embedding = await embedText(nicheQuery)
+  let embedding: number[]
+  try {
+    embedding = await embedText(nicheQuery)
+  } catch (embeddingError) {
+    // Embedding service unavailable — generate report without RAG context.
+    // This happens when GEMINI_API_KEY is missing or invalid.
+    console.warn('Embedding failed, falling back to zero-context generation:', embeddingError)
+    return []
+  }
 
   const { data: signals, error } = await supabaseAdmin.rpc('match_signals', {
     query_embedding: embedding,

@@ -36,7 +36,7 @@ export default async function NewslettersPage() {
             trend_reports ( id, title, niches ( name ) )
           `)
           .eq('workspace_id', workspace.id)
-          .order('id', { ascending: false }),
+          .order('created_at', { ascending: false }),
         supabaseAdmin
           .from('linkedin_posts')
           .select('id, newsletter_id, variants')
@@ -45,7 +45,7 @@ export default async function NewslettersPage() {
           .from('trend_reports')
           .select('id, title, niches ( name )')
           .eq('workspace_id', workspace.id)
-          .order('id', { ascending: false }),
+          .order('created_at', { ascending: false }),
         supabaseAdmin
           .from('usage_logs')
           .select('count')

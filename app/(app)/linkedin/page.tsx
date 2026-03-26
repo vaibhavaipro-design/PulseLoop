@@ -3,11 +3,14 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { isLocked, getPlanLimits } from '@/lib/plans'
 import type { Plan } from '@/lib/plans'
+import { redirect } from 'next/navigation'
 import LinkedInClient from './LinkedInClient'
 
 export default async function LinkedInPage() {
   const supabase = createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) redirect('/login')
 
   const { data: workspaceRows } = await supabase
     .from('workspaces')

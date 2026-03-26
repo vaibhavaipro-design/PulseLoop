@@ -59,8 +59,14 @@ export async function createNiche(formData: FormData) {
 
   const customSignalTypes = formData.get('customSignalTypes') as string | null
 
-  const keywords = keywordsStr ? JSON.parse(keywordsStr) : []
-  const sourcesArray = sourcesStr ? JSON.parse(sourcesStr) : []
+  let keywords: string[] = []
+  let sourcesArray: string[] = []
+  try {
+    keywords = keywordsStr ? JSON.parse(keywordsStr) : []
+    sourcesArray = sourcesStr ? JSON.parse(sourcesStr) : []
+  } catch {
+    throw new Error('Invalid keywords or sources format')
+  }
 
   // Check limits
   const { data: subscription } = await supabaseAdmin
@@ -108,9 +114,11 @@ export async function createNiche(formData: FormData) {
   }
 
   // Fire-and-forget: trigger initial scrape for the new niche
+  // Requires NEXT_PUBLIC_APP_URL (e.g. https://app.pulseloop.io) — skipped if unset
   const newNicheId = data?.id
-  if (newNicheId) {
-    fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? ''}/api/scrape/${newNicheId}`, {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (newNicheId && appUrl) {
+    fetch(`${appUrl}/api/scrape/${newNicheId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     }).catch(() => { /* ignore scrape errors */ })
@@ -186,6 +194,17 @@ export async function updateNiche(nicheId: string, formData: FormData) {
     throw new Error('Unauthorized')
   }
 
+  // Verify ownership — load workspace first
+  const { data: workspace } = await supabase
+    .from('workspaces')
+    .select('id')
+    .eq('user_id', user.id)
+    .order('created_at')
+    .limit(1)
+    .single()
+
+  if (!workspace) throw new Error('Workspace not found')
+
   const name = formData.get('name') as string
   const slug = formData.get('slug') as string
 
@@ -205,10 +224,16 @@ export async function updateNiche(nicheId: string, formData: FormData) {
 
   const customSignalTypes = formData.get('customSignalTypes') as string | null
 
-  const keywords = keywordsStr ? JSON.parse(keywordsStr) : []
-  const sourcesArray = sourcesStr ? JSON.parse(sourcesStr) : []
+  let keywords: string[] = []
+  let sourcesArray: string[] = []
+  try {
+    keywords = keywordsStr ? JSON.parse(keywordsStr) : []
+    sourcesArray = sourcesStr ? JSON.parse(sourcesStr) : []
+  } catch {
+    throw new Error('Invalid keywords or sources format')
+  }
 
-  const updateData: any = {
+  const updateData: Record<string, unknown> = {
     name: result.data.name,
     slug: result.data.slug,
     description,
@@ -228,6 +253,7 @@ export async function updateNiche(nicheId: string, formData: FormData) {
     .from('niches')
     .update(updateData)
     .eq('id', nicheId)
+    .eq('workspace_id', workspace.id)
 
   if (error) {
     console.error('Update niche error:', error)

@@ -5,25 +5,35 @@ import type { Plan } from '@/lib/plans'
 
 // ── Built-in sources data (matches design exactly) ──────────────
 const BUILTIN_SOURCES = [
-  { emoji: '💼', name: 'LinkedIn',          tier: 'Tier 1 · Core',       defaultOn: true  },
-  { emoji: '🔶', name: 'Hacker News',       tier: 'Tier 1 · Core',       defaultOn: true  },
-  { emoji: '🟠', name: 'Reddit',            tier: 'Tier 1 · Core',       defaultOn: true  },
-  { emoji: '📰', name: 'Google News',       tier: 'Tier 1 · Core',       defaultOn: true  },
-  { emoji: '𝕏',  name: 'X / Twitter',      tier: 'Tier 1 · Core',       defaultOn: true  },
-  { emoji: '🇫🇷', name: 'Malt.fr',           tier: 'Tier 2 · EU Edge',   defaultOn: true  },
-  { emoji: '📡', name: 'FrenchWeb',         tier: 'Tier 2 · EU Edge',   defaultOn: true  },
-  { emoji: '🎯', name: 'Maddyness',         tier: 'Tier 2 · EU Edge',   defaultOn: true  },
-  { emoji: '🚀', name: 'ProductHunt',       tier: 'Tier 2 · EU Edge',   defaultOn: true  },
-  { emoji: '💼', name: 'Welcome to Jungle', tier: 'Tier 2 · EU Edge',   defaultOn: false },
-  { emoji: '📊', name: 'Dealroom',          tier: 'Tier 2 · EU Edge',   defaultOn: true  },
-  { emoji: '📝', name: 'Substack',          tier: 'Tier 2 · EU Edge',   defaultOn: true  },
-  { emoji: '🔮', name: 'Polymarket',        tier: 'Tier 3 · Deep Intel', defaultOn: false },
-  { emoji: '💻', name: 'GitHub Trending',   tier: 'Tier 3 · Deep Intel', defaultOn: true  },
-  { emoji: '🎬', name: 'YouTube',           tier: 'Tier 3 · Deep Intel', defaultOn: false },
-  { emoji: '🏛️', name: 'EU Parliament',     tier: 'Tier 3 · Deep Intel', defaultOn: true  },
-  { emoji: '🔒', name: 'CNIL',              tier: 'Tier 3 · Deep Intel', defaultOn: true  },
-  { emoji: '🦋', name: 'Bluesky',           tier: 'Tier 3 · Deep Intel', defaultOn: false },
+  { emoji: '💼', name: 'LinkedIn',          tier: 'Tier 1 · Core',       defaultOn: true,  platformKey: 'linkedin'         },
+  { emoji: '🔶', name: 'Hacker News',       tier: 'Tier 1 · Core',       defaultOn: true,  platformKey: 'hackernews'       },
+  { emoji: '🟠', name: 'Reddit',            tier: 'Tier 1 · Core',       defaultOn: true,  platformKey: 'reddit'           },
+  { emoji: '📰', name: 'Google News',       tier: 'Tier 1 · Core',       defaultOn: true,  platformKey: 'googlenews'       },
+  { emoji: '𝕏',  name: 'X / Twitter',      tier: 'Tier 1 · Core',       defaultOn: true,  platformKey: 'twitter'          },
+  { emoji: '🇫🇷', name: 'Malt.fr',           tier: 'Tier 2 · EU Edge',   defaultOn: true,  platformKey: 'malt'             },
+  { emoji: '📡', name: 'FrenchWeb',         tier: 'Tier 2 · EU Edge',   defaultOn: true,  platformKey: 'frenchweb'        },
+  { emoji: '🎯', name: 'Maddyness',         tier: 'Tier 2 · EU Edge',   defaultOn: true,  platformKey: 'maddyness'        },
+  { emoji: '🚀', name: 'ProductHunt',       tier: 'Tier 2 · EU Edge',   defaultOn: true,  platformKey: 'producthunt'      },
+  { emoji: '💼', name: 'Welcome to Jungle', tier: 'Tier 2 · EU Edge',   defaultOn: false, platformKey: 'welcometothejungle'},
+  { emoji: '📊', name: 'Dealroom',          tier: 'Tier 2 · EU Edge',   defaultOn: true,  platformKey: 'dealroom'         },
+  { emoji: '📝', name: 'Substack',          tier: 'Tier 2 · EU Edge',   defaultOn: true,  platformKey: 'substack'         },
+  { emoji: '🔮', name: 'Polymarket',        tier: 'Tier 3 · Deep Intel', defaultOn: false, platformKey: 'polymarket'       },
+  { emoji: '💻', name: 'GitHub Trending',   tier: 'Tier 3 · Deep Intel', defaultOn: true,  platformKey: 'github'           },
+  { emoji: '🎬', name: 'YouTube',           tier: 'Tier 3 · Deep Intel', defaultOn: false, platformKey: 'youtube'          },
+  { emoji: '🏛️', name: 'EU Parliament',     tier: 'Tier 3 · Deep Intel', defaultOn: true,  platformKey: 'euparliament'     },
+  { emoji: '🔒', name: 'CNIL',              tier: 'Tier 3 · Deep Intel', defaultOn: true,  platformKey: 'cnil'             },
+  { emoji: '🦋', name: 'Bluesky',           tier: 'Tier 3 · Deep Intel', defaultOn: false, platformKey: 'bluesky'          },
 ]
+
+// ── Relative time helper ─────────────────────────────────────────
+function relativeTime(isoString: string): string {
+  const diffMs = Date.now() - new Date(isoString).getTime()
+  const diffMin = Math.floor(diffMs / 60000)
+  if (diffMin < 60) return `${diffMin}m ago`
+  const diffHr = Math.floor(diffMin / 60)
+  if (diffHr < 24) return `${diffHr}h ago`
+  return `${Math.floor(diffHr / 24)}d ago`
+}
 
 const TIERS = ['Tier 1 · Core', 'Tier 2 · EU Edge', 'Tier 3 · Deep Intel']
 
@@ -177,11 +187,33 @@ function LockedPersonalSources({ plan }: { plan: Plan }) {
   )
 }
 
+// ── Signal stats badge ───────────────────────────────────────────
+function SignalStatsBadge({
+  platformKey,
+  signalStatsByPlatform,
+}: {
+  platformKey: string
+  signalStatsByPlatform: Record<string, { count: number; lastSeen: string }>
+}) {
+  const stats = signalStatsByPlatform[platformKey]
+  if (!stats || stats.count === 0) {
+    return <div className="text-[9px] text-slate-400 mt-0.5">No signals yet</div>
+  }
+  return (
+    <>
+      <div className="text-[9px] font-semibold text-emerald-600 mt-0.5">{stats.count} this week</div>
+      <div className="text-[9px] text-slate-400">Last seen {relativeTime(stats.lastSeen)}</div>
+    </>
+  )
+}
+
 // ── Agency full view ─────────────────────────────────────────────
 function AgencySourcesView({
   workspaces,
+  signalStatsByPlatform,
 }: {
   workspaces: Array<{ id: string; name: string }>
+  signalStatsByPlatform: Record<string, { count: number; lastSeen: string }>
 }) {
   const [activeWsIndex, setActiveWsIndex] = useState(0)
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
@@ -379,7 +411,7 @@ function AgencySourcesView({
                   <span className="text-[17px] flex-shrink-0">{s.emoji}</span>
                   <div className="flex-1 min-w-0">
                     <div className="text-[12px] font-semibold text-slate-800 truncate">{s.name}</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">{s.tier}</div>
+                    <SignalStatsBadge platformKey={s.platformKey} signalStatsByPlatform={signalStatsByPlatform} />
                   </div>
                   <Toggle on={toggles[s.index]} onChange={() => handleToggle(s.index)} />
                 </div>
@@ -395,7 +427,11 @@ function AgencySourcesView({
 }
 
 // ── Starter/Pro view — built-in sources read-only ────────────────
-function StarterProSourcesView() {
+function StarterProSourcesView({
+  signalStatsByPlatform,
+}: {
+  signalStatsByPlatform: Record<string, { count: number; lastSeen: string }>
+}) {
   return (
     <>
       {/* Built-in EU sources (read-only) */}
@@ -418,7 +454,7 @@ function StarterProSourcesView() {
                   <span className="text-[17px] flex-shrink-0">{s.emoji}</span>
                   <div className="flex-1 min-w-0">
                     <div className="text-[12px] font-semibold text-slate-800 truncate">{s.name}</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">{s.tier}</div>
+                    <SignalStatsBadge platformKey={s.platformKey} signalStatsByPlatform={signalStatsByPlatform} />
                   </div>
                   <span className={`w-2 h-2 rounded-full flex-shrink-0 ${s.defaultOn ? 'bg-emerald-400' : 'bg-slate-300'}`} />
                 </div>
@@ -443,17 +479,29 @@ export default function SourcesClient({
   plan,
   isAgency,
   workspaces,
+  signalStatsByPlatform,
+  lastScrapedAt,
 }: {
   plan: Plan
   isAgency: boolean
   workspaces: Array<{ id: string; name: string }>
+  signalStatsByPlatform: Record<string, { count: number; lastSeen: string }>
+  lastScrapedAt: string | null
 }) {
   return (
     <div className="flex-1 overflow-y-auto p-5 bg-slate-50">
+      {lastScrapedAt && (
+        <div className="text-[11px] text-slate-400 mb-3">
+          Last scraped: <span className="font-medium text-slate-600">{relativeTime(lastScrapedAt)}</span>
+        </div>
+      )}
       {isAgency ? (
-        <AgencySourcesView workspaces={workspaces.length > 0 ? workspaces : [{ id: '1', name: 'My Workspace' }]} />
+        <AgencySourcesView
+          workspaces={workspaces.length > 0 ? workspaces : [{ id: '1', name: 'My Workspace' }]}
+          signalStatsByPlatform={signalStatsByPlatform}
+        />
       ) : (
-        <StarterProSourcesView />
+        <StarterProSourcesView signalStatsByPlatform={signalStatsByPlatform} />
       )}
     </div>
   )

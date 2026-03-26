@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { deleteDashboard } from '@/app/actions/dashboards'
+import { deleteDashboard, toggleDashboardShare } from '@/app/actions/dashboards'
 import type { Plan } from '@/lib/plans'
 
 interface Workspace { id: string; name: string }
@@ -87,6 +87,8 @@ function DashboardCard({
 }) {
   const [isPending, startTransition] = useTransition()
   const [deleted, setDeleted] = useState(false)
+  const [shareActive, setShareActive] = useState(dashboard.share_active ?? false)
+  const [copiedShare, setCopiedShare] = useState(false)
 
   if (deleted) return null
 
@@ -111,6 +113,20 @@ function DashboardCard({
     if (!confirm('Delete this dashboard?')) return
     setDeleted(true)
     startTransition(() => deleteDashboard(dashboard.id).catch(() => setDeleted(false)))
+  }
+
+  const handleToggleShare = () => {
+    const next = !shareActive
+    setShareActive(next)
+    startTransition(() =>
+      toggleDashboardShare(dashboard.id, next).catch(() => setShareActive(!next))
+    )
+  }
+
+  const handleCopyShare = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/share/dashboard/${dashboard.share_id}`)
+    setCopiedShare(true)
+    setTimeout(() => setCopiedShare(false), 2000)
   }
 
   return (
@@ -183,6 +199,17 @@ function DashboardCard({
             PDF
           </button>
           <button
+            onClick={handleToggleShare}
+            disabled={isPending}
+            className={`h-[26px] px-2 rounded-md text-[11px] font-medium ${
+              shareActive
+                ? 'text-emerald-600 hover:bg-emerald-50'
+                : isAgency ? 'text-amber-700 hover:bg-amber-50' : 'text-indigo-600 hover:bg-indigo-50'
+            }`}
+          >
+            {shareActive ? 'Shared ✓' : 'Share'}
+          </button>
+          <button
             onClick={handleDelete}
             className="h-[26px] px-2 rounded-md text-[11px] font-medium text-red-500 hover:bg-red-50"
           >
@@ -190,6 +217,25 @@ function DashboardCard({
           </button>
         </div>
       </div>
+
+      {/* Share URL row */}
+      {shareActive && (
+        <div className="px-3 pb-3">
+          <div className="flex rounded-md overflow-hidden border border-slate-200">
+            <input
+              readOnly
+              value={`${typeof window !== 'undefined' ? window.location.origin : ''}/share/dashboard/${dashboard.share_id}`}
+              className="flex-1 px-2.5 py-1.5 bg-slate-50 text-[11px] text-slate-500 outline-none"
+            />
+            <button
+              onClick={handleCopyShare}
+              className="px-3 py-1.5 bg-white text-[11px] font-bold text-slate-700 hover:bg-slate-50 border-l border-slate-200"
+            >
+              {copiedShare ? 'Copied!' : 'Copy'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

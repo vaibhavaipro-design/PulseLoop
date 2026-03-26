@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Parser from 'rss-parser'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { userRatelimit } from '@/lib/ratelimit'
+import { userRatelimit, ipRatelimit } from '@/lib/ratelimit'
 import { embedAndStoreBatch } from '@/lib/rag'
 
 const parser = new Parser()
@@ -19,9 +19,13 @@ export async function POST(
   if (!user || authError)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // ── 2. Rate limit (user-level only — no Claude call) ─────────
-  const { success } = await userRatelimit.limit(user.id)
-  if (!success)
+  // ── 2. Rate limit (user + IP — route calls Gemini embeddings) ──
+  const ip = request.headers.get('x-forwarded-for') ?? 'unknown'
+  const [userLimit, ipLimit] = await Promise.all([
+    userRatelimit.limit(user.id),
+    ipRatelimit.limit(ip),
+  ])
+  if (!userLimit.success || !ipLimit.success)
     return NextResponse.json({ error: 'Rate limited' }, { status: 429 })
 
   // ── 3. Validate nicheId from params ──────────────────────────
@@ -34,6 +38,19 @@ export async function POST(
     .from('workspaces').select('id').eq('user_id', user.id).single()
   if (!workspace)
     return NextResponse.json({ error: 'No workspace' }, { status: 404 })
+
+  // ── 5a. Subscription check — expired trials cannot trigger scrapes ──
+  const { data: sub } = await supabaseAdmin
+    .from('subscriptions')
+    .select('plan, trial_ends_at')
+    .eq('workspace_id', workspace.id)
+    .single()
+
+  if (sub?.plan === 'trial' && sub.trial_ends_at) {
+    if (new Date(sub.trial_ends_at) < new Date()) {
+      return NextResponse.json({ error: 'Trial expired' }, { status: 403 })
+    }
+  }
 
   // ── 5. Verify niche ownership ────────────────────────────────
   const { data: niche } = await supabase
@@ -112,11 +129,12 @@ export async function POST(
     }
   }
 
-  // ── 8. Update last_scraped_at ─────────────────────────────────
+  // ── 8. Update last_scraped_at (ownership double-check for defence in depth) ──
   await supabaseAdmin
     .from('niches')
     .update({ last_scraped_at: new Date().toISOString() })
     .eq('id', nicheId)
+    .eq('workspace_id', workspace.id)
 
   // ── 9. Return signal count ────────────────────────────────────
   return NextResponse.json({ success: true, signalCount: signalRows.length })

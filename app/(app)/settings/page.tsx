@@ -1,13 +1,16 @@
 import Topbar from '@/components/layout/Topbar'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { getAllWorkspaces } from '@/lib/data/queries'
+import { redirect } from 'next/navigation'
 import BrandVoiceForm from './BrandVoiceForm'
+import SettingsClient from './SettingsClient'
 
 export default async function SettingsPage() {
   const supabase = createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) return null
+  if (!user) redirect('/login')
 
   // Get workspace
   const { data: workspace } = await supabase
@@ -25,22 +28,29 @@ export default async function SettingsPage() {
         .maybeSingle()
     : { data: null }
 
-  // Get subscription
-  const { data: sub } = await supabaseAdmin
-    .from('subscriptions')
-    .select('plan, current_period_end')
-    .eq('workspace_id', workspace?.id)
-    .single()
+  // Get subscription — guard: skip query if workspace is null
+  const { data: sub } = workspace
+    ? await supabaseAdmin
+        .from('subscriptions')
+        .select('plan, current_period_end')
+        .eq('workspace_id', workspace.id)
+        .single()
+    : { data: null }
 
   const planName = sub?.plan ?? 'trial'
   const isTrial = planName === 'trial'
+
+  // Get all workspaces (for Agency workspace management section)
+  const allWorkspaces = await getAllWorkspaces(user.id)
+
+  const displayName = (user.user_metadata?.display_name as string | undefined) ?? ''
 
   return (
     <>
       <Topbar title="Settings" />
       <div className="flex-1 overflow-y-auto p-5 bg-slate-50">
         <div className="max-w-2xl space-y-6 mx-auto mt-4">
-          
+
           {/* Brand Voice Section */}
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
             <h3 className="text-lg font-bold text-slate-800 mb-1">Brand Voice</h3>
@@ -61,7 +71,7 @@ export default async function SettingsPage() {
                 {planName}
               </div>
             </div>
-            
+
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-slate-700">
@@ -84,11 +94,11 @@ export default async function SettingsPage() {
             </div>
           </div>
 
-          {/* Account section */}
+          {/* Account section (email display — read-only) */}
           <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
             <h3 className="text-lg font-bold text-slate-800 mb-1">Account</h3>
             <p className="text-sm text-slate-500 mb-4 border-b border-slate-100 pb-4">Email and profile settings.</p>
-            
+
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Email</label>
@@ -98,6 +108,13 @@ export default async function SettingsPage() {
               </div>
             </div>
           </div>
+
+          {/* Interactive sections: workspace management, profile, danger zone */}
+          <SettingsClient
+            plan={planName}
+            displayName={displayName}
+            allWorkspaces={allWorkspaces}
+          />
 
         </div>
       </div>

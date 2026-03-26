@@ -14,11 +14,16 @@ export async function GET(request: NextRequest) {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
   // Query trend_reports from last 7 days with niche info
-  const { data: recentReports } = await supabaseAdmin
+  const { data: recentReports, error: reportsError } = await supabaseAdmin
     .from('trend_reports')
     .select('id, title, content_md, workspace_id, created_at, niches ( name )')
     .gte('created_at', sevenDaysAgo)
     .order('created_at', { ascending: false })
+
+  if (reportsError) {
+    console.error('Digest cron: failed to query trend_reports', reportsError)
+    return NextResponse.json({ error: 'Database query failed' }, { status: 500 })
+  }
 
   if (!recentReports || recentReports.length === 0) {
     return NextResponse.json({ message: 'No recent reports', emailsSent: 0 })

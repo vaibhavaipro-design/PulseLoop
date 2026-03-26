@@ -42,7 +42,7 @@ export default function NichesClientShell({
   const [keywords, setKeywords] = useState<string[]>([])
   const [keywordInput, setKeywordInput] = useState('')
   const [customSignalTypes, setCustomSignalTypes] = useState('')
-  const [sources, setSources] = useState<string[]>(['LinkedIn', 'Google News', 'Hacker News', 'GitHub'])
+  const [sources, setSources] = useState<string[]>(['googlenews', 'hackernews', 'reddit', 'github'])
   const [modalScrapeFreq, setModalScrapeFreq] = useState(plan === 'starter' || plan === 'trial' ? 'Every 6 hours (Starter)' : plan === 'pro' ? 'Every 2 hours (Pro)' : 'Every hour (Agency)')
   const [signalMemory, setSignalMemory] = useState('90 days')
   const [activateImmediately, setActivateImmediately] = useState(true)
@@ -58,7 +58,7 @@ export default function NichesClientShell({
     setKeywordInput('')
     setCustomSignalTypes('')
     setIcon('🤖')
-    setSources(['LinkedIn', 'Google News', 'Hacker News', 'GitHub'])
+    setSources(['googlenews', 'hackernews', 'reddit', 'github'])
     setActivateImmediately(true)
     setShowModal(true)
   }
@@ -72,15 +72,38 @@ export default function NichesClientShell({
     setKeywordInput('')
     setCustomSignalTypes(niche.custom_signal_types || '')
     setIcon(niche.icon || '🤖')
-    setSources(niche.sources || ['LinkedIn', 'Google News', 'Hacker News', 'GitHub'])
+    setSources(niche.sources || ['googlenews', 'hackernews', 'reddit', 'github'])
     setActivateImmediately(niche.is_active ?? true)
     setShowModal(true)
   }
 
   const emojis = ['🤖','📊','🚀','🇫🇷','💡','🔍','📋','⚡','🎯','💼']
-  const sourcesT1 = ['LinkedIn','Google News','Hacker News','Reddit','X/Twitter','Medium']
-  const sourcesT2 = ['FrenchWeb','Maddyness','Malt.fr','Dealroom','ProductHunt','Substack','Crunchbase']
-  const sourcesT3 = ['GitHub','EU Parliament','CNIL','Dev.to','Polymarket']
+
+  type SourceEntry = { label: string; key: string; comingSoon?: true }
+  const sourcesT1: SourceEntry[] = [
+    { label: 'LinkedIn',    key: 'linkedin',    comingSoon: true },
+    { label: 'Google News', key: 'googlenews'  },
+    { label: 'Hacker News', key: 'hackernews'  },
+    { label: 'Reddit',      key: 'reddit'      },
+    { label: 'X/Twitter',   key: 'twitter',     comingSoon: true },
+    { label: 'Medium',      key: 'medium'      },
+  ]
+  const sourcesT2: SourceEntry[] = [
+    { label: 'FrenchWeb',   key: 'frenchweb'   },
+    { label: 'Maddyness',   key: 'maddyness'   },
+    { label: 'Malt.fr',     key: 'malt'        },
+    { label: 'Dealroom',    key: 'dealroom'    },
+    { label: 'ProductHunt', key: 'producthunt' },
+    { label: 'Substack',    key: 'substack'    },
+    { label: 'Crunchbase',  key: 'crunchbase'  },
+  ]
+  const sourcesT3: SourceEntry[] = [
+    { label: 'GitHub',       key: 'github'       },
+    { label: 'EU Parliament',key: 'euparliament' },
+    { label: 'CNIL',         key: 'cnil'         },
+    { label: 'Dev.to',       key: 'devto'        },
+    { label: 'Polymarket',   key: 'polymarket'   },
+  ]
 
   const handleAddKeyword = () => {
     if (keywordInput.trim() && !keywords.includes(keywordInput.trim())) {
@@ -707,15 +730,23 @@ export default function NichesClientShell({
                   <div className="mb-3">
                     <div className="text-[10px] font-bold text-[#A0A0BE] tracking-[0.6px] uppercase mb-2">Tier 1 — Core</div>
                     <div className="grid grid-cols-3 gap-2">
-                      {sourcesT1.map((source, idx) => {
-                        const isSelected = sources.includes(source)
+                      {sourcesT1.map((s) => {
+                        const isSelected = sources.includes(s.key)
+                        if (s.comingSoon) {
+                          return (
+                            <div key={s.key} className="flex justify-between items-center px-3 h-[36px] rounded-[7px] border border-[#E4E4F0] bg-[#F7F7FC] opacity-60 cursor-not-allowed" title="Coming Soon">
+                              <span className="text-[12px] text-[#A0A0BE]">{s.label}</span>
+                              <span className="text-[9px] font-bold text-amber-500 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-px">Soon</span>
+                            </div>
+                          )
+                        }
                         return (
-                          <div 
-                            key={idx}
-                            onClick={() => toggleSource(source)}
+                          <div
+                            key={s.key}
+                            onClick={() => toggleSource(s.key)}
                             className={`flex justify-between items-center px-3 h-[36px] rounded-[7px] border cursor-pointer border-[#E4E4F0] hover:border-[#5B5FC7] ${isSelected ? 'bg-[#EEEEFF] border-[#5B5FC7]' : 'bg-white'}`}
                           >
-                            <span className={`text-[13px] ${isSelected ? 'text-[#5B5FC7] font-medium' : 'text-[#6B6B8A]'}`}>{source}</span>
+                            <span className={`text-[13px] ${isSelected ? 'text-[#5B5FC7] font-medium' : 'text-[#6B6B8A]'}`}>{s.label}</span>
                             <div className={`w-[17px] h-[17px] rounded-[4px] border flex items-center justify-center ${isSelected ? 'bg-[#5B5FC7] border-[#5B5FC7]' : 'bg-white border-[#E4E4F0]'}`}>
                               {isSelected && <svg viewBox="0 0 24 24" className="w-3 h-3 stroke-white fill-none" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12" /></svg>}
                             </div>
@@ -729,15 +760,15 @@ export default function NichesClientShell({
                   <div className="mb-3">
                     <div className="text-[10px] font-bold text-[#A0A0BE] tracking-[0.6px] uppercase mb-2">Tier 2 — EU Edge</div>
                     <div className="grid grid-cols-3 gap-2">
-                      {sourcesT2.map((source, idx) => {
-                        const isSelected = sources.includes(source)
+                      {sourcesT2.map((s) => {
+                        const isSelected = sources.includes(s.key)
                         return (
-                          <div 
-                            key={idx}
-                            onClick={() => toggleSource(source)}
+                          <div
+                            key={s.key}
+                            onClick={() => toggleSource(s.key)}
                             className={`flex justify-between items-center px-3 h-[36px] rounded-[7px] border cursor-pointer border-[#E4E4F0] hover:border-[#5B5FC7] ${isSelected ? 'bg-[#EEEEFF] border-[#5B5FC7]' : 'bg-white'}`}
                           >
-                            <span className={`text-[13px] ${isSelected ? 'text-[#5B5FC7] font-medium' : 'text-[#6B6B8A]'}`}>{source}</span>
+                            <span className={`text-[13px] ${isSelected ? 'text-[#5B5FC7] font-medium' : 'text-[#6B6B8A]'}`}>{s.label}</span>
                             <div className={`w-[17px] h-[17px] rounded-[4px] border flex items-center justify-center ${isSelected ? 'bg-[#5B5FC7] border-[#5B5FC7]' : 'bg-white border-[#E4E4F0]'}`}>
                               {isSelected && <svg viewBox="0 0 24 24" className="w-3 h-3 stroke-white fill-none" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12" /></svg>}
                             </div>
@@ -751,15 +782,15 @@ export default function NichesClientShell({
                   <div className="mb-3">
                     <div className="text-[10px] font-bold text-[#A0A0BE] tracking-[0.6px] uppercase mb-2">Tier 3 — Deep Intel</div>
                     <div className="grid grid-cols-3 gap-2">
-                      {sourcesT3.map((source, idx) => {
-                        const isSelected = sources.includes(source)
+                      {sourcesT3.map((s) => {
+                        const isSelected = sources.includes(s.key)
                         return (
-                          <div 
-                            key={idx}
-                            onClick={() => toggleSource(source)}
+                          <div
+                            key={s.key}
+                            onClick={() => toggleSource(s.key)}
                             className={`flex justify-between items-center px-3 h-[36px] rounded-[7px] border cursor-pointer border-[#E4E4F0] hover:border-[#5B5FC7] ${isSelected ? 'bg-[#EEEEFF] border-[#5B5FC7]' : 'bg-white'}`}
                           >
-                            <span className={`text-[13px] ${isSelected ? 'text-[#5B5FC7] font-medium' : 'text-[#6B6B8A]'}`}>{source}</span>
+                            <span className={`text-[13px] ${isSelected ? 'text-[#5B5FC7] font-medium' : 'text-[#6B6B8A]'}`}>{s.label}</span>
                             <div className={`w-[17px] h-[17px] rounded-[4px] border flex items-center justify-center ${isSelected ? 'bg-[#5B5FC7] border-[#5B5FC7]' : 'bg-white border-[#E4E4F0]'}`}>
                               {isSelected && <svg viewBox="0 0 24 24" className="w-3 h-3 stroke-white fill-none" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12" /></svg>}
                             </div>

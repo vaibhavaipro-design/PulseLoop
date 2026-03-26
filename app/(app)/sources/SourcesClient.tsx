@@ -5,24 +5,24 @@ import type { Plan } from '@/lib/plans'
 
 // ── Built-in sources data (matches design exactly) ──────────────
 const BUILTIN_SOURCES = [
-  { emoji: '💼', name: 'LinkedIn',          tier: 'Tier 1 · Core',       defaultOn: true,  platformKey: 'linkedin'         },
-  { emoji: '🔶', name: 'Hacker News',       tier: 'Tier 1 · Core',       defaultOn: true,  platformKey: 'hackernews'       },
-  { emoji: '🟠', name: 'Reddit',            tier: 'Tier 1 · Core',       defaultOn: true,  platformKey: 'reddit'           },
-  { emoji: '📰', name: 'Google News',       tier: 'Tier 1 · Core',       defaultOn: true,  platformKey: 'googlenews'       },
-  { emoji: '𝕏',  name: 'X / Twitter',      tier: 'Tier 1 · Core',       defaultOn: true,  platformKey: 'twitter'          },
-  { emoji: '🇫🇷', name: 'Malt.fr',           tier: 'Tier 2 · EU Edge',   defaultOn: true,  platformKey: 'malt'             },
-  { emoji: '📡', name: 'FrenchWeb',         tier: 'Tier 2 · EU Edge',   defaultOn: true,  platformKey: 'frenchweb'        },
-  { emoji: '🎯', name: 'Maddyness',         tier: 'Tier 2 · EU Edge',   defaultOn: true,  platformKey: 'maddyness'        },
-  { emoji: '🚀', name: 'ProductHunt',       tier: 'Tier 2 · EU Edge',   defaultOn: true,  platformKey: 'producthunt'      },
-  { emoji: '💼', name: 'Welcome to Jungle', tier: 'Tier 2 · EU Edge',   defaultOn: false, platformKey: 'welcometothejungle'},
-  { emoji: '📊', name: 'Dealroom',          tier: 'Tier 2 · EU Edge',   defaultOn: true,  platformKey: 'dealroom'         },
-  { emoji: '📝', name: 'Substack',          tier: 'Tier 2 · EU Edge',   defaultOn: true,  platformKey: 'substack'         },
-  { emoji: '🔮', name: 'Polymarket',        tier: 'Tier 3 · Deep Intel', defaultOn: false, platformKey: 'polymarket'       },
-  { emoji: '💻', name: 'GitHub Trending',   tier: 'Tier 3 · Deep Intel', defaultOn: true,  platformKey: 'github'           },
-  { emoji: '🎬', name: 'YouTube',           tier: 'Tier 3 · Deep Intel', defaultOn: false, platformKey: 'youtube'          },
-  { emoji: '🏛️', name: 'EU Parliament',     tier: 'Tier 3 · Deep Intel', defaultOn: true,  platformKey: 'euparliament'     },
-  { emoji: '🔒', name: 'CNIL',              tier: 'Tier 3 · Deep Intel', defaultOn: true,  platformKey: 'cnil'             },
-  { emoji: '🦋', name: 'Bluesky',           tier: 'Tier 3 · Deep Intel', defaultOn: false, platformKey: 'bluesky'          },
+  { emoji: '💼', name: 'LinkedIn',          tier: 'Tier 1 · Core',        defaultOn: false, platformKey: 'linkedin',          comingSoon: true  },
+  { emoji: '🔶', name: 'Hacker News',       tier: 'Tier 1 · Core',        defaultOn: true,  platformKey: 'hackernews'                           },
+  { emoji: '🟠', name: 'Reddit',            tier: 'Tier 1 · Core',        defaultOn: true,  platformKey: 'reddit'                               },
+  { emoji: '📰', name: 'Google News',       tier: 'Tier 1 · Core',        defaultOn: true,  platformKey: 'googlenews'                           },
+  { emoji: '𝕏',  name: 'X / Twitter',      tier: 'Tier 1 · Core',        defaultOn: false, platformKey: 'twitter',           comingSoon: true  },
+  { emoji: '🇫🇷', name: 'Malt.fr',           tier: 'Tier 2 · EU Edge',    defaultOn: true,  platformKey: 'malt'                                 },
+  { emoji: '📡', name: 'FrenchWeb',         tier: 'Tier 2 · EU Edge',    defaultOn: true,  platformKey: 'frenchweb'                            },
+  { emoji: '🎯', name: 'Maddyness',         tier: 'Tier 2 · EU Edge',    defaultOn: true,  platformKey: 'maddyness'                            },
+  { emoji: '🚀', name: 'ProductHunt',       tier: 'Tier 2 · EU Edge',    defaultOn: true,  platformKey: 'producthunt'                          },
+  { emoji: '💼', name: 'Welcome to Jungle', tier: 'Tier 2 · EU Edge',    defaultOn: false, platformKey: 'welcometothejungle'                   },
+  { emoji: '📊', name: 'Dealroom',          tier: 'Tier 2 · EU Edge',    defaultOn: true,  platformKey: 'dealroom'                             },
+  { emoji: '📝', name: 'Substack',          tier: 'Tier 2 · EU Edge',    defaultOn: true,  platformKey: 'substack'                             },
+  { emoji: '🔮', name: 'Polymarket',        tier: 'Tier 3 · Deep Intel', defaultOn: false, platformKey: 'polymarket'                           },
+  { emoji: '💻', name: 'GitHub Trending',   tier: 'Tier 3 · Deep Intel', defaultOn: true,  platformKey: 'github'                               },
+  { emoji: '🎬', name: 'YouTube',           tier: 'Tier 3 · Deep Intel', defaultOn: false, platformKey: 'youtube',           comingSoon: true  },
+  { emoji: '🏛️', name: 'EU Parliament',     tier: 'Tier 3 · Deep Intel', defaultOn: true,  platformKey: 'euparliament'                         },
+  { emoji: '🔒', name: 'CNIL',              tier: 'Tier 3 · Deep Intel', defaultOn: true,  platformKey: 'cnil'                                 },
+  { emoji: '🦋', name: 'Bluesky',           tier: 'Tier 3 · Deep Intel', defaultOn: false, platformKey: 'bluesky'                              },
 ]
 
 // ── Relative time helper ─────────────────────────────────────────
@@ -406,14 +406,21 @@ function AgencySourcesView({
               {sources.map((s) => (
                 <div
                   key={s.index}
-                  className="bg-white border border-slate-200 rounded-[11px] px-3 py-2.5 flex items-center gap-2.5"
+                  className={`bg-white border border-slate-200 rounded-[11px] px-3 py-2.5 flex items-center gap-2.5 ${s.comingSoon ? 'opacity-60' : ''}`}
+                  title={s.comingSoon ? 'Coming Soon' : undefined}
                 >
                   <span className="text-[17px] flex-shrink-0">{s.emoji}</span>
                   <div className="flex-1 min-w-0">
                     <div className="text-[12px] font-semibold text-slate-800 truncate">{s.name}</div>
-                    <SignalStatsBadge platformKey={s.platformKey} signalStatsByPlatform={signalStatsByPlatform} />
+                    {s.comingSoon
+                      ? <div className="text-[9px] font-semibold text-amber-500 mt-0.5">Coming Soon</div>
+                      : <SignalStatsBadge platformKey={s.platformKey} signalStatsByPlatform={signalStatsByPlatform} />
+                    }
                   </div>
-                  <Toggle on={toggles[s.index]} onChange={() => handleToggle(s.index)} />
+                  {s.comingSoon
+                    ? <span className="text-[9px] font-bold text-amber-500 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-px flex-shrink-0">Soon</span>
+                    : <Toggle on={toggles[s.index]} onChange={() => handleToggle(s.index)} />
+                  }
                 </div>
               ))}
             </div>
@@ -449,14 +456,20 @@ function StarterProSourcesView({
               {sources.map((s) => (
                 <div
                   key={s.name}
-                  className="bg-white border border-slate-200 rounded-[11px] px-3 py-2.5 flex items-center gap-2.5"
+                  className={`bg-white border border-slate-200 rounded-[11px] px-3 py-2.5 flex items-center gap-2.5 ${s.comingSoon ? 'opacity-60' : ''}`}
                 >
                   <span className="text-[17px] flex-shrink-0">{s.emoji}</span>
                   <div className="flex-1 min-w-0">
                     <div className="text-[12px] font-semibold text-slate-800 truncate">{s.name}</div>
-                    <SignalStatsBadge platformKey={s.platformKey} signalStatsByPlatform={signalStatsByPlatform} />
+                    {s.comingSoon
+                      ? <div className="text-[9px] font-semibold text-amber-500 mt-0.5">Coming Soon</div>
+                      : <SignalStatsBadge platformKey={s.platformKey} signalStatsByPlatform={signalStatsByPlatform} />
+                    }
                   </div>
-                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${s.defaultOn ? 'bg-emerald-400' : 'bg-slate-300'}`} />
+                  {s.comingSoon
+                    ? <span className="text-[9px] font-bold text-amber-500 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-px flex-shrink-0">Soon</span>
+                    : <span className={`w-2 h-2 rounded-full flex-shrink-0 ${s.defaultOn ? 'bg-emerald-400' : 'bg-slate-300'}`} />
+                  }
                 </div>
               ))}
             </div>

@@ -5,8 +5,23 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { userRatelimit, ipRatelimit } from '@/lib/ratelimit'
 import { embedAndStoreBatch } from '@/lib/rag'
+import {
+  fetchReddit,
+  fetchSubstack,
+  fetchBluesky,
+  fetchPolymarket,
+  fetchGitHubTrending,
+  fetchEUParliament,
+  fetchCNIL,
+  type SourceResult,
+} from '@/lib/sources'
 
 const parser = new Parser()
+
+function parseSignalMemoryDays(mem: string | null): number {
+  const match = (mem ?? '').match(/(\d+)/)
+  return match ? parseInt(match[1]) : 90
+}
 
 // User-triggered on-demand scrape for a single niche
 export async function POST(
@@ -55,25 +70,34 @@ export async function POST(
   // ── 5. Verify niche ownership ────────────────────────────────
   const { data: niche } = await supabase
     .from('niches')
-    .select('id, name, slug')
+    .select('id, name, slug, keywords, description, sources, signal_memory')
     .eq('id', nicheId)
     .eq('workspace_id', workspace.id)
     .single()
   if (!niche)
     return NextResponse.json({ error: 'Niche not found' }, { status: 404 })
 
-  // ── 6. Fetch RSS feeds and filter by niche keywords ──────────
-  const feeds = [
-    'https://hnrss.org/frontpage?points=100', // HN top posts
-    'https://techcrunch.com/feed/',            // TechCrunch
-  ]
+  // ── 6. Build search query and keyword set ─────────────────────
+  const nicheKeywords: string[] = (niche.keywords ?? []) as string[]
+  const nicheSources: string[] = (niche.sources ?? []) as string[]
 
-  // Build keyword set from niche name + slug for case-insensitive matching
+  // Rich search query: niche name + top 2 keywords
+  const searchQuery = [niche.name, ...nicheKeywords.slice(0, 2)].join(' ')
+
+  // Keyword filter set for RSS feeds (include 2-char terms like "ai")
   const keywords = [
     niche.name.toLowerCase(),
-    ...(niche.slug ?? '').toLowerCase().split('-').filter((k: string) => k.length > 2),
+    ...(niche.slug ?? '').toLowerCase().split('-').filter((k: string) => k.length > 1),
+    ...nicheKeywords.map((k: string) => k.toLowerCase()),
   ].filter(Boolean)
 
+  // Signal memory: how long to keep signals
+  const memoryDays = parseSignalMemoryDays(niche.signal_memory)
+  const expiresAt = new Date()
+  expiresAt.setDate(expiresAt.getDate() + memoryDays)
+  const expiresAtStr = expiresAt.toISOString()
+
+  // ── 7. Fetch from all selected sources ───────────────────────
   const signalRows: Array<{
     workspace_id: string
     niche_id: string
@@ -82,44 +106,107 @@ export async function POST(
     source_url: string
     signal_type: string
     signal_source: string
+    expires_at: string
   }> = []
 
-  for (const feedUrl of feeds) {
+  function addResults(results: SourceResult[]) {
+    for (const r of results) {
+      if (r.text.length < 50) continue
+      signalRows.push({
+        workspace_id: workspace.id,
+        niche_id: niche.id,
+        text: r.text,
+        platform: r.platform,
+        source_url: r.source_url,
+        signal_type: 'article',
+        signal_source: 'public',
+        expires_at: expiresAtStr,
+      })
+    }
+  }
+
+  // All sources with their platformKeys — only run if in niche.sources (or sources is empty = all)
+  const useAllSources = nicheSources.length === 0
+  const has = (key: string) => useAllSources || nicheSources.includes(key)
+
+  // ── RSS-based feeds ───────────────────────────────────────────
+  const rssFeeds: Array<{ url: string; platform: string; platformKey: string }> = [
+    { url: 'https://hnrss.org/frontpage?points=100', platform: 'hacker_news', platformKey: 'hackernews' },
+    { url: 'https://techcrunch.com/feed/', platform: 'techcrunch', platformKey: 'techcrunch' },
+    { url: 'https://www.frenchweb.fr/feed', platform: 'frenchweb', platformKey: 'frenchweb' },
+    { url: 'https://www.maddyness.com/feed/', platform: 'maddyness', platformKey: 'maddyness' },
+    { url: 'https://www.producthunt.com/feed?category=tech', platform: 'producthunt', platformKey: 'producthunt' },
+    {
+      url: `https://news.google.com/rss/search?q=${encodeURIComponent(searchQuery)}&hl=en&gl=FR&ceid=FR:en`,
+      platform: 'google_news',
+      platformKey: 'googlenews',
+    },
+  ]
+
+  for (const feed of rssFeeds) {
+    if (!has(feed.platformKey)) continue
     try {
-      const feed = await parser.parseURL(feedUrl)
-      // Take top 10 articles per feed for on-demand scrape
-      const articles = feed.items.slice(0, 10)
+      const parsedFeed = await parser.parseURL(feed.url)
+      const articles = parsedFeed.items.slice(0, 10)
 
       for (const article of articles) {
         const titleLower = (article.title ?? '').toLowerCase()
         const snippetLower = (article.contentSnippet ?? article.content ?? '').toLowerCase()
         const combined = `${titleLower} ${snippetLower}`
 
-        // Only include articles that contain at least one niche keyword
-        const isRelevant = keywords.some(kw => combined.includes(kw))
+        // Google News results are already niche-specific — skip keyword filter
+        const isRelevant = feed.platformKey === 'googlenews'
+          ? true
+          : keywords.some(kw => combined.includes(kw))
         if (!isRelevant) continue
 
         const text = `${article.title ?? ''}\n${article.contentSnippet ?? article.content ?? ''}`.trim()
         if (text.length < 50) continue
 
-        const platform = feedUrl.includes('hnrss') ? 'hacker_news' : 'techcrunch'
-
         signalRows.push({
           workspace_id: workspace.id,
           niche_id: niche.id,
           text,
-          platform,
-          source_url: article.link ?? feedUrl,
+          platform: feed.platform,
+          source_url: article.link ?? feed.url,
           signal_type: 'article',
           signal_source: 'public',
+          expires_at: expiresAtStr,
         })
       }
     } catch (feedErr) {
-      console.error(`Failed to fetch feed ${feedUrl}:`, feedErr)
+      console.error(`Failed to fetch feed ${feed.url}:`, feedErr)
     }
   }
 
-  // ── 7. Embed + store via embedAndStoreBatch ───────────────────
+  // ── Dynamic API sources ───────────────────────────────────────
+  const dynamicFetches: Promise<void>[] = []
+
+  if (has('reddit')) {
+    dynamicFetches.push(fetchReddit(searchQuery).then(addResults))
+  }
+  if (has('substack')) {
+    dynamicFetches.push(fetchSubstack(searchQuery).then(addResults))
+  }
+  if (has('bluesky')) {
+    dynamicFetches.push(fetchBluesky(searchQuery).then(addResults))
+  }
+  if (has('polymarket')) {
+    dynamicFetches.push(fetchPolymarket(searchQuery).then(addResults))
+  }
+  if (has('github')) {
+    dynamicFetches.push(fetchGitHubTrending(searchQuery).then(addResults))
+  }
+  if (has('euparliament')) {
+    dynamicFetches.push(fetchEUParliament(keywords).then(addResults))
+  }
+  if (has('cnil')) {
+    dynamicFetches.push(fetchCNIL(keywords).then(addResults))
+  }
+
+  await Promise.allSettled(dynamicFetches)
+
+  // ── 8. Embed + store via embedAndStoreBatch ───────────────────
   if (signalRows.length > 0) {
     try {
       await embedAndStoreBatch(signalRows)
@@ -129,13 +216,13 @@ export async function POST(
     }
   }
 
-  // ── 8. Update last_scraped_at (ownership double-check for defence in depth) ──
+  // ── 9. Update last_scraped_at ─────────────────────────────────
   await supabaseAdmin
     .from('niches')
     .update({ last_scraped_at: new Date().toISOString() })
     .eq('id', nicheId)
     .eq('workspace_id', workspace.id)
 
-  // ── 9. Return signal count ────────────────────────────────────
+  // ── 10. Return signal count ───────────────────────────────────
   return NextResponse.json({ success: true, signalCount: signalRows.length })
 }

@@ -4,6 +4,15 @@ import { useState, useTransition } from 'react'
 import { toggleNicheStatus, deleteNiche } from '@/app/actions/niches'
 import { useRouter } from 'next/navigation'
 
+async function triggerScrape(nicheId: string): Promise<{ signalCount: number }> {
+  const res = await fetch(`/api/scrape/${nicheId}`, { method: 'POST' })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error ?? `Scrape failed (${res.status})`)
+  }
+  return res.json()
+}
+
 interface NicheCardProps {
   niche: {
     id: string
@@ -37,6 +46,7 @@ function formatLastScraped(date: string | null): string {
 
 export default function NicheClientCard({ niche, plan, signalCount = 0, reportCount = 0, sourceCount = 18, onEdit }: NicheCardProps) {
   const [isPending, startTransition] = useTransition()
+  const [isScanning, setIsScanning] = useState(false)
   const router = useRouter()
   const icon = niche.icon || '🎯'
   const isAgency = plan === 'agency'
@@ -52,6 +62,23 @@ export default function NicheClientCard({ niche, plan, signalCount = 0, reportCo
       startTransition(() => {
         deleteNiche(niche.id)
       })
+    }
+  }
+
+  const handleScan = async () => {
+    if (isScanning) return
+    setIsScanning(true)
+    try {
+      const { signalCount } = await triggerScrape(niche.id)
+      router.refresh()
+      if (signalCount === 0) {
+        console.info('Scan complete — no new signals matched this niche from current feeds.')
+      }
+    } catch (err: any) {
+      console.error('Scan failed:', err)
+      alert(`Scan failed: ${err.message}`)
+    } finally {
+      setIsScanning(false)
     }
   }
 
@@ -134,6 +161,15 @@ export default function NicheClientCard({ niche, plan, signalCount = 0, reportCo
           {niche.is_active ? '● Active' : '⏸ Paused'}
         </span>
         <div className="ml-auto flex gap-px">
+          {niche.is_active && (
+            <button
+              onClick={handleScan}
+              disabled={isScanning || isPending}
+              className="h-7 px-2 rounded-[7px] bg-transparent text-[#4CAF82] text-[11px] font-medium border-none cursor-pointer hover:bg-[#E8F7EF] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isScanning ? 'Scanning…' : 'Scan now'}
+            </button>
+          )}
           {niche.is_active && (
             <button
               onClick={() => router.push(`/reports?niche=${niche.id}`)}

@@ -4,7 +4,7 @@ import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import ReportActions from './ReportActions'
-import PrintTrigger from './PrintTrigger'
+import PdfDownloadTrigger from './PdfDownloadTrigger'
 
 export default async function ReportDetailPage({ params, searchParams }: { params: { id: string }; searchParams?: { print?: string } }) {
   const supabase = createSupabaseServerClient()
@@ -47,7 +47,14 @@ export default async function ReportDetailPage({ params, searchParams }: { param
           .print-scroll { overflow: visible !important; height: auto !important; }
         }
       `}</style>
-      {searchParams?.print === 'true' && <PrintTrigger />}
+      {searchParams?.print === 'true' && (
+        <PdfDownloadTrigger
+          title={report.title ?? 'Trend Report'}
+          date={new Date(report.created_at).toLocaleDateString('en-GB', {
+            day: 'numeric', month: 'short', year: 'numeric',
+          })}
+        />
+      )}
       <div className="print:hidden">
         <Topbar title={report.title ?? 'Trend Report'} />
       </div>
@@ -55,7 +62,7 @@ export default async function ReportDetailPage({ params, searchParams }: { param
       <div className="flex-1 flex overflow-hidden">
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto print-scroll p-5 md:p-8 bg-slate-50 print:bg-white print:p-8">
-          <div className="max-w-3xl mx-auto">
+          <div id="report-content" className="max-w-3xl mx-auto">
 
             {/* Breadcrumb */}
             <div className="mb-4 print:hidden">

@@ -114,6 +114,23 @@ function CopyBtn({ text, isAg, small }: { text: string; isAg: boolean; small?: b
   )
 }
 
+// ── Variant normalizer ─────────────────────────────────────────────
+// Handles old DB rows where variants[0].content = full JSON array string
+function normalizeVariants(variants: Variant[]): Variant[] {
+  if (!Array.isArray(variants) || variants.length === 0) return variants
+  const first = variants[0]
+  if (first?.content) {
+    const cleaned = first.content.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim()
+    if (cleaned.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(cleaned)
+        if (Array.isArray(parsed) && parsed[0]?.type && parsed[0]?.content) return parsed
+      } catch {}
+    }
+  }
+  return variants
+}
+
 // ── Post set card ──────────────────────────────────────────────────
 const PREVIEW_CHARS = 180
 
@@ -124,7 +141,7 @@ function PostSetCard({ post, plan }: { post: LinkedInPost; plan: Plan }) {
   const report = newsletter?.trend_reports
   const niche = report?.niches?.name ?? 'General'
   const title = report?.title ?? newsletter?.angle ?? 'Trend Report'
-  const variants: Variant[] = Array.isArray(post.variants) ? post.variants : []
+  const variants: Variant[] = normalizeVariants(Array.isArray(post.variants) ? post.variants : [])
   const source = newsletter?.angle ? `Newsletter · ${newsletter.angle}` : 'Trend Report'
 
   const accentColor = isAg ? C.agb : C.a

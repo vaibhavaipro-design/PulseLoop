@@ -108,6 +108,22 @@ const EXPORT_GROUPS = [
   },
 ]
 
+// ── CONTENT NORMALIZER ────────────────────────────────────────────────────────
+// Handles old DB rows where content_md = full JSON object string (pre-fix)
+function normalizeNewsletterContent(raw: string | null | undefined): string {
+  if (!raw) return ''
+  const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim()
+  if (cleaned.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(cleaned)
+      if (parsed && typeof parsed === 'object' && typeof parsed.content_md === 'string') {
+        return parsed.content_md
+      }
+    } catch {}
+  }
+  return raw
+}
+
 function downloadBlob(content: string, filename: string, mimeType: string) {
   const blob = new Blob([content], { type: mimeType })
   const url = URL.createObjectURL(blob)
@@ -136,14 +152,15 @@ function ExportDropdown({ newsletter }: { newsletter?: any }) {
   function handleExport(label: string) {
     setOpen(false)
     if (!newsletter) return
+    const mdContent = normalizeNewsletterContent(newsletter.content_md)
     if (label === 'Plain text / Markdown') {
-      downloadBlob(newsletter.content_md ?? '', `${safeFilename}.md`, 'text/markdown')
+      downloadBlob(mdContent, `${safeFilename}.md`, 'text/markdown')
     } else if (label === 'HTML') {
-      downloadBlob(newsletter.content_html ?? `<div>${newsletter.content_md ?? ''}</div>`, `${safeFilename}.html`, 'text/html')
+      downloadBlob(newsletter.content_html ?? `<div>${mdContent}</div>`, `${safeFilename}.html`, 'text/html')
     } else if (label === 'PDF') {
       const win = window.open('', '_blank')
       if (win) {
-        win.document.write(`<html><head><title>${subject}</title><style>body{font-family:sans-serif;max-width:700px;margin:40px auto;padding:0 20px;line-height:1.6}@media print{body{margin:0}}</style></head><body><pre style="white-space:pre-wrap;font-family:sans-serif">${(newsletter.content_md ?? '').replace(/</g, '&lt;')}</pre></body></html>`)
+        win.document.write(`<html><head><title>${subject}</title><style>body{font-family:sans-serif;max-width:700px;margin:40px auto;padding:0 20px;line-height:1.6}@media print{body{margin:0}}</style></head><body><pre style="white-space:pre-wrap;font-family:sans-serif">${mdContent.replace(/</g, '&lt;')}</pre></body></html>`)
         win.document.close()
         win.print()
       }
@@ -387,9 +404,7 @@ function NewsletterCard({
   const icon = (newsletter.trend_reports?.niches as any)?.icon ?? '📧'
   const subjectLines: string[] = Array.isArray(newsletter.subject_lines) ? newsletter.subject_lines : []
   const mainSubject = subjectLines[0] ?? (newsletter.trend_reports?.title ?? 'Newsletter')
-  // Strip JSON code fences from preview if content was stored before fix
-  const rawContent = newsletter.content_md ?? ''
-  const cleanContent = rawContent.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim()
+  const cleanContent = normalizeNewsletterContent(newsletter.content_md)
   const preview = cleanContent.replace(/^#+\s+/gm, '').replace(/\*\*/g, '').replace(/\*/g, '').slice(0, 160)
   const sections = ['Opening story', '3 signals', 'EU spotlight', 'What to watch', 'CTA']
 
@@ -599,24 +614,27 @@ function NewsletterDetail({
         </div>
 
         {/* Full newsletter content — rendered markdown */}
-        {newsletter.content_md && (
-          <div className="px-6 py-4 border-b border-slate-100">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 flex-1">
-                Newsletter content
-              </span>
-              <button
-                onClick={() => { navigator.clipboard.writeText(newsletter.content_md ?? ''); setCopiedMd(true); setTimeout(() => setCopiedMd(false), 2000) }}
-                className="text-xs font-bold text-slate-500 hover:text-slate-700 px-2.5 py-1 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-              >
-                {copiedMd ? 'Copied!' : 'Copy Markdown'}
-              </button>
+        {newsletter.content_md && (() => {
+          const mdContent = normalizeNewsletterContent(newsletter.content_md)
+          return (
+            <div className="px-6 py-4 border-b border-slate-100">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 flex-1">
+                  Newsletter content
+                </span>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(mdContent); setCopiedMd(true); setTimeout(() => setCopiedMd(false), 2000) }}
+                  className="text-xs font-bold text-slate-500 hover:text-slate-700 px-2.5 py-1 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                >
+                  {copiedMd ? 'Copied!' : 'Copy Markdown'}
+                </button>
+              </div>
+              <article className="prose prose-slate prose-sm max-w-none max-h-[500px] overflow-y-auto bg-slate-50 rounded-xl p-4">
+                <ReactMarkdown>{mdContent}</ReactMarkdown>
+              </article>
             </div>
-            <article className="prose prose-slate prose-sm max-w-none max-h-[500px] overflow-y-auto bg-slate-50 rounded-xl p-4">
-              <ReactMarkdown>{newsletter.content_md}</ReactMarkdown>
-            </article>
-          </div>
-        )}
+          )
+        })()}
 
         {/* Subject lines */}
         {subjectLines.length > 0 && (

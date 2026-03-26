@@ -129,7 +129,7 @@ export default function ReportsClient({
       filtered = [...filtered].sort((a, b) => (b.source_health?.total_signals ?? 0) - (a.source_health?.total_signals ?? 0))
     }
     return filtered
-  }, [reports, activeNicheFilter, monthFilter, sortBy])
+  }, [reports, activeWorkspaceId, activeNicheFilter, monthFilter, sortBy])
 
   // Starter only sees current month
   const visibleReports = isStarter ? filteredReports.slice(0, 4) : filteredReports

@@ -24,26 +24,15 @@ export default function PdfDownloadTrigger({ title, date }: Props) {
         // Wait for React hydration + ReactMarkdown to fully render in DOM
         await new Promise((resolve) => setTimeout(resolve, 800))
 
-        // Inject page-break protection so html2pdf doesn't slice mid-element
-        const style = document.createElement('style')
-        style.id = 'pdf-pagebreak-style'
-        style.textContent = `
-          #report-content table,
-          #report-content thead,
-          #report-content tbody,
-          #report-content tr,
-          #report-content blockquote,
-          #report-content li,
-          #report-content h1,
-          #report-content h2,
-          #report-content h3,
-          #report-content h4,
-          #report-content section {
-            page-break-inside: avoid;
-            break-inside: avoid;
-          }
-        `
-        document.head.appendChild(style)
+        // Apply inline page-break styles BEFORE html2pdf measures element heights
+        // (injecting a <style> tag fires after measurement and has no effect)
+        const breakTargets: HTMLElement[] = []
+        element.querySelectorAll('table,thead,tbody,tr,blockquote,li,h1,h2,h3,h4,section').forEach(el => {
+          const h = el as HTMLElement
+          h.style.pageBreakInside = 'avoid'
+          h.style.breakInside = 'avoid'
+          breakTargets.push(h)
+        })
 
         const safeTitle = title.replace(/[^a-z0-9]/gi, '-').toLowerCase().slice(0, 60)
         const safeDate = date.replace(/[^a-z0-9]/gi, '-').toLowerCase()
@@ -54,15 +43,14 @@ export default function PdfDownloadTrigger({ title, date }: Props) {
             margin: [12, 14, 12, 14],
             filename,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false },
+            html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
           })
           .from(element)
           .save()
 
-        // Clean up injected style
-        document.getElementById('pdf-pagebreak-style')?.remove()
+        breakTargets.forEach(el => { el.style.pageBreakInside = ''; el.style.breakInside = '' })
 
         setStatus('done')
       } catch (err) {

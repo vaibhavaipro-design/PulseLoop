@@ -169,40 +169,37 @@ function ExportDropdown({ newsletter }: { newsletter?: any }) {
       const element = document.getElementById('newsletter-pdf-content')
       if (!element) return
 
-      // Temporarily remove scroll constraint so full content is captured
+      // Remove scroll constraint so full content is captured
       const prevMaxH = element.style.maxHeight
       const prevOverflow = element.style.overflow
       element.style.maxHeight = 'none'
       element.style.overflow = 'visible'
 
-      // Allow any lazy rendering to settle
-      await new Promise(r => setTimeout(r, 400))
+      // Apply inline page-break styles BEFORE html2pdf measures element heights
+      // (injecting a <style> tag fires after measurement and has no effect)
+      const breakTargets: HTMLElement[] = []
+      element.querySelectorAll('table,thead,tbody,tr,blockquote,li,h1,h2,h3,h4').forEach(el => {
+        const h = el as HTMLElement
+        h.style.pageBreakInside = 'avoid'
+        h.style.breakInside = 'avoid'
+        breakTargets.push(h)
+      })
 
-      const style = document.createElement('style')
-      style.id = 'pdf-nl-style'
-      style.textContent = `
-        #newsletter-pdf-content table, #newsletter-pdf-content thead,
-        #newsletter-pdf-content tbody, #newsletter-pdf-content tr,
-        #newsletter-pdf-content blockquote, #newsletter-pdf-content li,
-        #newsletter-pdf-content h1, #newsletter-pdf-content h2, #newsletter-pdf-content h3 {
-          page-break-inside: avoid; break-inside: avoid;
-        }
-      `
-      document.head.appendChild(style)
+      await new Promise(r => setTimeout(r, 400))
 
       try {
         await html2pdf().set({
           margin: [12, 14, 12, 14],
           filename: `${safeFilename}.pdf`,
           image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, logging: false },
+          html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
           pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
         }).from(element).save()
       } finally {
+        breakTargets.forEach(el => { el.style.pageBreakInside = ''; el.style.breakInside = '' })
         element.style.maxHeight = prevMaxH
         element.style.overflow = prevOverflow
-        document.getElementById('pdf-nl-style')?.remove()
       }
     }
   }

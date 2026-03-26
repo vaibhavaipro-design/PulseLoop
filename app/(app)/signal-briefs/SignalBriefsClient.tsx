@@ -142,7 +142,18 @@ async function downloadBriefPdf(brief: SignalBrief) {
       margin: [12, 14, 12, 14],
       filename: `brief-${safeTitle}-${safeDate}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        // Reposition the off-screen element into the visible area of the clone
+        // so html2canvas captures content instead of empty space
+        onclone: (_doc: Document, el: HTMLElement) => {
+          el.style.position = 'static'
+          el.style.left = '0'
+        },
+      },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
     }).from(wrap).save()
@@ -161,21 +172,18 @@ async function downloadDetailPdf(brief: SignalBrief) {
   const safeTitle = title.replace(/[^a-z0-9]/gi, '-').toLowerCase().slice(0, 60)
   const safeDate = date.replace(/[^a-z0-9]/gi, '-').toLowerCase()
 
-  // Remove overflow-hidden so full content is captured
   const prevOverflow = element.style.overflow
   element.style.overflow = 'visible'
 
-  const style = document.createElement('style')
-  style.id = 'pdf-brief-style'
-  style.textContent = `
-    #brief-doc-container table, #brief-doc-container thead,
-    #brief-doc-container tbody, #brief-doc-container tr,
-    #brief-doc-container blockquote, #brief-doc-container li,
-    #brief-doc-container h1, #brief-doc-container h2, #brief-doc-container h3 {
-      page-break-inside: avoid; break-inside: avoid;
-    }
-  `
-  document.head.appendChild(style)
+  // Apply inline page-break styles BEFORE html2pdf measures element heights
+  // (injecting a <style> tag fires after measurement and has no effect)
+  const breakTargets: HTMLElement[] = []
+  element.querySelectorAll('table,thead,tbody,tr,blockquote,li,h1,h2,h3,h4').forEach(el => {
+    const h = el as HTMLElement
+    h.style.pageBreakInside = 'avoid'
+    h.style.breakInside = 'avoid'
+    breakTargets.push(h)
+  })
 
   await new Promise(r => setTimeout(r, 300))
 
@@ -189,8 +197,8 @@ async function downloadDetailPdf(brief: SignalBrief) {
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
     }).from(element).save()
   } finally {
+    breakTargets.forEach(el => { el.style.pageBreakInside = ''; el.style.breakInside = '' })
     element.style.overflow = prevOverflow
-    document.getElementById('pdf-brief-style')?.remove()
   }
 }
 

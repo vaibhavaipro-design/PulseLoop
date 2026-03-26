@@ -62,7 +62,7 @@ export default async function ReportDetailPage({ params, searchParams }: { param
       <div className="flex-1 flex overflow-hidden">
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto print-scroll p-5 md:p-8 bg-slate-50 print:bg-white print:p-8">
-          <div id="report-content" className="max-w-3xl mx-auto">
+          <div className="max-w-3xl mx-auto">
 
             {/* Breadcrumb */}
             <div className="mb-4 print:hidden">
@@ -110,7 +110,7 @@ export default async function ReportDetailPage({ params, searchParams }: { param
               )}
             </div>
 
-            <article className="prose prose-slate prose-indigo max-w-none bg-white border border-slate-200 rounded-2xl p-6 md:p-10 shadow-sm">
+            <article id="report-content" className="prose prose-slate prose-indigo max-w-none bg-white border border-slate-200 rounded-2xl p-6 md:p-10 shadow-sm">
               <ReactMarkdown>{report.content_md || '*No content available.*'}</ReactMarkdown>
             </article>
 

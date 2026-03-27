@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Rate limit exceeded. Try again shortly.' }, { status: 429 })
 
   // ── 3. Validate request body ──────────────────────────────────
-  let body: { nicheId: string; nicheQuery: string; workspaceId?: string; privateContext?: string }
+  let body: { nicheId: string; nicheQuery: string; workspaceId?: string; privateContext?: string; privateContextNote?: string }
   try {
     const raw = await request.json()
     body = TrendReportSchema.parse(raw)
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
   // ── 6. Verify niche belongs to this workspace ─────────────────
   const { data: niche } = await supabase
     .from('niches')
-    .select('id, name')
+    .select('id, name, description, keywords')
     .eq('id', body.nicheId)
     .eq('workspace_id', workspace.id)  // ← critical: ownership check
     .single()
@@ -87,10 +87,21 @@ export async function POST(request: NextRequest) {
 
   // ── 9. RAG + Claude ───────────────────────────────────────────
   try {
-    const signals = await ragQuery(workspace.id, body.nicheQuery)
+    // Enrich the RAG query with description so similarity search reflects user's analytical intent
+    const richQuery = [body.nicheQuery, niche.description].filter(Boolean).join('. ')
+    const signals = await ragQuery(workspace.id, richQuery)
     // Only Agency plan can inject private context
     const privateCtx = limits.privateUpload ? body.privateContext : undefined
-    const result = await generateReport(signals, brandVoice?.content ?? null, body.nicheQuery, subscription.plan, privateCtx)
+    const result = await generateReport(
+      signals,
+      brandVoice?.content ?? null,
+      body.nicheQuery,
+      subscription.plan,
+      privateCtx,
+      niche.description ?? null,
+      (niche.keywords ?? []) as string[],
+      limits.privateUpload ? body.privateContextNote : undefined
+    )
 
     // ── 10. Save via ADMIN client ─────────────────────────────────
     const { data: saved } = await supabaseAdmin

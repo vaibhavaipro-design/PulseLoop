@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useTransition } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Plan } from '@/lib/plans'
@@ -69,6 +69,268 @@ function getSignalStrength(report: Report): 'hi' | 'med' {
   return total >= 200 ? 'hi' : 'med'
 }
 
+// ── DELETE CONFIRM MODAL ──────────────────────────────────────────────────────
+function DeleteConfirmModal({
+  onConfirm,
+  onCancel,
+  loading,
+}: {
+  onConfirm: () => void
+  onCancel: () => void
+  loading: boolean
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-white rounded-2xl shadow-xl max-w-xs w-full mx-4 p-5">
+        <div className="text-sm font-bold text-slate-800 mb-1">Delete this report?</div>
+        <div className="text-xs text-slate-500 mb-5">This cannot be undone.</div>
+        <div className="flex gap-2">
+          <button
+            onClick={onCancel}
+            disabled={loading}
+            className="flex-1 h-8 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 h-8 rounded-lg bg-red-600 text-xs font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+          >
+            {loading ? (
+              <>
+                <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                </svg>
+                Deleting…
+              </>
+            ) : (
+              'Delete permanently'
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── RUN REPORT MODAL ──────────────────────────────────────────────────────────
+function RunReportModal({
+  isAgency,
+  workspaces,
+  niches,
+  atLimit,
+  running,
+  runError,
+  runWorkspaceId,
+  setRunWorkspaceId,
+  runNicheId,
+  setRunNicheId,
+  privateFile,
+  setPrivateFile,
+  privateContextNote,
+  setPrivateContextNote,
+  fileInputRef,
+  onRun,
+  onClose,
+}: {
+  isAgency: boolean
+  workspaces: Workspace[]
+  niches: Niche[]
+  atLimit: boolean
+  running: boolean
+  runError: string | null
+  runWorkspaceId: string
+  setRunWorkspaceId: (v: string) => void
+  runNicheId: string
+  setRunNicheId: (v: string) => void
+  privateFile: File | null
+  setPrivateFile: (f: File | null) => void
+  privateContextNote: string
+  setPrivateContextNote: (v: string) => void
+  fileInputRef: React.RefObject<HTMLInputElement>
+  onRun: () => void
+  onClose: () => void
+}) {
+  const nichesForWorkspace = niches.filter(n => n.workspace_id === runWorkspaceId)
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-5 space-y-4">
+        {/* Header */}
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-sm flex-shrink-0">⚡</div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-bold text-slate-800">Run a new report</div>
+            <div className="text-[11px] text-slate-400 mt-0.5">Generates a trend report from 18 EU signal sources</div>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center flex-shrink-0 transition-colors"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5 text-slate-400">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Workspace selector — Agency + multiple workspaces only */}
+        {isAgency && workspaces.length > 1 && (
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[.4px]">Workspace</label>
+            <select
+              value={runWorkspaceId}
+              onChange={e => {
+                const wsId = e.target.value
+                setRunWorkspaceId(wsId)
+                const firstNiche = niches.find(n => n.workspace_id === wsId)
+                setRunNicheId(firstNiche?.id ?? '')
+              }}
+              disabled={atLimit}
+              className="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs text-slate-700 bg-white disabled:opacity-50 disabled:cursor-not-allowed outline-none focus:ring-2 focus:ring-amber-400"
+            >
+              {workspaces.map(ws => (
+                <option key={ws.id} value={ws.id}>{ws.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Niche selector */}
+        <div className="space-y-1">
+          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[.4px]">Niche</label>
+          <select
+            value={runNicheId}
+            onChange={e => setRunNicheId(e.target.value)}
+            disabled={atLimit}
+            className="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs text-slate-700 bg-white disabled:opacity-50 disabled:cursor-not-allowed outline-none focus:ring-2 focus:ring-indigo-400"
+          >
+            {nichesForWorkspace.length === 0 && <option value="">No niches in this workspace</option>}
+            {nichesForWorkspace.map(n => (
+              <option key={n.id} value={n.id}>{n.icon ? `${n.icon} ` : ''}{n.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Private data upload — Agency only */}
+        {isAgency && (
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[.4px]">Private Data</label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".txt,.pdf,.doc,.docx,.xls,.xlsx,.csv"
+              className="hidden"
+              onChange={e => {
+                const file = e.target.files?.[0] ?? null
+                setPrivateFile(file)
+                e.target.value = ''
+              }}
+            />
+            {privateFile ? (
+              <div className="bg-white border border-amber-200 rounded-xl px-3.5 py-3 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-3.5 h-3.5 text-amber-700">
+                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/>
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-xs font-semibold text-slate-800 truncate">{privateFile.name}</div>
+                  <div className="text-[11px] text-slate-400">{(privateFile.size / 1024).toFixed(1)} KB · Will be injected into this report run</div>
+                </div>
+                <button
+                  onClick={() => setPrivateFile(null)}
+                  className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center flex-shrink-0 transition-colors"
+                  title="Remove file"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5 text-slate-400">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full bg-white border border-dashed border-slate-300 rounded-xl px-3.5 py-3 flex items-center gap-2.5 hover:border-amber-400 hover:bg-amber-50/40 transition-colors group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-amber-100 flex items-center justify-center flex-shrink-0 transition-colors">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-3.5 h-3.5 text-slate-500 group-hover:text-amber-700 transition-colors">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <div className="text-xs font-semibold text-slate-700 group-hover:text-slate-800">Upload private data into this report</div>
+                  <div className="text-[11px] text-slate-400">TXT, PDF, Excel, Word, CSV — injected as context for this run</div>
+                </div>
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 flex-shrink-0">Agency ✦</span>
+              </button>
+            )}
+
+            {/* How to use this file — only visible when a file is selected */}
+            {privateFile && (
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[.4px]">How to use this file</label>
+                <textarea
+                  value={privateContextNote}
+                  onChange={e => setPrivateContextNote(e.target.value)}
+                  rows={2}
+                  placeholder="e.g. Focus on the regulatory sections and cross-reference with market signals"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs text-slate-700 bg-white outline-none focus:ring-2 focus:ring-amber-400 resize-none placeholder:text-slate-300"
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Error */}
+        {runError && (
+          <div className="text-xs text-red-600 font-medium bg-red-50 border border-red-100 rounded-lg px-3 py-2">{runError}</div>
+        )}
+
+        {/* Actions */}
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={onClose}
+            disabled={running}
+            className="flex-1 h-9 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onRun}
+            disabled={atLimit || running || !runNicheId}
+            className={`flex-1 h-9 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              isAgency
+                ? 'bg-slate-900 text-white hover:bg-slate-800'
+                : 'bg-indigo-600 text-white hover:bg-indigo-700'
+            }`}
+          >
+            {running ? (
+              <>
+                <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                </svg>
+                Generating…
+              </>
+            ) : (
+              <>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="w-3 h-3">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Run report
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── MAIN COMPONENT ────────────────────────────────────────────────────────────
 export default function ReportsClient({
   plan,
   limits,
@@ -89,11 +351,15 @@ export default function ReportsClient({
   const [sortBy, setSortBy] = useState<'newest' | 'signals' | 'oldest'>('newest')
   const [monthFilter, setMonthFilter] = useState<string>('all')
   const [runWorkspaceId, setRunWorkspaceId] = useState(primaryWorkspaceId ?? workspaces[0]?.id ?? '')
-  const nicherForPanel = niches.filter(n => n.workspace_id === (runWorkspaceId || primaryWorkspaceId))
-  const [runNicheId, setRunNicheId] = useState(nicherForPanel[0]?.id ?? '')
+  const nichesForPanel = niches.filter(n => n.workspace_id === (runWorkspaceId || primaryWorkspaceId))
+  const [runNicheId, setRunNicheId] = useState(nichesForPanel[0]?.id ?? '')
   const [running, setRunning] = useState(false)
   const [runError, setRunError] = useState<string | null>(null)
   const [privateFile, setPrivateFile] = useState<File | null>(null)
+  const [privateContextNote, setPrivateContextNote] = useState('')
+  const [showRunModal, setShowRunModal] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const reportsLimit = limits.reportsPerMonth
@@ -166,7 +432,13 @@ export default function ReportsClient({
       const res = await fetch('/api/trend-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nicheId: runNicheId, nicheQuery: niche?.name ?? '', workspaceId: runWorkspaceId || undefined, privateContext }),
+        body: JSON.stringify({
+          nicheId: runNicheId,
+          nicheQuery: niche?.name ?? '',
+          workspaceId: runWorkspaceId || undefined,
+          privateContext,
+          privateContextNote: privateContextNote.trim() || undefined,
+        }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Generation failed')
@@ -177,14 +449,74 @@ export default function ReportsClient({
     }
   }
 
+  const handleDeleteReport = async () => {
+    if (!deletingId) return
+    setDeleteLoading(true)
+    try {
+      const res = await fetch(`/api/trend-report/${deletingId}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error ?? 'Delete failed')
+      }
+      setDeletingId(null)
+      router.refresh()
+    } catch (err: any) {
+      // Surface error without blocking — just close the modal
+      setDeletingId(null)
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
   const atLimit = usedThisMonth >= reportsLimit
 
   const nicheColorClass = isAgency ? 'text-amber-700' : 'text-indigo-600'
   const fillBarClass = isStarter && atLimit ? 'bg-red-500' : isAgency ? 'bg-amber-500' : 'bg-indigo-500'
   const usedColor = isStarter && atLimit ? 'text-red-600' : isAgency ? 'text-amber-700' : 'text-slate-800'
 
+  const runTriggerSubtitle = niches.length === 0
+    ? 'You need at least one niche before running a report'
+    : atLimit
+    ? `0 slots remaining this month — resets next month`
+    : isAgency
+    ? `${slotsLeft} slots remaining · 1h-fresh signals · custom signal types active`
+    : isStarter
+    ? `${slotsLeft} of ${reportsLimit} slots remaining · Once per week cadence`
+    : `${slotsLeft} slots remaining · 2h-fresh signals from 18 EU sources`
+
   return (
     <div className="flex-1 overflow-y-auto p-5 bg-slate-50">
+      {/* Modals */}
+      {showRunModal && (
+        <RunReportModal
+          isAgency={isAgency}
+          workspaces={workspaces}
+          niches={niches}
+          atLimit={atLimit}
+          running={running}
+          runError={runError}
+          runWorkspaceId={runWorkspaceId}
+          setRunWorkspaceId={setRunWorkspaceId}
+          runNicheId={runNicheId}
+          setRunNicheId={setRunNicheId}
+          privateFile={privateFile}
+          setPrivateFile={setPrivateFile}
+          privateContextNote={privateContextNote}
+          setPrivateContextNote={setPrivateContextNote}
+          fileInputRef={fileInputRef}
+          onRun={handleRunReport}
+          onClose={() => { setShowRunModal(false); setRunError(null) }}
+        />
+      )}
+
+      {deletingId && (
+        <DeleteConfirmModal
+          onConfirm={handleDeleteReport}
+          onCancel={() => setDeletingId(null)}
+          loading={deleteLoading}
+        />
+      )}
+
       <div className="space-y-3">
 
         {/* ── UPGRADE BANNER ── */}
@@ -311,23 +643,13 @@ export default function ReportsClient({
           </div>
         )}
 
-        {/* ── RUN PANEL ── */}
-        <div className="bg-white border border-slate-200 rounded-xl p-3 space-y-0">
+        {/* ── RUN TRIGGER ROW ── */}
+        <div className="bg-white border border-slate-200 rounded-xl p-3">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-sm flex-shrink-0">⚡</div>
             <div className="flex-1 min-w-0">
               <div className="text-xs font-semibold text-slate-800">Run a new report</div>
-              <div className="text-[11px] text-slate-400 mt-0.5">
-                {niches.length === 0
-                  ? 'You need at least one niche before running a report'
-                  : atLimit
-                  ? `0 slots remaining this month — resets next month`
-                  : isAgency
-                  ? `${slotsLeft} slots remaining · 1h-fresh signals · custom signal types active`
-                  : isStarter
-                  ? `${slotsLeft} of ${reportsLimit} slots remaining · Once per week cadence`
-                  : `${slotsLeft} slots remaining · 2h-fresh signals from 18 EU sources`}
-              </div>
+              <div className="text-[11px] text-slate-400 mt-0.5">{runTriggerSubtitle}</div>
             </div>
             {niches.length === 0 ? (
               <Link
@@ -337,126 +659,23 @@ export default function ReportsClient({
                 Add a niche →
               </Link>
             ) : (
-              <>
-                {/* Workspace selector — Agency only */}
-                {isAgency && workspaces.length > 1 && (
-                  <select
-                    value={runWorkspaceId}
-                    onChange={e => {
-                      const wsId = e.target.value
-                      setRunWorkspaceId(wsId)
-                      const firstNiche = niches.find(n => n.workspace_id === wsId)
-                      setRunNicheId(firstNiche?.id ?? '')
-                    }}
-                    disabled={atLimit}
-                    className="h-7 px-2 rounded-lg border border-slate-200 text-[11px] text-slate-600 bg-white disabled:opacity-50 disabled:cursor-not-allowed outline-none focus:ring-1 focus:ring-amber-400"
-                  >
-                    {workspaces.map(ws => (
-                      <option key={ws.id} value={ws.id}>{ws.name}</option>
-                    ))}
-                  </select>
-                )}
-                <select
-                  value={runNicheId}
-                  onChange={e => setRunNicheId(e.target.value)}
-                  disabled={atLimit}
-                  className="h-7 px-2 rounded-lg border border-slate-200 text-[11px] text-slate-600 bg-white disabled:opacity-50 disabled:cursor-not-allowed outline-none focus:ring-1 focus:ring-indigo-400"
-                >
-                  {nicherForPanel.length === 0 && <option value="">No niches in this workspace</option>}
-                  {nicherForPanel.map(n => (
-                    <option key={n.id} value={n.id}>{n.icon ? `${n.icon} ` : ''}{n.name}</option>
-                  ))}
-                </select>
-                <button
-                  onClick={handleRunReport}
-                  disabled={atLimit || running}
-                  className={`h-7 px-3 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                    isAgency
-                      ? 'bg-slate-900 text-white hover:bg-slate-800'
-                      : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                  }`}
-                >
-                  {running ? (
-                    <>
-                      <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                      </svg>
-                      Generating…
-                    </>
-                  ) : (
-                    <>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="w-3 h-3">
-                        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                      </svg>
-                      Run report
-                    </>
-                  )}
-                </button>
-              </>
-            )}
-          </div>
-
-          {runError && (
-            <div className="mt-2 text-xs text-red-600 font-medium bg-red-50 border border-red-100 rounded-lg px-3 py-2">{runError}</div>
-          )}
-        </div>
-
-        {/* Agency private data upload — separate card for clean spacing */}
-        {isAgency && (
-          <>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".txt,.pdf,.doc,.docx,.xls,.xlsx,.csv"
-              className="hidden"
-              onChange={e => {
-                const file = e.target.files?.[0] ?? null
-                setPrivateFile(file)
-                e.target.value = ''
-              }}
-            />
-            {privateFile ? (
-              <div className="bg-white border border-amber-200 rounded-xl px-3.5 py-3 flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-3.5 h-3.5 text-amber-700">
-                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/>
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-slate-800 truncate">{privateFile.name}</div>
-                  <div className="text-[11px] text-slate-400">{(privateFile.size / 1024).toFixed(1)} KB · Will be injected into this report run</div>
-                </div>
-                <button
-                  onClick={() => setPrivateFile(null)}
-                  className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center flex-shrink-0 transition-colors"
-                  title="Remove file"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3.5 h-3.5 text-slate-400">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                </button>
-              </div>
-            ) : (
               <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full bg-white border border-dashed border-slate-300 rounded-xl px-3.5 py-3 flex items-center gap-2.5 hover:border-amber-400 hover:bg-amber-50/40 transition-colors group"
+                onClick={() => setShowRunModal(true)}
+                disabled={atLimit}
+                className={`h-7 px-3 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isAgency
+                    ? 'bg-slate-900 text-white hover:bg-slate-800'
+                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                }`}
               >
-                <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-amber-100 flex items-center justify-center flex-shrink-0 transition-colors">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-3.5 h-3.5 text-slate-500 group-hover:text-amber-700 transition-colors">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0 text-left">
-                  <div className="text-xs font-semibold text-slate-700 group-hover:text-slate-800">Upload private data into next report</div>
-                  <div className="text-[11px] text-slate-400">TXT, PDF, Excel, Word, CSV — injected as context for this run</div>
-                </div>
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 flex-shrink-0">Agency ✦</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="w-3 h-3">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Run report
               </button>
             )}
-          </>
-        )}
+          </div>
+        </div>
 
         {/* ── FILTER ROW ── */}
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -576,6 +795,15 @@ export default function ReportsClient({
                         >
                           PDF
                         </Link>
+                        <button
+                          onClick={e => { e.stopPropagation(); setDeletingId(report.id) }}
+                          className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-red-50 transition-colors"
+                          title="Delete report"
+                        >
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 text-slate-300 hover:text-red-400 transition-colors">
+                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                          </svg>
+                        </button>
                       </div>
                     </div>
                   </div>

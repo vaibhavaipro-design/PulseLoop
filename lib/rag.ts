@@ -11,7 +11,7 @@ export async function ragQuery(
   workspaceId: string,
   nicheQuery: string,
   threshold = 0.65,
-  count = 10
+  count = 40
 ) {
   let embedding: number[]
   try {

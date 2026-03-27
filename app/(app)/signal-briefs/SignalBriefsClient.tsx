@@ -255,16 +255,141 @@ function SimpleMarkdown({ md }: { md: string }) {
 
 // ── Brief card (list view) ────────────────────────────────────────────────────
 
+// ── DELETE CONFIRM MODAL ──────────────────────────────────────────────────────
+
+function DeleteConfirmModal({
+  onConfirm,
+  onCancel,
+  loading,
+}: {
+  onConfirm: () => void
+  onCancel: () => void
+  loading: boolean
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-6">
+        <h3 className="text-[15px] font-bold text-slate-800 mb-1">Delete this brief?</h3>
+        <p className="text-[12px] text-slate-500 mb-5">This cannot be undone.</p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            disabled={loading}
+            className="flex-1 h-[30px] rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 h-[30px] rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors disabled:opacity-50"
+          >
+            {loading ? 'Deleting…' : 'Delete permanently'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── GENERATE BRIEF MODAL ──────────────────────────────────────────────────────
+
+function GenerateBriefModal({
+  reports,
+  workspaces,
+  plan,
+  onClose,
+  onGenerate,
+  generating,
+  error,
+}: {
+  reports: Report[]
+  workspaces: Workspace[]
+  plan: Plan
+  onClose: () => void
+  onGenerate: (reportId: string) => void
+  generating: boolean
+  error: string | null
+}) {
+  const isAgency = plan === 'agency'
+  const [wsId, setWsId] = useState(workspaces[0]?.id ?? '')
+  const wsReports = wsId ? reports.filter(r => r.workspace_id === wsId) : reports
+  const [reportId, setReportId] = useState(wsReports[0]?.id ?? '')
+
+  const handleWsChange = (newWsId: string) => {
+    setWsId(newWsId)
+    const filtered = reports.filter(r => r.workspace_id === newWsId)
+    setReportId(filtered[0]?.id ?? '')
+  }
+
+  const btnClass = isAgency ? 'bg-slate-900 hover:bg-slate-800' : 'bg-indigo-600 hover:bg-indigo-700'
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-[15px] font-bold text-slate-800">Generate Signal Brief</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 text-xl leading-none">×</button>
+        </div>
+        {error && <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-600 font-medium">{error}</div>}
+        <div className="space-y-4">
+          {isAgency && workspaces.length > 1 && (
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Workspace</label>
+              <select
+                value={wsId}
+                onChange={e => handleWsChange(e.target.value)}
+                className="w-full h-[30px] px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+              >
+                {workspaces.map(ws => <option key={ws.id} value={ws.id}>{ws.name}</option>)}
+              </select>
+            </div>
+          )}
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Source Report</label>
+            <select
+              value={reportId}
+              onChange={e => setReportId(e.target.value)}
+              className="w-full h-[30px] px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+            >
+              {wsReports.length === 0 && <option value="">No reports available</option>}
+              {wsReports.map(r => (
+                <option key={r.id} value={r.id}>
+                  {r.niches?.icon ? `${r.niches.icon} ` : ''}{r.niches?.name ?? 'Report'} — {r.title?.slice(0, 40) ?? 'Trend Report'}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="flex gap-3 mt-5">
+          <button onClick={onClose} className="flex-1 h-[30px] rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors">Cancel</button>
+          <button
+            onClick={() => onGenerate(reportId)}
+            disabled={generating || !reportId}
+            className={`flex-1 h-[30px] rounded-lg text-white text-xs font-bold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${btnClass}`}
+          >
+            {generating ? 'Generating…' : 'Generate →'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Brief card (list view) ────────────────────────────────────────────────────
+
 function BriefCard({
   brief,
   isAgency,
   isLatest,
   onView,
+  onDelete,
 }: {
   brief: SignalBrief
   isAgency: boolean
   isLatest: boolean
   onView: () => void
+  onDelete: (id: string) => void
 }) {
   const [sharing, startShare] = useTransition()
   const [shareActive, setShareActive] = useState(brief.share_active)
@@ -344,6 +469,15 @@ function BriefCard({
       <div className="flex items-center gap-1 px-3 py-2 border-t border-slate-100 bg-slate-50">
         <span className="text-[10px] text-slate-400">{weekLabel}</span>
         <div className="ml-auto flex gap-0.5">
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(brief.id) }}
+            className="h-[26px] w-[26px] rounded-md inline-flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+            title="Delete brief"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-3.5 h-3.5">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+            </svg>
+          </button>
           <button
             onClick={onView}
             className={`h-[26px] px-2 rounded-md text-[11px] font-medium ${isAgency ? 'text-amber-700 hover:bg-amber-50' : 'text-indigo-600 hover:bg-indigo-50'}`}
@@ -592,10 +726,11 @@ export default function SignalBriefsClient({
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [activeWorkspaceId, setActiveWorkspaceId] = useState(primaryWorkspaceId ?? workspaces[0]?.id ?? '')
   const [activeNicheId, setActiveNicheId] = useState<string | null>(null)
-  const [genReportId, setGenReportId] = useState('')
-  const [genWorkspaceId, setGenWorkspaceId] = useState(primaryWorkspaceId ?? workspaces[0]?.id ?? '')
   const [generating, setGenerating] = useState(false)
   const [genError, setGenError] = useState<string | null>(null)
+  const [showGenModal, setShowGenModal] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   const selectedBrief = briefs.find(b => b.id === selectedId) ?? null
 
@@ -619,11 +754,9 @@ export default function SignalBriefsClient({
   const countByWorkspace: Record<string, number> = {}
   briefs.forEach(b => { countByWorkspace[b.workspace_id] = (countByWorkspace[b.workspace_id] ?? 0) + 1 })
 
-  const panelReports = reports.filter(r => r.workspace_id === (isAgency ? genWorkspaceId : (primaryWorkspaceId ?? workspaces[0]?.id)))
   const atLimit = briefLimit > 0 && usedThisMonth >= briefLimit
 
-  const handleGenerate = async () => {
-    const reportId = genReportId || panelReports[0]?.id
+  const handleGenerate = async (reportId: string) => {
     if (!reportId) return
     setGenerating(true)
     setGenError(null)
@@ -635,11 +768,23 @@ export default function SignalBriefsClient({
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Generation failed')
+      setShowGenModal(false)
       router.refresh()
     } catch (err: any) {
       setGenError(err.message)
     } finally {
       setGenerating(false)
+    }
+  }
+
+  const handleDeleteBrief = async (id: string) => {
+    setDeleteLoading(true)
+    try {
+      await fetch(`/api/signal-brief/${id}`, { method: 'DELETE' })
+      setDeletingId(null)
+      router.refresh()
+    } finally {
+      setDeleteLoading(false)
     }
   }
 
@@ -788,7 +933,7 @@ export default function SignalBriefsClient({
         </div>
       )}
 
-      {/* ── Generate panel (Pro + Agency) ──────────────────────────────────── */}
+      {/* ── Generate trigger (Pro + Agency) ──────────────────────────────────── */}
       {!isStarter && (
         <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 mb-4 flex items-center gap-3">
           <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[15px] flex-shrink-0 ${isAgency ? 'bg-amber-100' : 'bg-indigo-50'}`}>⚡</div>
@@ -801,49 +946,14 @@ export default function SignalBriefsClient({
           {isAgency && (
             <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 flex-shrink-0">✦ White-label</span>
           )}
-          {isAgency && workspaces.length > 1 && (
-            <select
-              value={genWorkspaceId}
-              onChange={e => { setGenWorkspaceId(e.target.value); setGenReportId('') }}
-              className="h-7 px-2 rounded-[7px] border border-slate-200 text-[11px] text-slate-600 bg-white outline-none cursor-pointer"
-            >
-              {workspaces.map(ws => <option key={ws.id} value={ws.id}>{ws.name}</option>)}
-            </select>
-          )}
-          <select
-            value={genReportId || panelReports[0]?.id || ''}
-            onChange={e => setGenReportId(e.target.value)}
-            className="h-7 px-2 rounded-[7px] border border-slate-200 text-[11px] text-slate-600 bg-white outline-none cursor-pointer w-[175px]"
-          >
-            {panelReports.length === 0
-              ? <option value="">No reports yet</option>
-              : panelReports.map(r => (
-                <option key={r.id} value={r.id}>
-                  {(r.niches as any)?.icon ? `${(r.niches as any).icon} ` : ''}{r.title ?? 'Trend Report'}
-                </option>
-              ))
-            }
-          </select>
           <button
-            onClick={handleGenerate}
-            disabled={generating || atLimit || panelReports.length === 0}
+            onClick={() => setShowGenModal(true)}
+            disabled={atLimit || reports.length === 0}
             className={`h-[30px] px-3 rounded-lg text-[12px] font-semibold text-white inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed ${isAgency ? 'bg-slate-900' : 'bg-indigo-600 hover:bg-indigo-700'}`}
           >
-            {generating ? (
-              <>
-                <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                </svg>
-                Generating…
-              </>
-            ) : 'Generate →'}
+            Generate →
           </button>
         </div>
-      )}
-
-      {genError && (
-        <div className="mb-3 px-3 py-2 bg-red-50 border border-red-100 rounded-lg text-[12px] text-red-600 font-medium">{genError}</div>
       )}
 
       {/* ── Filter row (Pro + Agency) ───────────────────────────────────────── */}
@@ -897,10 +1007,32 @@ export default function SignalBriefsClient({
                 isAgency={isAgency}
                 isLatest={latestIds.has(brief.id)}
                 onView={() => { setSelectedId(brief.id); setView('detail') }}
+                onDelete={(id) => setDeletingId(id)}
               />
             ))}
           </div>
         )
+      )}
+
+      {/* Modals */}
+      {showGenModal && (
+        <GenerateBriefModal
+          reports={reports}
+          workspaces={workspaces}
+          plan={plan}
+          onClose={() => { setShowGenModal(false); setGenError(null) }}
+          onGenerate={handleGenerate}
+          generating={generating}
+          error={genError}
+        />
+      )}
+
+      {deletingId && (
+        <DeleteConfirmModal
+          onConfirm={() => handleDeleteBrief(deletingId)}
+          onCancel={() => setDeletingId(null)}
+          loading={deleteLoading}
+        />
       )}
     </div>
   )

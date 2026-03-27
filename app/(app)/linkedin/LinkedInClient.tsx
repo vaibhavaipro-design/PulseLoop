@@ -1,13 +1,15 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Plan } from '@/lib/plans'
 
 // ── Types ─────────────────────────────────────────────────────────
+interface Workspace { id: string; name: string }
 interface Variant { type: string; content: string }
 interface LinkedInPost {
   id: string
+  workspace_id: string
   variants: Variant[]
   newsletter_id: string
   newsletters: {
@@ -19,10 +21,11 @@ interface LinkedInPost {
 interface Newsletter {
   id: string
   angle: string | null
-  trend_reports: { id: string; title: string; niches: { name: string } | null } | null
+  trend_reports: { id: string; workspace_id: string; title: string; niches: { name: string } | null } | null
 }
 interface TrendReport {
   id: string
+  workspace_id: string
   title: string
   niches: { name: string } | null
 }
@@ -131,10 +134,186 @@ function normalizeVariants(variants: Variant[]): Variant[] {
   return variants
 }
 
+// ── DELETE CONFIRM MODAL ──────────────────────────────────────────
+
+function DeleteConfirmModal({
+  onConfirm,
+  onCancel,
+  loading,
+}: {
+  onConfirm: () => void
+  onCancel: () => void
+  loading: boolean
+}) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,.4)', backdropFilter: 'blur(4px)' }}>
+      <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 25px 50px -12px rgba(0,0,0,.15)', width: '100%', maxWidth: 320, padding: 24 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: C.tp, marginBottom: 4 }}>Delete this post set?</h3>
+        <p style={{ fontSize: 12, color: C.ts, marginBottom: 20 }}>This cannot be undone.</p>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button
+            onClick={onCancel}
+            disabled={loading}
+            style={{ flex: 1, height: 30, borderRadius: 8, border: `1px solid ${C.br}`, fontSize: 12, fontWeight: 600, color: C.ts, cursor: 'pointer', background: '#fff', opacity: loading ? 0.5 : 1 }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            style={{ flex: 1, height: 30, borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer', background: C.da, opacity: loading ? 0.5 : 1 }}
+          >
+            {loading ? 'Deleting…' : 'Delete permanently'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── GENERATE LINKEDIN MODAL ─────────────────────────────────────────
+
+function GenerateLinkedInModal({
+  newsletters,
+  trendReports,
+  workspaces,
+  plan,
+  onClose,
+  onGenerate,
+  generating,
+  error,
+}: {
+  newsletters: Newsletter[]
+  trendReports: TrendReport[]
+  workspaces: Workspace[]
+  plan: Plan
+  onClose: () => void
+  onGenerate: (newsletterId: string) => void
+  generating: boolean
+  error: string | null
+}) {
+  const isAg = plan === 'agency'
+  const isS = plan === 'starter'
+  const [wsId, setWsId] = useState(workspaces[0]?.id ?? '')
+  const [genSrc, setGenSrc] = useState<'report' | 'brief' | 'newsletter'>('newsletter')
+  const [genId, setGenId] = useState('')
+
+  // Filter source items by selected workspace
+  const wsNewsletters = isAg && wsId ? newsletters.filter(n => n.trend_reports?.workspace_id === wsId) : newsletters
+  const wsReports = isAg && wsId ? trendReports.filter(r => r.workspace_id === wsId) : trendReports
+
+  const genDropdownItems: Array<{ id: string; label: string }> =
+    genSrc === 'newsletter'
+      ? wsNewsletters.map(n => ({
+          id: n.id,
+          label: n.trend_reports
+            ? `📧 ${n.trend_reports.niches?.name ?? 'Newsletter'} · ${n.trend_reports.title?.slice(0, 35) ?? 'Newsletter'}`
+            : `📧 Newsletter`,
+        }))
+      : genSrc === 'report'
+      ? wsReports.map(r => ({
+          id: r.id,
+          label: `📊 ${r.niches?.name ?? 'Report'} · ${r.title?.slice(0, 40) ?? 'Trend Report'}`,
+        }))
+      : []
+
+  const bgOn = isAg ? 'rgba(245,166,35,.15)' : C.al
+  const colorOn = isAg ? '#9A6600' : C.a
+  const btnBg = isAg ? C.ag : C.li
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, background: 'rgba(0,0,0,.4)', backdropFilter: 'blur(4px)' }}>
+      <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 25px 50px -12px rgba(0,0,0,.15)', width: '100%', maxWidth: 420, padding: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: C.tp }}>Generate LinkedIn Posts</h3>
+          <button onClick={onClose} style={{ color: C.tt, fontSize: 20, background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1 }}>×</button>
+        </div>
+        {error && <div style={{ marginBottom: 16, padding: '10px 12px', background: C.dab, borderRadius: 8, fontSize: 12, color: C.da }}>{error}</div>}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Workspace selector */}
+          {isAg && workspaces.length > 1 && (
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: C.tt, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>Workspace</div>
+              <select
+                value={wsId}
+                onChange={e => setWsId(e.target.value)}
+                style={{ width: '100%', height: 30, padding: '0 10px', borderRadius: 8, border: `1px solid ${C.br}`, fontSize: 12, color: C.ts, background: C.bm, fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}
+              >
+                {workspaces.map(ws => <option key={ws.id} value={ws.id}>{ws.name}</option>)}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: C.tt, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Source type</div>
+            <div style={{ display: 'flex', border: `1px solid ${C.br}`, borderRadius: 8, overflow: 'hidden' }}>
+              {([
+                { key: 'report' as const, label: '📊 Trend Report', disabled: false },
+                { key: 'brief' as const, label: '📋 Signal Brief', disabled: isS },
+                { key: 'newsletter' as const, label: '📧 Newsletter', disabled: isS },
+              ]).map(({ key, label, disabled }) => (
+                <button
+                  key={key}
+                  disabled={disabled}
+                  onClick={() => { if (!disabled) { setGenSrc(key); setGenId('') } }}
+                  title={disabled ? 'Upgrade to Pro' : undefined}
+                  style={{
+                    flex: 1, height: 28, fontSize: 11, fontWeight: 600, cursor: disabled ? 'not-allowed' : 'pointer',
+                    border: 'none', background: genSrc === key ? bgOn : '#fff', color: genSrc === key ? colorOn : C.ts,
+                    borderRight: `1px solid ${C.br}`, opacity: disabled ? 0.4 : 1,
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: C.tt, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+              {genSrc === 'report' ? 'Select Report' : genSrc === 'brief' ? 'Select Signal Brief' : 'Select Newsletter'}
+            </div>
+            <select
+              value={genId}
+              onChange={e => setGenId(e.target.value)}
+              style={{ width: '100%', height: 30, padding: '0 10px', borderRadius: 8, border: `1px solid ${C.br}`, fontSize: 12, color: C.ts, background: C.bm, fontFamily: 'inherit', cursor: 'pointer', outline: 'none' }}
+            >
+              <option value="">Select…</option>
+              {genDropdownItems.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 12, marginTop: 20 }}>
+          <button
+            onClick={onClose}
+            style={{ flex: 1, height: 30, borderRadius: 8, border: `1px solid ${C.br}`, fontSize: 12, fontWeight: 600, color: C.ts, cursor: 'pointer', background: '#fff' }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => { if (genId) onGenerate(genId) }}
+            disabled={generating || !genId}
+            style={{
+              flex: 1, height: 30, borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 700, color: '#fff', cursor: generating || !genId ? 'not-allowed' : 'pointer',
+              background: btnBg, opacity: generating || !genId ? 0.5 : 1,
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+            }}
+          >
+            {generating ? 'Generating…' : 'Generate →'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Post set card ──────────────────────────────────────────────────
 const PREVIEW_CHARS = 180
 
-function PostSetCard({ post, plan }: { post: LinkedInPost; plan: Plan }) {
+function PostSetCard({ post, plan, onDelete }: { post: LinkedInPost; plan: Plan; onDelete: (id: string) => void }) {
   const isAg = plan === 'agency'
   const [expanded, setExpanded] = useState(false)
   const newsletter = post.newsletters
@@ -272,6 +451,19 @@ function PostSetCard({ post, plan }: { post: LinkedInPost; plan: Plan }) {
           }}>
             Regenerate
           </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(post.id) }}
+            style={{
+              width: 26, height: 26, borderRadius: 6, background: 'transparent',
+              border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              color: C.tt,
+            }}
+            title="Delete post set"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{ width: 14, height: 14 }}>
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+            </svg>
+          </button>
         </div>
       </div>}
     </div>
@@ -285,6 +477,7 @@ export default function LinkedInClient({
   trendReports,
   plan,
   locked,
+  workspaces,
   workspaceId,
   setsUsedThisMonth,
   setsLimit,
@@ -294,6 +487,7 @@ export default function LinkedInClient({
   trendReports: TrendReport[]
   plan: Plan
   locked: boolean
+  workspaces: Workspace[]
   workspaceId: string
   setsUsedThisMonth: number
   setsLimit: number
@@ -305,68 +499,79 @@ export default function LinkedInClient({
   const isAg = plan === 'agency'
 
   // Filter state
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState(workspaceId)
   const [filterSource, setFilterSource] = useState<'all' | 'reports' | 'briefs' | 'newsletters'>('all')
   const [filterNiche,  setFilterNiche]  = useState<string | null>(null)
 
-  // Generate panel state
-  const [genSrc,    setGenSrc]    = useState<'report' | 'brief' | 'newsletter'>('newsletter')
-  const [genId,     setGenId]     = useState('')
+  // Modal + delete state
+  const [showGenModal, setShowGenModal] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [genError,  setGenError]  = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
-  // Unique niches from posts
-  const niches = Array.from(new Set(
-    posts
-      .map(p => p.newsletters?.trend_reports?.niches?.name)
-      .filter(Boolean) as string[]
-  ))
+  // Unique niches from posts (scoped to workspace if isAg)
+  const niches = useMemo(() => {
+    let base = posts
+    if (isAg && activeWorkspaceId) base = base.filter(p => p.workspace_id === activeWorkspaceId)
+    return Array.from(new Set(
+      base
+        .map(p => p.newsletters?.trend_reports?.niches?.name)
+        .filter(Boolean) as string[]
+    ))
+  }, [posts, isAg, activeWorkspaceId])
 
   // Filtered posts (all posts currently come from newsletters)
-  const filteredPosts = posts.filter(p => {
-    if (filterSource === 'reports')     return false // no report-only posts yet
-    if (filterSource === 'briefs')      return false // no brief-only posts yet
-    if (filterSource === 'newsletters') return true
-    if (filterNiche) return p.newsletters?.trend_reports?.niches?.name === filterNiche
-    return true
-  })
+  const filteredPosts = useMemo(() => {
+    return posts.filter(p => {
+      // Workspace filter
+      if (isAg && activeWorkspaceId && p.workspace_id !== activeWorkspaceId) return false
+      
+      // Source filter
+      if (filterSource === 'reports') return false
+      if (filterSource === 'briefs') return false
+      if (filterSource === 'newsletters' && !p.newsletter_id) return false
+      
+      // Niche filter
+      if (filterNiche) {
+        const pNiche = p.newsletters?.trend_reports?.niches?.name
+        if (pNiche !== filterNiche) return false
+      }
+      
+      return true
+    })
+  }, [posts, isAg, activeWorkspaceId, filterSource, filterNiche])
 
-  // Generate dropdown items
-  const genDropdownItems: Array<{ id: string; label: string }> =
-    genSrc === 'newsletter'
-      ? newsletters.map(n => ({
-          id: n.id,
-          label: n.trend_reports
-            ? `📧 ${n.trend_reports.niches?.name ?? 'Newsletter'} · ${n.trend_reports.title?.slice(0, 35) ?? 'Newsletter'}`
-            : `📧 Newsletter`,
-        }))
-      : genSrc === 'report'
-      ? trendReports.map(r => ({
-          id: r.id,
-          label: `📊 ${r.niches?.name ?? 'Report'} · ${r.title?.slice(0, 40) ?? 'Trend Report'}`,
-        }))
-      : []
+  const genDropdownItems: Array<{ id: string; label: string }> = []
 
-  async function handleGenerate() {
-    if (!genId) { setGenError('Please select a source to generate from.'); return }
-    if (genSrc !== 'newsletter') {
-      setGenError('Direct generation from reports and signal briefs is coming soon. Create a newsletter first, then LinkedIn posts are generated automatically.')
-      return
-    }
+  async function handleGenerate(newsletterId: string) {
     setGenError(null)
     setGenerating(true)
     try {
       const res = await fetch('/api/linkedin-posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newsletterId: genId }),
+        body: JSON.stringify({ newsletterId }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Generation failed')
+      setShowGenModal(false)
       startTransition(() => router.refresh())
     } catch (e: any) {
       setGenError(e.message)
     } finally {
       setGenerating(false)
+    }
+  }
+
+  async function handleDeletePost(id: string) {
+    setDeleteLoading(true)
+    try {
+      await fetch(`/api/linkedin-posts/${id}`, { method: 'DELETE' })
+      setDeletingId(null)
+      startTransition(() => router.refresh())
+    } finally {
+      setDeleteLoading(false)
     }
   }
 
@@ -476,13 +681,61 @@ export default function LinkedInClient({
           </a>
         </div>
       )}
-{/* Agency banner intentionally omitted — agency users already know their plan features */}
+      {/* Agency workspace tabs */}
+      {isAg && workspaces.length > 0 && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: C.tt, textTransform: 'uppercase', letterSpacing: '.6px', marginBottom: 6 }}>Workspace</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {workspaces.map(ws => (
+              <button
+                key={ws.id}
+                onClick={() => { setActiveWorkspaceId(ws.id); setFilterNiche('all') }}
+                style={{
+                  height: 28, padding: '0 12px', borderRadius: 7, fontSize: 11, fontWeight: 600,
+                  border: '1px solid', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                  transition: 'all .15s ease',
+                  background: activeWorkspaceId === ws.id ? '#000' : '#fff',
+                  color: activeWorkspaceId === ws.id ? '#fff' : C.ts,
+                  borderColor: activeWorkspaceId === ws.id ? '#000' : C.br,
+                }}
+              >
+                {ws.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
-      {/* ── Stats grid ────────────────────────────────────────── */}
+      {/* Agency workspace tabs */}
+      {isAg && workspaces.length > 0 && (
+        <div style={{ marginBottom: 12 }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: C.tt, textTransform: 'uppercase', letterSpacing: '.6px', marginBottom: 6 }}>Workspace</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {workspaces.map(ws => (
+              <button
+                key={ws.id}
+                onClick={() => { setActiveWorkspaceId(ws.id); setFilterNiche(null) }}
+                style={{
+                  height: 28, padding: '0 12px', borderRadius: 7, fontSize: 11, fontWeight: 600,
+                  border: '1px solid', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                  transition: 'all .15s ease',
+                  background: activeWorkspaceId === ws.id ? '#000' : '#fff',
+                  color: activeWorkspaceId === ws.id ? '#fff' : C.ts,
+                  borderColor: activeWorkspaceId === ws.id ? '#000' : C.br,
+                }}
+              >
+                {ws.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Stats grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 8, marginBottom: 14 }}>
         {[
           { label: 'Sets generated', value: String(setsUsedThisMonth), sub: setsAllowedLabel },
-          { label: 'Variants/set',   value: '3', sub: 'Hook · Insight · CTA' },
+          { label: 'Variants/set',   value: '3', sub: 'Hook \u00b7 Insight \u00b7 CTA' },
           { label: 'Sources',        value: sourcesLabel, sub: '90-day RAG memory', small: true },
           { label: 'White-label',    value: wlLabel, sub: isAg ? 'Client brand voice' : 'Agency only', small: true },
         ].map(({ label, value, sub, small }) => (
@@ -494,108 +747,36 @@ export default function LinkedInClient({
         ))}
       </div>
 
-      {/* ── Generate panel ────────────────────────────────────── */}
+      {/* Generate trigger */}
       <div style={{ background: '#fff', border: `1px solid ${C.br}`, borderRadius: 12, padding: '12px 15px', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 32, height: 32, borderRadius: 8, flexShrink: 0,
             background: isAg ? 'rgba(245,166,35,.15)' : C.lil,
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15,
-          }}>💼</div>
+          }}>{'💼'}</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: C.tp }}>Generate 3 LinkedIn post variants</div>
             <div style={{ fontSize: 11, color: C.tt, marginTop: 1 }}>
-              Hook · Insight · CTA — all in your brand voice · copy-paste ready · cited sources
-              {isAg && ' · white-label · custom signals · private data'}
+              Hook {'\u00b7'} Insight {'\u00b7'} CTA {'\u2014'} all in your brand voice {'\u00b7'} copy-paste ready {'\u00b7'} cited sources
+              {isAg && ' \u00b7 white-label \u00b7 custom signals \u00b7 private data'}
             </div>
           </div>
           {isAg && (
-            <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 9999, background: 'rgba(245,166,35,.15)', color: '#9A6600' }}>✦ White-label</span>
+            <span style={{ fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 9999, background: 'rgba(245,166,35,.15)', color: '#9A6600' }}>{'\u2726'} White-label</span>
           )}
-        </div>
-
-        <div style={{ display: 'flex', gap: 8, marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.br}`, flexWrap: 'wrap' as const, alignItems: 'center' }}>
-          <span style={{ fontSize: 11, color: C.tt, fontWeight: 500, flexShrink: 0 }}>From:</span>
-
-          {/* Source type toggle */}
-          <div style={{ display: 'flex', border: `1px solid ${C.br}`, borderRadius: 8, overflow: 'hidden' }}>
-            {([
-              { key: 'report',     label: '📊 Trend Report',  disabled: false },
-              { key: 'brief',      label: '📋 Signal Brief',  disabled: isS },
-              { key: 'newsletter', label: '📧 Newsletter',    disabled: isS },
-            ] as const).map(({ key, label, disabled }) => {
-              const isOn = genSrc === key
-              const bgOn = isAg ? 'rgba(245,166,35,.15)' : C.al
-              const colorOn = isAg ? '#9A6600' : C.a
-              return (
-                <button
-                  key={key}
-                  disabled={disabled}
-                  onClick={() => { if (!disabled) { setGenSrc(key); setGenId('') } }}
-                  title={disabled ? 'Upgrade to Pro' : undefined}
-                  style={{
-                    height: 28, padding: '0 10px', fontSize: 11, fontWeight: 600, cursor: disabled ? 'not-allowed' : 'pointer',
-                    border: 'none', background: isOn ? bgOn : '#fff', color: isOn ? colorOn : C.ts,
-                    borderRight: `1px solid ${C.br}`, opacity: disabled ? 0.4 : 1,
-                    display: 'inline-flex', alignItems: 'center', gap: 5,
-                  }}
-                >
-                  {label}
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Source dropdown */}
-          <select
-            value={genId}
-            onChange={e => setGenId(e.target.value)}
-            style={{
-              height: 28, padding: '0 8px', borderRadius: 7, border: `1px solid ${C.br}`,
-              fontSize: 11, color: C.ts, background: '#fff', flex: 1, minWidth: 150,
-              fontFamily: 'inherit', cursor: 'pointer', outline: 'none',
-            }}
-          >
-            <option value="">Select {genSrc === 'report' ? 'report' : genSrc === 'brief' ? 'signal brief' : 'newsletter'}…</option>
-            {genDropdownItems.map(item => (
-              <option key={item.id} value={item.id}>{item.label}</option>
-            ))}
-          </select>
-
           <button
-            onClick={handleGenerate}
-            disabled={generating || !genId}
+            onClick={() => setShowGenModal(true)}
             style={{
               height: 30, padding: '0 14px', borderRadius: 8, color: '#fff', fontSize: 12, fontWeight: 600,
-              border: 'none', cursor: generating || !genId ? 'not-allowed' : 'pointer',
+              border: 'none', cursor: 'pointer',
               background: isAg ? C.ag : C.li,
-              opacity: generating || !genId ? 0.6 : 1,
               display: 'inline-flex', alignItems: 'center', gap: 5,
             }}
           >
-            {generating ? 'Generating…' : 'Generate →'}
+            {'Generate \u2192'}
           </button>
-
-          {/* Coming soon pill */}
-          {!isS && (
-            <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 6, paddingTop: 4 }}>
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', gap: 4,
-                background: '#F0FDF4', color: '#166534', border: '1px solid #BBF7D0',
-                borderRadius: 9999, fontSize: 10, fontWeight: 600, padding: '2px 8px',
-              }}>
-                🗓 Direct scheduling — coming soon
-              </span>
-              <span style={{ fontSize: 11, color: C.tt }}>Posts are copy-paste ready — direct LinkedIn scheduling is planned for a future release</span>
-            </div>
-          )}
         </div>
-
-        {genError && (
-          <div style={{ marginTop: 8, fontSize: 11, color: C.da, background: C.dab, padding: '8px 10px', borderRadius: 7 }}>
-            {genError}
-          </div>
-        )}
       </div>
 
       {/* ── Filter row ────────────────────────────────────────── */}
@@ -624,7 +805,7 @@ export default function LinkedInClient({
             </button>
           )
         })}
-        {niches.map(niche => (
+        {niches.map((niche: string) => (
           <button
             key={niche}
             onClick={() => setFilterNiche(filterNiche === niche ? null : niche)}
@@ -671,9 +852,31 @@ export default function LinkedInClient({
           </a>
         </div>
       ) : (
-        filteredPosts.map(post => (
-          <PostSetCard key={post.id} post={post} plan={plan} />
+        filteredPosts.map((post: LinkedInPost) => (
+          <PostSetCard key={post.id} post={post} plan={plan} onDelete={(id) => setDeletingId(id)} />
         ))
+      )}
+
+      {/* Modals */}
+      {showGenModal && (
+        <GenerateLinkedInModal
+          newsletters={newsletters}
+          trendReports={trendReports}
+          workspaces={workspaces}
+          plan={plan}
+          onClose={() => { setShowGenModal(false); setGenError(null) }}
+          onGenerate={handleGenerate}
+          generating={generating}
+          error={genError}
+        />
+      )}
+
+      {deletingId && (
+        <DeleteConfirmModal
+          onConfirm={() => handleDeletePost(deletingId)}
+          onCancel={() => setDeletingId(null)}
+          loading={deleteLoading}
+        />
       )}
     </div>
   )

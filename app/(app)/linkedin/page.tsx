@@ -14,11 +14,11 @@ export default async function LinkedInPage() {
 
   const { data: workspaceRows } = await supabase
     .from('workspaces')
-    .select('id')
+    .select('id, name')
     .eq('user_id', user!.id)
     .order('created_at', { ascending: true })
-    .limit(1)
-  const workspace = workspaceRows?.[0] ?? null
+  const workspaces = workspaceRows ?? []
+  const workspace = workspaces[0] ?? null
 
   const { data: subscription } = workspace
     ? await supabaseAdmin
@@ -72,6 +72,7 @@ export default async function LinkedInPage() {
         trendReports={(trendReportsRes.data ?? []) as any}
         plan={plan}
         locked={locked}
+        workspaces={workspaces}
         workspaceId={workspace?.id ?? ''}
         setsUsedThisMonth={usageRes.data?.count ?? 0}
         setsLimit={limits.linkedinPosts}

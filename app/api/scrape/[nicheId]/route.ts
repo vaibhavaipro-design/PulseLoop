@@ -81,8 +81,12 @@ export async function POST(
   const nicheKeywords: string[] = (niche.keywords ?? []) as string[]
   const nicheSources: string[] = (niche.sources ?? []) as string[]
 
-  // Rich search query: niche name + top 2 keywords
-  const searchQuery = [niche.name, ...nicheKeywords.slice(0, 2)].join(' ')
+  // Rich search query: niche name + top 3 keywords + up to 3 meaningful terms from description
+  const descTerms = (niche.description ?? '')
+    .split(/\s+/)
+    .filter((w: string) => w.length > 3)
+    .slice(0, 3)
+  const searchQuery = [niche.name, ...nicheKeywords.slice(0, 3), ...descTerms].join(' ')
 
   // Keyword filter set for RSS feeds (include 2-char terms like "ai")
   const keywords = [
@@ -147,7 +151,7 @@ export async function POST(
     if (!has(feed.platformKey)) continue
     try {
       const parsedFeed = await parser.parseURL(feed.url)
-      const articles = parsedFeed.items.slice(0, 10)
+      const articles = parsedFeed.items.slice(0, 25)
 
       for (const article of articles) {
         const titleLower = (article.title ?? '').toLowerCase()

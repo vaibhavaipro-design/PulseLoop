@@ -21,6 +21,7 @@ export const TrendReportSchema = z.object({
   nicheQuery: z.string().min(3).max(200),
   workspaceId: z.string().uuid().optional(),
   privateContext: z.string().max(50000).optional(),
+  privateContextNote: z.string().max(500).optional(),
 })
 
 export const SignalBriefSchema = z.object({

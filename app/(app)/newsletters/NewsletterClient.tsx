@@ -255,28 +255,75 @@ function ExportDropdown({ newsletter }: { newsletter?: any }) {
   )
 }
 
+// ── DELETE CONFIRM MODAL ──────────────────────────────────────────────────────
+
+function DeleteConfirmModal({
+  title,
+  onConfirm,
+  onCancel,
+  loading,
+}: {
+  title: string
+  onConfirm: () => void
+  onCancel: () => void
+  loading: boolean
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-6">
+        <h3 className="text-[15px] font-bold text-slate-800 mb-1">{title}</h3>
+        <p className="text-[12px] text-slate-500 mb-5">This cannot be undone.</p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            disabled={loading}
+            className="flex-1 h-[30px] rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 h-[30px] rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors disabled:opacity-50"
+          >
+            {loading ? 'Deleting…' : 'Delete permanently'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── GENERATE MODAL ────────────────────────────────────────────────────────────
 
 function GenerateModal({
   reports,
   signalBriefs,
   plan,
+  workspaces,
   onClose,
   onGenerated,
 }: {
   reports: any[]
   signalBriefs: any[]
   plan: Plan
+  workspaces: Array<{ id: string; name: string }>
   onClose: () => void
   onGenerated: () => void
 }) {
+  const isAgency = plan === 'agency'
+  const [wsId, setWsId] = useState(workspaces[0]?.id ?? '')
   const [source, setSource] = useState<'report' | 'brief'>('report')
-  const [reportId, setReportId] = useState(reports[0]?.id ?? '')
-  const [briefId, setBriefId] = useState(signalBriefs[0]?.id ?? '')
   const [angle, setAngle] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const isAgency = plan === 'agency'
+
+  // Filter reports/briefs by selected workspace
+  const wsReportsModal = wsId ? reports.filter(r => r.workspace_id === wsId) : reports
+  const wsBriefsModal = wsId ? signalBriefs.filter(b => b.workspace_id === wsId) : signalBriefs
+
+  const [reportId, setReportId] = useState(wsReportsModal[0]?.id ?? '')
+  const [briefId, setBriefId] = useState(wsBriefsModal[0]?.id ?? '')
 
   const btnClass = isAgency
     ? 'bg-slate-900 hover:bg-slate-800'
@@ -285,7 +332,15 @@ function GenerateModal({
   const activeTabClass = isAgency ? 'bg-amber-50 text-amber-700' : 'bg-indigo-50 text-indigo-600'
   const inactiveTabClass = 'bg-white text-slate-500'
 
-  const canGenerate = source === 'report' ? !!reportId && reports.length > 0 : !!briefId && signalBriefs.length > 0
+  const canGenerate = source === 'report' ? !!reportId && wsReportsModal.length > 0 : !!briefId && wsBriefsModal.length > 0
+
+  const handleWorkspaceChange = (newWsId: string) => {
+    setWsId(newWsId)
+    const filteredReports = reports.filter(r => r.workspace_id === newWsId)
+    const filteredBriefs = signalBriefs.filter(b => b.workspace_id === newWsId)
+    setReportId(filteredReports[0]?.id ?? '')
+    setBriefId(filteredBriefs[0]?.id ?? '')
+  }
 
   const handleGenerate = async () => {
     if (!canGenerate) return
@@ -331,6 +386,20 @@ function GenerateModal({
         )}
 
         <div className="space-y-4">
+          {/* Workspace selector — Agency + multiple workspaces only */}
+          {isAgency && workspaces.length > 1 && (
+            <div>
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Workspace</label>
+              <select
+                value={wsId}
+                onChange={e => handleWorkspaceChange(e.target.value)}
+                className="w-full h-[30px] px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
+              >
+                {workspaces.map(ws => <option key={ws.id} value={ws.id}>{ws.name}</option>)}
+              </select>
+            </div>
+          )}
+
           <div>
             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
               Generate from
@@ -361,8 +430,8 @@ function GenerateModal({
                 onChange={(e) => setReportId(e.target.value)}
                 className="w-full h-[30px] px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
               >
-                {reports.length === 0 && <option value="">No reports available</option>}
-                {reports.map((r) => (
+                {wsReportsModal.length === 0 && <option value="">No reports available</option>}
+                {wsReportsModal.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.title ?? 'Trend Report'} — {(r.niches as any)?.name ?? ''}
                   </option>
@@ -379,8 +448,8 @@ function GenerateModal({
                 onChange={(e) => setBriefId(e.target.value)}
                 className="w-full h-[30px] px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 cursor-pointer"
               >
-                {signalBriefs.length === 0 && <option value="">No signal briefs available</option>}
-                {signalBriefs.map((b) => (
+                {wsBriefsModal.length === 0 && <option value="">No signal briefs available</option>}
+                {wsBriefsModal.map((b) => (
                   <option key={b.id} value={b.id}>{getBriefTitle(b)}</option>
                 ))}
               </select>
@@ -429,12 +498,14 @@ function NewsletterCard({
   plan,
   isFirst,
   onView,
+  onDelete,
 }: {
   newsletter: any
   linkedinPost: any
   plan: Plan
   isFirst: boolean
   onView: (nl: any) => void
+  onDelete: (id: string) => void
 }) {
   const isAgency = plan === 'agency'
   const niche = (newsletter.trend_reports?.niches as any)?.name ?? 'General'
@@ -489,6 +560,15 @@ function NewsletterCard({
       <div className="flex items-center gap-1.5 px-3 py-2 border-t border-slate-100 bg-slate-50">
         <span className="text-[10px] text-slate-400">From Trend Report</span>
         <div className="ml-auto flex gap-1">
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(newsletter.id) }}
+            className="h-[26px] w-[26px] rounded-md inline-flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+            title="Delete newsletter"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="w-3.5 h-3.5">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+            </svg>
+          </button>
           <button
             onClick={(e) => { e.stopPropagation(); onView(newsletter) }}
             className={`h-[26px] px-2 rounded-md text-[11px] font-medium border-none cursor-pointer inline-flex items-center gap-1 ${btnColor}`}
@@ -786,6 +866,19 @@ export default function NewsletterClient({
   const [detail, setDetail] = useState<any | null>(null)
   const [activeNicheFilter, setActiveNicheFilter] = useState('all')
   const [activeWsId, setActiveWsId] = useState(workspaceId)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  const handleDelete = async (id: string) => {
+    setDeleteLoading(true)
+    try {
+      await fetch(`/api/newsletter-builder/${id}`, { method: 'DELETE' })
+      setDeletingId(null)
+      router.refresh()
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
 
   const handleGenerated = useCallback(() => {
     router.refresh()
@@ -931,7 +1024,6 @@ export default function NewsletterClient({
             {isAgency && <span className="text-[10px] font-semibold px-1.5 py-px rounded-full bg-amber-50 text-amber-700">✦ White-label</span>}
           </div>
           <div className="flex gap-2 mt-2.5 pt-2.5 border-t border-slate-100 flex-wrap items-center">
-            <span className="text-[11px] text-slate-400 font-medium flex-shrink-0">Generate from:</span>
             <button
               onClick={() => setShowModal(true)}
               disabled={usedThisMonth >= limitPerMonth}
@@ -998,6 +1090,7 @@ export default function NewsletterClient({
                 plan={plan}
                 isFirst={i === 0}
                 onView={setDetail}
+                onDelete={(id) => setDeletingId(id)}
               />
             ))}
           </div>
@@ -1006,11 +1099,21 @@ export default function NewsletterClient({
 
       {showModal && (
         <GenerateModal
-          reports={wsReports}
-          signalBriefs={wsBriefs}
+          reports={reports}
+          signalBriefs={signalBriefs}
           plan={plan}
+          workspaces={workspaces}
           onClose={() => setShowModal(false)}
           onGenerated={handleGenerated}
+        />
+      )}
+
+      {deletingId && (
+        <DeleteConfirmModal
+          title="Delete this newsletter?"
+          onConfirm={() => handleDelete(deletingId)}
+          onCancel={() => setDeletingId(null)}
+          loading={deleteLoading}
         />
       )}
     </>

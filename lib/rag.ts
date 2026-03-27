@@ -10,7 +10,7 @@ import { embedText, embedQuery } from './gemini'
 export async function ragQuery(
   workspaceId: string,
   nicheQuery: string,
-  threshold = 0.78,
+  threshold = 0.65,
   count = 10
 ) {
   let embedding: number[]

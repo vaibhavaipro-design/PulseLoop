@@ -1,6 +1,6 @@
 import 'server-only'
 import { supabaseAdmin } from './supabase/admin'
-import { embedText } from './gemini'
+import { embedText, embedQuery } from './gemini'
 
 /**
  * Query signals using RAG (Retrieval-Augmented Generation).
@@ -15,7 +15,7 @@ export async function ragQuery(
 ) {
   let embedding: number[]
   try {
-    embedding = await embedText(nicheQuery)
+    embedding = await embedQuery(nicheQuery)
   } catch (embeddingError) {
     // Embedding service unavailable — generate report without RAG context.
     // This happens when GEMINI_API_KEY is missing or invalid.
@@ -63,9 +63,13 @@ export async function embedAndStore(signal: {
   if (error) throw new Error(`Signal storage failed: ${error.message}`)
 }
 
+const ZERO_EMBEDDING = new Array(768).fill(0)
+
 /**
  * Batch embed and store multiple signals at once.
  * More efficient for the scraping pipeline.
+ * Falls back to a zero vector if Gemini embeddings are unavailable —
+ * signals are still stored and searchable by text, just not via RAG.
  */
 export async function embedAndStoreBatch(signals: Array<{
   workspace_id: string
@@ -75,21 +79,31 @@ export async function embedAndStoreBatch(signals: Array<{
   source_url: string
   signal_type: string
   signal_source?: string
+  expires_at?: string
 }>) {
-  const embeddings = await Promise.all(
+  const embeddingResults = await Promise.allSettled(
     signals.map(s => embedText(s.text))
   )
 
-  const expiresAt = new Date()
-  expiresAt.setDate(expiresAt.getDate() + 90)
+  const defaultExpiry = new Date()
+  defaultExpiry.setDate(defaultExpiry.getDate() + 90)
 
-  const rows = signals.map((signal, i) => ({
-    ...signal,
-    signal_source: signal.signal_source ?? 'public',
-    embedding: embeddings[i],
-    expires_at: expiresAt.toISOString(),
-    timestamp: new Date().toISOString(),
-  }))
+  const rows = signals.map((signal, i) => {
+    const result = embeddingResults[i]
+    const embedding = result.status === 'fulfilled' ? result.value : ZERO_EMBEDDING
+    return {
+      workspace_id: signal.workspace_id,
+      niche_id: signal.niche_id,
+      text: signal.text,
+      platform: signal.platform,
+      source_url: signal.source_url,
+      signal_type: signal.signal_type,
+      signal_source: signal.signal_source ?? 'public',
+      embedding,
+      expires_at: signal.expires_at ?? defaultExpiry.toISOString(),
+      timestamp: new Date().toISOString(),
+    }
+  })
 
   const { error } = await supabaseAdmin.from('signals').upsert(rows)
   if (error) throw new Error(`Batch signal storage failed: ${error.message}`)

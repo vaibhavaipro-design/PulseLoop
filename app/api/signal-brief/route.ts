@@ -34,11 +34,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  // ── 4. Load workspace + subscription ─────────────────────────
+  // ── 4. Load source report + verify ownership ────────────────
+  const { data: report } = await supabase
+    .from('trend_reports').select('id, workspace_id, content_md')
+    .eq('id', body.reportId).single()
+  if (!report)
+    return NextResponse.json({ error: 'Report not found' }, { status: 404 })
+
   const { data: workspace } = await supabase
-    .from('workspaces').select('id').eq('user_id', user.id).order('created_at').limit(1).single()
+    .from('workspaces')
+    .select('id')
+    .eq('id', report.workspace_id)
+    .eq('user_id', user.id)
+    .single()
   if (!workspace)
-    return NextResponse.json({ error: 'Workspace not found' }, { status: 404 })
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { data: subscription } = await supabaseAdmin
     .from('subscriptions').select('plan, trial_ends_at').eq('workspace_id', workspace.id).single()
@@ -62,12 +72,7 @@ export async function POST(request: NextRequest) {
   if ((usage?.count ?? 0) >= limits.signalBriefs)
     return NextResponse.json({ error: 'Monthly signal brief limit reached.' }, { status: 403 })
 
-  // ── 7. Load report (with ownership check) ────────────────────
-  const { data: report } = await supabase
-    .from('trend_reports').select('id, content_md')
-    .eq('id', body.reportId).eq('workspace_id', workspace.id).single()
-  if (!report)
-    return NextResponse.json({ error: 'Report not found' }, { status: 404 })
+  // Report already loaded above with ownership check
 
   // ── 8. Load brand voice ──────────────────────────────────────
   const { data: brandVoice } = await supabase

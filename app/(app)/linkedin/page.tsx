@@ -34,23 +34,24 @@ export default async function LinkedInPage() {
 
   const currentMonth = new Date().toISOString().slice(0, 7)
 
+  const workspaceIds = workspaces.map(w => w.id)
   const [linkedinPostsRes, newslettersRes, trendReportsRes, usageRes] = workspace
     ? await Promise.all([
         supabaseAdmin
           .from('linkedin_posts')
-          .select(`id, variants, newsletter_id, newsletters ( id, angle, trend_reports ( title, niches ( name ) ) )`)
-          .eq('workspace_id', workspace.id)
+          .select(`id, workspace_id, variants, newsletter_id, newsletters ( id, angle, trend_reports ( title, niches ( name ) ) )`)
+          .in('workspace_id', workspaceIds)
           .order('id', { ascending: false }),
         supabaseAdmin
           .from('newsletters')
-          .select('id, angle, trend_reports ( id, title, niches ( name ) )')
-          .eq('workspace_id', workspace.id)
+          .select('id, angle, trend_reports ( id, workspace_id, title, niches ( name ) )')
+          .in('workspace_id', workspaceIds)
           .order('id', { ascending: false })
           .limit(20),
         supabaseAdmin
           .from('trend_reports')
-          .select('id, title, niches ( name )')
-          .eq('workspace_id', workspace.id)
+          .select('id, workspace_id, title, niches ( name )')
+          .in('workspace_id', workspaceIds)
           .order('id', { ascending: false })
           .limit(20),
         supabaseAdmin

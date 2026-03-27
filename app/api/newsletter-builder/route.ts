@@ -33,11 +33,32 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  // ── 4. Workspace + subscription ──────────────────────────────
+  // ── 4. Load source content + verify ownership ────────────────
+  let sourceContent: string
+  let trendReportId: string | null = null
+  let sourceWsId: string
+
+  if (body.reportId) {
+    const { data: report } = await supabase
+      .from('trend_reports').select('id, workspace_id, content_md')
+      .eq('id', body.reportId).single()
+    if (!report) return NextResponse.json({ error: 'Report not found' }, { status: 404 })
+    sourceContent = report.content_md!
+    trendReportId = report.id
+    sourceWsId = report.workspace_id
+  } else {
+    const { data: brief } = await supabaseAdmin
+      .from('signal_briefs').select('id, workspace_id, content_md')
+      .eq('id', body.briefId!).single()
+    if (!brief) return NextResponse.json({ error: 'Signal brief not found' }, { status: 404 })
+    sourceContent = brief.content_md!
+    sourceWsId = brief.workspace_id
+  }
+
   const { data: workspace } = await supabase
-    .from('workspaces').select('id').eq('user_id', user.id).order('created_at').limit(1).single()
+    .from('workspaces').select('id').eq('id', sourceWsId).eq('user_id', user.id).single()
   if (!workspace)
-    return NextResponse.json({ error: 'Workspace not found' }, { status: 404 })
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { data: subscription } = await supabaseAdmin
     .from('subscriptions').select('plan, trial_ends_at').eq('workspace_id', workspace.id).single()
@@ -60,26 +81,7 @@ export async function POST(request: NextRequest) {
   if ((usage?.count ?? 0) >= limits.newsletters)
     return NextResponse.json({ error: 'Monthly newsletter limit reached.' }, { status: 403 })
 
-  // ── 7. Load source content (report or signal brief, ownership check) ──────
-  let sourceContent: string
-  let trendReportId: string | null = null
-
-  if (body.reportId) {
-    const { data: report } = await supabase
-      .from('trend_reports').select('id, content_md')
-      .eq('id', body.reportId).eq('workspace_id', workspace.id).single()
-    if (!report)
-      return NextResponse.json({ error: 'Report not found' }, { status: 404 })
-    sourceContent = report.content_md!
-    trendReportId = report.id
-  } else {
-    const { data: brief } = await supabaseAdmin
-      .from('signal_briefs').select('id, content_md')
-      .eq('id', body.briefId!).eq('workspace_id', workspace.id).single()
-    if (!brief)
-      return NextResponse.json({ error: 'Signal brief not found' }, { status: 404 })
-    sourceContent = brief.content_md!
-  }
+  // Source already loaded above with ownership check
 
   // ── 8. Brand voice ───────────────────────────────────────────
   const { data: brandVoice } = await supabase

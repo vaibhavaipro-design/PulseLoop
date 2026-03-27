@@ -39,7 +39,8 @@ export async function GET(request: NextRequest) {
 
   let emailsSent = 0
 
-  for (const [workspaceId, report] of workspaceReports) {
+  const entries = Array.from(workspaceReports.entries())
+  for (const [workspaceId, report] of entries) {
     try {
       const { data: workspace } = await supabaseAdmin
         .from('workspaces').select('user_id').eq('id', workspaceId).single()
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
       const preview = (report.content_md ?? '').replace(/^#{1,6}\s+.+$/gm, '').trim().slice(0, 300)
       const nicheName = (report.niches as any)?.name ?? 'Your Niche'
       const topSignal =
-        preview.split('\n').find(l => l.trim().length > 20)?.slice(0, 80) ?? 'New intelligence brief'
+        preview.split('\n').find((l: string) => l.trim().length > 20)?.slice(0, 80) ?? 'New intelligence brief'
       const weekOf = new Date(report.created_at).toLocaleDateString('en-GB', {
         day: 'numeric',
         month: 'long',

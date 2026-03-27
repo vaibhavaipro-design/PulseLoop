@@ -117,8 +117,8 @@ export async function POST(
     for (const r of results) {
       if (r.text.length < 50) continue
       signalRows.push({
-        workspace_id: workspace.id,
-        niche_id: niche.id,
+        workspace_id: workspace!.id,
+        niche_id: niche!.id,
         text: r.text,
         platform: r.platform,
         source_url: r.source_url,

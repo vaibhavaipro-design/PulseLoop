@@ -12,25 +12,29 @@ export async function DELETE(
   if (!user || authError)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data: workspace } = await supabase
-    .from('workspaces').select('id').eq('user_id', user.id).order('created_at').limit(1).single()
-  if (!workspace)
-    return NextResponse.json({ error: 'No workspace' }, { status: 404 })
-
+  // Verify ownership before delete
   const { data: brief } = await supabaseAdmin
     .from('signal_briefs')
-    .select('id')
+    .select('id, workspace_id')
     .eq('id', params.id)
-    .eq('workspace_id', workspace.id)
     .single()
   if (!brief)
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  const { data: workspaceOwned } = await supabaseAdmin
+    .from('workspaces')
+    .select('id')
+    .eq('id', brief.workspace_id)
+    .eq('user_id', user.id)
+    .single()
+  if (!workspaceOwned)
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { error } = await supabaseAdmin
     .from('signal_briefs')
     .delete()
     .eq('id', params.id)
-    .eq('workspace_id', workspace.id)
+    .eq('workspace_id', brief.workspace_id)
 
   if (error)
     return NextResponse.json({ error: 'Delete failed' }, { status: 500 })

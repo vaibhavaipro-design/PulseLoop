@@ -33,11 +33,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  // ── 4. Workspace ─────────────────────────────────────────────
+  // ── 4. Load newsletter + verify ownership ───────────────────
+  const { data: newsletter } = await supabase
+    .from('newsletters').select('id, workspace_id, content_md')
+    .eq('id', body.newsletterId).single()
+  if (!newsletter)
+    return NextResponse.json({ error: 'Newsletter not found' }, { status: 404 })
+
   const { data: workspace } = await supabase
-    .from('workspaces').select('id').eq('user_id', user.id).order('created_at').limit(1).single()
+    .from('workspaces').select('id').eq('id', newsletter.workspace_id).eq('user_id', user.id).single()
   if (!workspace)
-    return NextResponse.json({ error: 'Workspace not found' }, { status: 404 })
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   // ── 5. Subscription (admin) ──────────────────────────────────
   const { data: subscription } = await supabaseAdmin
@@ -62,12 +68,7 @@ export async function POST(request: NextRequest) {
   if ((usage?.count ?? 0) >= limits.linkedinPosts)
     return NextResponse.json({ error: 'Monthly LinkedIn posts limit reached.' }, { status: 403 })
 
-  // ── 9. Newsletter ownership check ────────────────────────────
-  const { data: newsletter } = await supabase
-    .from('newsletters').select('id, content_md')
-    .eq('id', body.newsletterId).eq('workspace_id', workspace.id).single()
-  if (!newsletter)
-    return NextResponse.json({ error: 'Newsletter not found' }, { status: 404 })
+  // Newsletter already loaded above with ownership check
 
   // ── 10. Brand voice ──────────────────────────────────────────
   const { data: brandVoice } = await supabase

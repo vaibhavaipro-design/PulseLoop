@@ -1,18 +1,14 @@
 import 'server-only'
-import { GoogleGenerativeAI, TaskType } from '@google/generative-ai'
 
-// Lazily initialize Google AI to avoid build-time crashes if key is missing
-function getEmbeddingModel() {
+const GEMINI_EMBED_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent'
+const GEMINI_BATCH_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:batchEmbedContents'
+
+function getApiKey(): string {
   const key = process.env.GEMINI_API_KEY
   if (!key || key.includes('placeholder')) {
-    console.warn('GEMINI_API_KEY is missing or placeholder. Gemini features will not work.')
-    return null
+    throw new Error('GEMINI_MODEL_NOT_INITIALIZED')
   }
-  const genAI = new GoogleGenerativeAI(key)
-  return genAI.getGenerativeModel(
-    { model: 'gemini-embedding-001' },
-    { apiVersion: 'v1' }
-  )
+  return key
 }
 
 /**
@@ -20,16 +16,31 @@ function getEmbeddingModel() {
  * Used in the scraping pipeline when storing new signals.
  */
 export async function embedText(text: string): Promise<number[]> {
-  const model = getEmbeddingModel()
-  if (!model) throw new Error('GEMINI_MODEL_NOT_INITIALIZED')
+  const key = getApiKey()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result = await model.embedContent({
-    content: { role: 'user', parts: [{ text }] },
-    taskType: TaskType.RETRIEVAL_DOCUMENT,
-    outputDimensionality: 768,
-  } as any)
-  return result.embedding.values
+  try {
+    const response = await fetch(`${GEMINI_EMBED_URL}?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content: { parts: [{ text }] },
+        taskType: 'RETRIEVAL_DOCUMENT',
+        outputDimensionality: 768,
+      }),
+    })
+
+    if (!response.ok) {
+      const errText = await response.text()
+      throw new Error(`Gemini API Error ${response.status}: ${errText}`)
+    }
+
+    const data = await response.json()
+    return data.embedding.values
+
+  } catch (error: any) {
+    console.error('[embedText] Fetch exception:', error.message)
+    throw error
+  }
 }
 
 /**
@@ -37,33 +48,64 @@ export async function embedText(text: string): Promise<number[]> {
  * Used in the RAG pipeline when querying for relevant signals.
  */
 export async function embedQuery(text: string): Promise<number[]> {
-  const model = getEmbeddingModel()
-  if (!model) throw new Error('GEMINI_MODEL_NOT_INITIALIZED')
+  const key = getApiKey()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result = await model.embedContent({
-    content: { role: 'user', parts: [{ text }] },
-    taskType: TaskType.RETRIEVAL_QUERY,
-    outputDimensionality: 768,
-  } as any)
-  return result.embedding.values
+  try {
+    const response = await fetch(`${GEMINI_EMBED_URL}?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content: { parts: [{ text }] },
+        taskType: 'RETRIEVAL_QUERY',
+        outputDimensionality: 768,
+      }),
+    })
+
+    if (!response.ok) {
+      const errText = await response.text()
+      throw new Error(`Gemini API Error ${response.status}: ${errText}`)
+    }
+
+    const data = await response.json()
+    return data.embedding.values
+
+  } catch (error: any) {
+    console.error('[embedQuery] Fetch exception:', error.message)
+    throw error
+  }
 }
 
 /**
  * Batch embed multiple texts at once using batchEmbedContents.
- * More rate-limit friendly than Promise.all of individual calls.
+ * More rate-limit friendly than individual embedText calls.
  */
 export async function embedBatch(texts: string[]): Promise<number[][]> {
-  const model = getEmbeddingModel()
-  if (!model) throw new Error('GEMINI_MODEL_NOT_INITIALIZED')
+  const key = getApiKey()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const result = await model.batchEmbedContents({
-    requests: texts.map(t => ({
-      content: { role: 'user', parts: [{ text: t }] },
-      taskType: TaskType.RETRIEVAL_DOCUMENT,
-      outputDimensionality: 768,
-    })),
-  } as any)
-  return result.embeddings.map((e: any) => e.values)
+  try {
+    const response = await fetch(`${GEMINI_BATCH_URL}?key=${key}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: texts.map(text => ({
+          model: 'models/gemini-embedding-001',
+          content: { parts: [{ text }] },
+          taskType: 'RETRIEVAL_DOCUMENT',
+          outputDimensionality: 768,
+        })),
+      }),
+    })
+
+    if (!response.ok) {
+      const errText = await response.text()
+      throw new Error(`Gemini API Error ${response.status}: ${errText}`)
+    }
+
+    const data = await response.json()
+    return data.embeddings.map((e: { values: number[] }) => e.values)
+
+  } catch (error: any) {
+    console.error('[embedBatch] Fetch exception:', error.message)
+    throw error
+  }
 }

@@ -85,6 +85,12 @@ export async function embedAndStoreBatch(signals: Array<{
     signals.map(s => embedText(s.text))
   )
 
+  const failures = embeddingResults.filter(r => r.status === 'rejected')
+  if (failures.length > 0) {
+    const firstErr = (failures[0] as PromiseRejectedResult).reason
+    console.error(`[embedAndStoreBatch] ${failures.length}/${signals.length} embeddings failed. First error:`, firstErr)
+  }
+
   const defaultExpiry = new Date()
   defaultExpiry.setDate(defaultExpiry.getDate() + 90)
 

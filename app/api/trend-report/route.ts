@@ -101,12 +101,12 @@ export async function POST(request: NextRequest) {
       urgencyResult,
     ] = await Promise.all([
       ragQuery(workspace.id, richQuery),
-      supabaseAdmin.rpc('get_signal_volume_by_week', { p_workspace_id: workspace.id, p_niche_id: niche.id }).catch(() => ({ data: [] })),
-      supabaseAdmin.rpc('get_source_distribution',   { p_workspace_id: workspace.id, p_niche_id: niche.id }).catch(() => ({ data: [] })),
-      supabaseAdmin.rpc('get_topic_distribution',    { p_workspace_id: workspace.id, p_niche_id: niche.id }).catch(() => ({ data: [] })),
-      supabaseAdmin.rpc('get_sentiment_breakdown',   { p_workspace_id: workspace.id, p_niche_id: niche.id }).catch(() => ({ data: [] })),
-      supabaseAdmin.rpc('get_geo_distribution',      { p_workspace_id: workspace.id, p_niche_id: niche.id }).catch(() => ({ data: [] })),
-      supabaseAdmin.rpc('get_urgency_distribution',  { p_workspace_id: workspace.id, p_niche_id: niche.id }).catch(() => ({ data: [] })),
+      Promise.resolve(supabaseAdmin.rpc('get_signal_volume_by_week', { p_workspace_id: workspace.id, p_niche_id: niche.id })).catch(() => ({ data: [] })),
+      Promise.resolve(supabaseAdmin.rpc('get_source_distribution',   { p_workspace_id: workspace.id, p_niche_id: niche.id })).catch(() => ({ data: [] })),
+      Promise.resolve(supabaseAdmin.rpc('get_topic_distribution',    { p_workspace_id: workspace.id, p_niche_id: niche.id })).catch(() => ({ data: [] })),
+      Promise.resolve(supabaseAdmin.rpc('get_sentiment_breakdown',   { p_workspace_id: workspace.id, p_niche_id: niche.id })).catch(() => ({ data: [] })),
+      Promise.resolve(supabaseAdmin.rpc('get_geo_distribution',      { p_workspace_id: workspace.id, p_niche_id: niche.id })).catch(() => ({ data: [] })),
+      Promise.resolve(supabaseAdmin.rpc('get_urgency_distribution',  { p_workspace_id: workspace.id, p_niche_id: niche.id })).catch(() => ({ data: [] })),
     ])
 
     // Fetch top 6 signals with source images (by urgency)

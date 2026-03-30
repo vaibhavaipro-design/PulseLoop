@@ -6,6 +6,9 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import ReportActions from './ReportActions'
 import PdfDownloadTrigger from './PdfDownloadTrigger'
+import ReportCharts from '@/components/reports/ReportCharts'
+import SignalImageGallery from '@/components/reports/SignalImageGallery'
+import type { ChartData } from '@/lib/chart-types'
 
 export default async function ReportDetailPage({ params, searchParams }: { params: { id: string }; searchParams?: { print?: string } }) {
   const supabase = createSupabaseServerClient()
@@ -31,6 +34,7 @@ export default async function ReportDetailPage({ params, searchParams }: { param
       content_md,
       created_at,
       source_health,
+      chart_data,
       niches ( id, name, icon )
     `)
     .eq('id', params.id)
@@ -91,29 +95,46 @@ export default async function ReportDetailPage({ params, searchParams }: { param
                 {report.title}
               </h1>
 
-              {/* Source health stats strip */}
-              {(report as any).source_health && (
-                <div className="mt-4 flex items-center gap-3 flex-wrap">
-                  <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
-                    <svg className="w-3 h-3 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                    <span className="font-medium text-slate-700">{(report as any).source_health?.total_signals ?? 0}</span>
-                    <span>total signals</span>
+              {/* Stats strip — uses chart_data metadata when available, falls back to source_health */}
+              {(() => {
+                const chartData = (report as any).chart_data as ChartData | null
+                const signalCount = chartData?.signal_count ?? (report as any).source_health?.total_signals ?? 0
+                const positivePct = chartData?.sentiment_breakdown?.find(s => s.label === 'positive')?.pct ?? null
+                const topGeo = chartData?.geo_distribution?.[0]?.geo ?? null
+                return (
+                  <div className="mt-4 flex items-center gap-3 flex-wrap">
+                    <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                      <svg className="w-3 h-3 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                      <span className="font-medium text-slate-700">{signalCount}</span>
+                      <span>signals analysed</span>
+                    </div>
+                    {positivePct !== null && (
+                      <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                        <span className="font-medium text-slate-700">{positivePct}%</span>
+                        <span>positive sentiment</span>
+                      </div>
+                    )}
+                    {topGeo && (
+                      <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block" />
+                        <span>Top geo:</span>
+                        <span className="font-medium text-slate-700">{topGeo}</span>
+                      </div>
+                    )}
                   </div>
-                  {(report as any).source_health?.by_platform && Object.entries((report as any).source_health.by_platform as Record<string, number>).map(([platform, count]) => (
-                    <span
-                      key={platform}
-                      className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600"
-                    >
-                      {platform} · {count}
-                    </span>
-                  ))}
-                </div>
-              )}
+                )
+              })()}
             </div>
 
-            <article id="report-content" className="prose prose-slate prose-indigo max-w-none bg-white border border-slate-200 rounded-2xl p-6 md:p-10 shadow-sm">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{report.content_md || '*No content available.*'}</ReactMarkdown>
-            </article>
+            <div id="report-content">
+              <ReportCharts chartData={(report as any).chart_data as ChartData | null} />
+              <SignalImageGallery images={((report as any).chart_data as ChartData | null)?.signal_images ?? []} />
+
+              <article className="prose prose-slate prose-indigo max-w-none bg-white border border-slate-200 rounded-2xl p-6 md:p-10 shadow-sm">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{report.content_md || '*No content available.*'}</ReactMarkdown>
+              </article>
+            </div>
 
           </div>
         </div>

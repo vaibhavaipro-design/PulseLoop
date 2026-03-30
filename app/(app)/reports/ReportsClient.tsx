@@ -74,16 +74,21 @@ function DeleteConfirmModal({
   onConfirm,
   onCancel,
   loading,
+  error,
 }: {
   onConfirm: () => void
   onCancel: () => void
   loading: boolean
+  error?: string | null
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-white rounded-2xl shadow-xl max-w-xs w-full mx-4 p-5">
         <div className="text-sm font-bold text-slate-800 mb-1">Delete this report?</div>
-        <div className="text-xs text-slate-500 mb-5">This cannot be undone.</div>
+        <div className="text-xs text-slate-500 mb-4">This cannot be undone.</div>
+        {error && (
+          <div className="mb-4 text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</div>
+        )}
         <div className="flex gap-2">
           <button
             onClick={onCancel}
@@ -360,6 +365,7 @@ export default function ReportsClient({
   const [showRunModal, setShowRunModal] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const reportsLimit = limits.reportsPerMonth
@@ -452,6 +458,7 @@ export default function ReportsClient({
   const handleDeleteReport = async () => {
     if (!deletingId) return
     setDeleteLoading(true)
+    setDeleteError(null)
     try {
       const res = await fetch(`/api/trend-report/${deletingId}`, { method: 'DELETE' })
       if (!res.ok) {
@@ -461,8 +468,7 @@ export default function ReportsClient({
       setDeletingId(null)
       router.refresh()
     } catch (err: any) {
-      // Surface error without blocking — just close the modal
-      setDeletingId(null)
+      setDeleteError(err.message)
     } finally {
       setDeleteLoading(false)
     }
@@ -500,7 +506,7 @@ export default function ReportsClient({
           runNicheId={runNicheId}
           setRunNicheId={setRunNicheId}
           privateFile={privateFile}
-          setPrivateFile={setPrivateFile}
+          setPrivateFile={(f) => { setPrivateFile(f); if (!f) setPrivateContextNote('') }}
           privateContextNote={privateContextNote}
           setPrivateContextNote={setPrivateContextNote}
           fileInputRef={fileInputRef}
@@ -512,8 +518,9 @@ export default function ReportsClient({
       {deletingId && (
         <DeleteConfirmModal
           onConfirm={handleDeleteReport}
-          onCancel={() => setDeletingId(null)}
+          onCancel={() => { setDeletingId(null); setDeleteError(null) }}
           loading={deleteLoading}
+          error={deleteError}
         />
       )}
 

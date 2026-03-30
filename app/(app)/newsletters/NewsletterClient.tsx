@@ -262,17 +262,22 @@ function DeleteConfirmModal({
   onConfirm,
   onCancel,
   loading,
+  error,
 }: {
   title: string
   onConfirm: () => void
   onCancel: () => void
   loading: boolean
+  error?: string | null
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-xs p-6">
         <h3 className="text-[15px] font-bold text-slate-800 mb-1">{title}</h3>
-        <p className="text-[12px] text-slate-500 mb-5">This cannot be undone.</p>
+        <p className="text-[12px] text-slate-500 mb-4">This cannot be undone.</p>
+        {error && (
+          <div className="mb-4 text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{error}</div>
+        )}
         <div className="flex gap-3">
           <button
             onClick={onCancel}
@@ -868,13 +873,22 @@ export default function NewsletterClient({
   const [activeWsId, setActiveWsId] = useState(workspaceId)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async () => {
+    if (!deletingId) return
     setDeleteLoading(true)
+    setDeleteError(null)
     try {
-      await fetch(`/api/newsletter-builder/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/newsletter-builder/${deletingId}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error ?? 'Delete failed')
+      }
       setDeletingId(null)
       router.refresh()
+    } catch (err: any) {
+      setDeleteError(err.message)
     } finally {
       setDeleteLoading(false)
     }
@@ -1111,9 +1125,10 @@ export default function NewsletterClient({
       {deletingId && (
         <DeleteConfirmModal
           title="Delete this newsletter?"
-          onConfirm={() => handleDelete(deletingId)}
-          onCancel={() => setDeletingId(null)}
+          onConfirm={handleDelete}
+          onCancel={() => { setDeletingId(null); setDeleteError(null) }}
           loading={deleteLoading}
+          error={deleteError}
         />
       )}
     </>

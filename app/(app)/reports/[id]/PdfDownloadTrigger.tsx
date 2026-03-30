@@ -21,13 +21,13 @@ export default function PdfDownloadTrigger({ title, date }: Props) {
           return
         }
 
-        // Wait for React hydration + ReactMarkdown to fully render in DOM
-        await new Promise((resolve) => setTimeout(resolve, 800))
+        // Wait for React hydration + ReactMarkdown + Recharts ResponsiveContainer to fully render
+        await new Promise((resolve) => setTimeout(resolve, 2000))
 
         // Apply inline page-break styles BEFORE html2pdf measures element heights
         // (injecting a <style> tag fires after measurement and has no effect)
         const breakTargets: HTMLElement[] = []
-        element.querySelectorAll('table,thead,tbody,tr,blockquote,li,h1,h2,h3,h4,section').forEach(el => {
+        element.querySelectorAll('table,thead,tbody,tr,blockquote,li,h1,h2,h3,h4,section,.recharts-wrapper,.signal-image-card').forEach(el => {
           const h = el as HTMLElement
           h.style.pageBreakInside = 'avoid'
           h.style.breakInside = 'avoid'

@@ -7,6 +7,7 @@ import { getPlanLimits } from '@/lib/plans'
 import { TrendReportSchema } from '@/lib/validation'
 import { ragQuery } from '@/lib/rag'
 import { generateReport } from '@/lib/claude'
+import type { ChartData } from '@/lib/chart-types'
 
 const ACTION_TYPE = 'trend_report'
 
@@ -85,11 +86,40 @@ export async function POST(request: NextRequest) {
   const { data: brandVoice } = await supabase
     .from('brand_voice_profiles').select('content').eq('workspace_id', workspace.id).maybeSingle()
 
-  // ── 9. RAG + Claude ───────────────────────────────────────────
+  // ── 9. RAG + SQL chart queries (parallel) ────────────────────
   try {
     // Enrich the RAG query with description so similarity search reflects user's analytical intent
     const richQuery = [body.nicheQuery, niche.description].filter(Boolean).join('. ')
-    const signals = await ragQuery(workspace.id, richQuery)
+
+    const [
+      signals,
+      volumeResult,
+      sourceResult,
+      topicResult,
+      sentimentResult,
+      geoResult,
+      urgencyResult,
+    ] = await Promise.all([
+      ragQuery(workspace.id, richQuery),
+      supabaseAdmin.rpc('get_signal_volume_by_week', { p_workspace_id: workspace.id, p_niche_id: niche.id }).catch(() => ({ data: [] })),
+      supabaseAdmin.rpc('get_source_distribution',   { p_workspace_id: workspace.id, p_niche_id: niche.id }).catch(() => ({ data: [] })),
+      supabaseAdmin.rpc('get_topic_distribution',    { p_workspace_id: workspace.id, p_niche_id: niche.id }).catch(() => ({ data: [] })),
+      supabaseAdmin.rpc('get_sentiment_breakdown',   { p_workspace_id: workspace.id, p_niche_id: niche.id }).catch(() => ({ data: [] })),
+      supabaseAdmin.rpc('get_geo_distribution',      { p_workspace_id: workspace.id, p_niche_id: niche.id }).catch(() => ({ data: [] })),
+      supabaseAdmin.rpc('get_urgency_distribution',  { p_workspace_id: workspace.id, p_niche_id: niche.id }).catch(() => ({ data: [] })),
+    ])
+
+    // Fetch top 6 signals with source images (by urgency)
+    const { data: imageSignals } = await supabaseAdmin
+      .from('signals')
+      .select('id, title:text, platform, source_url, source_image_url')
+      .eq('workspace_id', workspace.id)
+      .eq('niche_id', niche.id)
+      .not('source_image_url', 'is', null)
+      .gt('expires_at', new Date().toISOString())
+      .order('urgency_score', { ascending: false })
+      .limit(6)
+
     // Only Agency plan can inject private context
     const privateCtx = limits.privateUpload ? body.privateContext : undefined
     const result = await generateReport(
@@ -103,6 +133,27 @@ export async function POST(request: NextRequest) {
       limits.privateUpload ? body.privateContextNote : undefined
     )
 
+    // ── Assemble chart_data ───────────────────────────────────
+    const chartData: ChartData = {
+      signal_volume_by_week: volumeResult.data ?? [],
+      source_distribution:   sourceResult.data ?? [],
+      topic_distribution:    topicResult.data ?? [],
+      sentiment_breakdown:   sentimentResult.data ?? [],
+      geo_distribution:      geoResult.data ?? [],
+      urgency_distribution:  urgencyResult.data ?? [],
+      ...(result.chart_data_partial ?? {}),
+      signal_images: (imageSignals ?? []).map(s => ({
+        signal_id: s.id,
+        source_image_url: s.source_image_url as string,
+        title: (s.title as string).split('\n')[0].slice(0, 120),
+        platform: s.platform,
+        source_url: s.source_url,
+      })),
+      generated_at: new Date().toISOString(),
+      signal_count: signals.length,
+      chart_schema_version: 2,
+    }
+
     // ── 10. Save via ADMIN client ─────────────────────────────────
     const { data: saved } = await supabaseAdmin
       .from('trend_reports')
@@ -112,6 +163,7 @@ export async function POST(request: NextRequest) {
         title: result.title,
         content_md: result.content_md,
         source_health: result.source_health,
+        chart_data: chartData,
       })
       .select('id')
       .single()
@@ -123,7 +175,7 @@ export async function POST(request: NextRequest) {
       p_month: currentMonth,
     })
 
-    return NextResponse.json({ id: saved?.id, ...result })
+    return NextResponse.json({ id: saved?.id, title: result.title, content_md: result.content_md, source_health: result.source_health, chart_data: chartData })
 
   } catch (error: any) {
     if (error.message === 'CAPACITY_EXCEEDED') {

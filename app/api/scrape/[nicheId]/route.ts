@@ -5,6 +5,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { userRatelimit, ipRatelimit } from '@/lib/ratelimit'
 import { embedAndStoreBatch } from '@/lib/rag'
+import { enrichSignals } from '@/lib/claude'
 import {
   fetchReddit,
   fetchSubstack,
@@ -16,7 +17,23 @@ import {
   type SourceResult,
 } from '@/lib/sources'
 
-const parser = new Parser()
+type RssItem = {
+  title?: string
+  contentSnippet?: string
+  content?: string
+  link?: string
+  mediaContent?: { $?: { url?: string } }
+  enclosure?: { url?: string }
+}
+
+const parser = new Parser<Record<string, unknown>, RssItem>({
+  customFields: {
+    item: [
+      ['media:content', 'mediaContent', { keepArray: false }],
+      ['enclosure', 'enclosure'],
+    ],
+  },
+})
 
 function parseSignalMemoryDays(mem: string | null): number {
   const match = (mem ?? '').match(/(\d+)/)
@@ -111,6 +128,7 @@ export async function POST(
     signal_type: string
     signal_source: string
     expires_at: string
+    source_image_url?: string | null
   }> = []
 
   function addResults(results: SourceResult[]) {
@@ -125,6 +143,7 @@ export async function POST(
         signal_type: 'article',
         signal_source: 'public',
         expires_at: expiresAtStr,
+        source_image_url: null,
       })
     }
   }
@@ -167,6 +186,12 @@ export async function POST(
         const text = `${article.title ?? ''}\n${article.contentSnippet ?? article.content ?? ''}`.trim()
         if (text.length < 50) continue
 
+        const sourceImageUrl =
+          (article.mediaContent as any)?.$?.url
+          ?? (article.mediaContent as any)?.url
+          ?? article.enclosure?.url
+          ?? null
+
         signalRows.push({
           workspace_id: workspace.id,
           niche_id: niche.id,
@@ -176,6 +201,7 @@ export async function POST(
           signal_type: 'article',
           signal_source: 'public',
           expires_at: expiresAtStr,
+          source_image_url: sourceImageUrl,
         })
       }
     } catch (feedErr) {
@@ -210,10 +236,50 @@ export async function POST(
 
   await Promise.allSettled(dynamicFetches)
 
-  // ── 8. Embed + store via embedAndStoreBatch ───────────────────
+  // ── 8a. Enrich signals with Claude Haiku (batch of 20) ───────
+  let enrichedSignalRows = signalRows
   if (signalRows.length > 0) {
     try {
-      await embedAndStoreBatch(signalRows)
+      const BATCH_SIZE = 20
+      const enrichmentMap = new Map<number, Awaited<ReturnType<typeof enrichSignals>>[number]>()
+
+      for (let i = 0; i < signalRows.length; i += BATCH_SIZE) {
+        const batch = signalRows.slice(i, i + BATCH_SIZE)
+        const enrichInput = batch.map((row, j) => ({
+          id: String(i + j),
+          title: row.text.split('\n')[0].slice(0, 120),
+          snippet: row.text.slice(0, 400),
+          platform: row.platform,
+          source_url: row.source_url,
+        }))
+        const results = await enrichSignals(enrichInput)
+        for (const r of results) {
+          enrichmentMap.set(parseInt(r.id), r)
+        }
+      }
+
+      enrichedSignalRows = signalRows.map((row, i) => {
+        const enrichment = enrichmentMap.get(i)
+        if (!enrichment) return row
+        return {
+          ...row,
+          sentiment: enrichment.sentiment,
+          sentiment_score: enrichment.sentiment_score,
+          topic_tags: enrichment.topic_tags,
+          geo_origin: enrichment.geo_origin,
+          urgency_score: enrichment.urgency_score,
+        }
+      })
+    } catch (enrichErr) {
+      // Enrichment failure must never block signal storage
+      console.error('[enrichSignals] failed, storing without enrichment:', enrichErr)
+    }
+  }
+
+  // ── 8b. Embed + store via embedAndStoreBatch ──────────────────
+  if (enrichedSignalRows.length > 0) {
+    try {
+      await embedAndStoreBatch(enrichedSignalRows)
     } catch (embedErr) {
       console.error('embedAndStoreBatch failed:', embedErr)
       return NextResponse.json({ error: 'Signal storage failed' }, { status: 500 })

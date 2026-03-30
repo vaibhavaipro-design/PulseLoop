@@ -80,6 +80,13 @@ export async function embedAndStoreBatch(signals: Array<{
   signal_type: string
   signal_source?: string
   expires_at?: string
+  // Enrichment fields (optional — set after Claude enrichment)
+  sentiment?: string | null
+  sentiment_score?: number | null
+  topic_tags?: string[] | null
+  geo_origin?: string | null
+  urgency_score?: number | null
+  source_image_url?: string | null
 }>) {
   const embeddingResults = await Promise.allSettled(
     signals.map(s => embedText(s.text))
@@ -108,6 +115,12 @@ export async function embedAndStoreBatch(signals: Array<{
       embedding,
       expires_at: signal.expires_at ?? defaultExpiry.toISOString(),
       timestamp: new Date().toISOString(),
+      sentiment: signal.sentiment ?? null,
+      sentiment_score: signal.sentiment_score ?? null,
+      topic_tags: signal.topic_tags ?? null,
+      geo_origin: signal.geo_origin ?? null,
+      urgency_score: signal.urgency_score ?? null,
+      source_image_url: signal.source_image_url ?? null,
     }
   })
 
